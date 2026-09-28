@@ -1,0 +1,430 @@
+/* ============================================================
+   PET-PROFILE.CSS — Public Pet Profile page
+   ============================================================ */
+
+/* --- Public navigation --- */
+.public-nav {
+  background: #fff;
+  border-bottom: 1px solid #EDD9C8;
+  padding: 0 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 68px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  box-shadow: 0 1px 6px rgba(42,36,25,.06);
+}
+
+.public-nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  color: #2A2419;
+  text-decoration: none;
+}
+
+.public-nav-logo img { height: 36px; width: auto; object-fit: contain; }
+
+.public-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+
+.public-nav-links a {
+  font-size: 14px;
+  font-weight: 500;
+  color: #6B5B4E;
+  text-decoration: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+  transition: color 0.2s, background 0.2s;
+}
+
+.public-nav-links a:hover { color: #C85A3E; background: #FEF3EE; }
+
+.btn-get-started {
+  background: #C85A3E;
+  color: #fff;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 8px rgba(200,90,62,.25);
+}
+
+.btn-get-started:hover { background: #A8452E; box-shadow: 0 4px 12px rgba(200,90,62,.35); }
+
+/* --- Page wrapper --- */
+.pet-page-main {
+  flex: 1;
+  padding: 52px 48px;
+  background: #FDF8F2;
+}
+
+.pet-page-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* --- Two-column grid --- */
+.pet-layout {
+  display: grid;
+  grid-template-columns: 46% 54%;
+  gap: 52px;
+  align-items: start;
+}
+
+/* ── LEFT: Gallery ── */
+.pet-gallery { display: flex; flex-direction: column; gap: 14px; }
+
+.main-image-wrap {
+  width: 100%;
+  aspect-ratio: 4/3;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 8px 28px rgba(42,36,25,.12);
+}
+
+.main-image-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.4s ease, opacity 0.3s;
+}
+
+.main-image-wrap img:hover { transform: scale(1.02); }
+
+/* Thumbnails — equal width, no gaps */
+.thumbnails {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.thumbnail {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 2.5px solid transparent;
+  cursor: pointer;
+  padding: 0;
+  background: none;
+  transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+  flex-shrink: 0;
+}
+
+.thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.thumbnail:hover {
+  border-color: rgba(200,90,62,.5);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(42,36,25,.1);
+}
+
+.thumbnail.active {
+  border-color: #C85A3E;
+  box-shadow: 0 4px 12px rgba(200,90,62,.25);
+}
+
+/* ── RIGHT: Pet Info ── */
+.pet-info { display: flex; flex-direction: column; gap: 22px; }
+
+.pet-name {
+  font-family: var(--font-display);
+  font-size: 44px;
+  font-weight: 700;
+  color: #2A2419;
+  line-height: 1.1;
+}
+
+.pet-badges { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.pet-badge {
+  display: inline-block;
+  padding: 6px 16px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.pet-badge-available { background: #7FA882; color: #fff; }
+.pet-badge-type { background: #FFE5D9; color: #C85A3E; }
+
+.pet-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: rgba(42,36,25,.6);
+  flex-wrap: wrap;
+}
+
+.pet-meta-sep { color: #EDD9C8; font-size: 16px; }
+
+.personality-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #6B5B4E;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.personality-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.personality-tag {
+  padding: 7px 15px;
+  border-radius: 999px;
+  border: 1.5px solid #EDD9C8;
+  background: #FCEEE4;
+  font-size: 13px;
+  color: #6B5B4E;
+  font-weight: 500;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.personality-tag:hover { border-color: #C85A3E; background: #FFE5D9; }
+
+.ai-bio-box {
+  background: #fff;
+  border: 1px solid #EDD9C8;
+  border-left: 4px solid #D4A853;
+  border-radius: 14px;
+  padding: 22px;
+  box-shadow: 0 2px 8px rgba(42,36,25,.05);
+}
+
+.ai-bio-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.ai-bio-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #6B5B4E;
+}
+
+.ai-bio-title svg { width: 16px; height: 16px; color: #D4A853; }
+
+.ai-powered-badge {
+  background: rgba(212,168,83,.1);
+  border: 1px solid rgba(212,168,83,.3);
+  color: #B8892A;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 6px;
+}
+
+.ai-bio-text {
+  font-size: 14px;
+  line-height: 1.75;
+  color: #6B5B4E;
+  font-style: italic;
+}
+
+.staff-box {
+  background: #FFF7F4;
+  border: 2px dashed rgba(212,168,83,.35);
+  border-radius: 14px;
+  padding: 22px;
+}
+
+.staff-only-badge {
+  display: inline-block;
+  background: #6B5B4E;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 6px;
+  margin-bottom: 18px;
+}
+
+.staff-field { margin-bottom: 14px; }
+.staff-field:last-child { margin-bottom: 0; }
+
+.staff-field-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #6B5B4E;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.staff-textarea {
+  width: 100%;
+  height: 88px;
+  padding: 12px 14px;
+  background: #fff;
+  border: 1px solid #EDD9C8;
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: var(--font-body);
+  color: #6B5B4E;
+  resize: none;
+  outline: none;
+  transition: box-shadow 0.2s;
+}
+
+.staff-textarea:focus { box-shadow: 0 0 0 3px rgba(212,168,83,.2); }
+
+.pet-actions { display: flex; gap: 14px; }
+
+.btn-adopt {
+  flex: 1;
+  background: #C85A3E;
+  color: #fff;
+  border: none;
+  padding: 16px 24px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s, transform 0.15s;
+  box-shadow: 0 3px 12px rgba(200,90,62,.3);
+}
+
+.btn-adopt:hover {
+  background: #A8452E;
+  box-shadow: 0 6px 18px rgba(200,90,62,.4);
+  transform: translateY(-1px);
+}
+
+.btn-vets {
+  flex: 1;
+  background: transparent;
+  color: #7FA882;
+  border: 2px solid #7FA882;
+  padding: 16px 24px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: var(--font-body);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background 0.2s, color 0.2s, transform 0.15s;
+}
+
+.btn-vets svg { width: 17px; height: 17px; }
+.btn-vets:hover { background: #7FA882; color: #fff; transform: translateY(-1px); }
+
+/* --- Public footer --- */
+.public-footer {
+  background: #fff;
+  border-top: 1px solid #EDD9C8;
+  padding: 48px;
+}
+
+.public-footer-inner { max-width: 1200px; margin: 0 auto; }
+
+.public-footer-top {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr;
+  gap: 40px;
+  margin-bottom: 32px;
+  align-items: start;
+}
+
+.public-footer-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.public-footer-logo img { height: 34px; width: auto; object-fit: contain; }
+
+.public-footer-logo-text {
+  font-family: var(--font-display);
+  font-size: 21px;
+  font-weight: 700;
+  color: #2A2419;
+}
+
+.public-footer-tagline { font-size: 13px; color: #6B5B4E; font-style: italic; margin-bottom: 4px; }
+.public-footer-motto { font-size: 12px; color: #C85A3E; font-weight: 600; }
+
+.public-footer-links { display: flex; flex-direction: column; gap: 12px; }
+
+.public-footer-links a {
+  font-size: 13px;
+  color: #6B5B4E;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.public-footer-links a:hover { color: #C85A3E; }
+
+.public-footer-social {
+  display: flex;
+  justify-content: flex-start;
+  gap: 12px;
+}
+
+.social-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1.5px solid #EDD9C8;
+  color: #6B5B4E;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
+}
+
+.social-icon:hover { background: #C85A3E; border-color: #C85A3E; color: #fff; }
+.social-icon svg { width: 16px; height: 16px; }
+
+.public-footer-bottom {
+  border-top: 1px solid #EDD9C8;
+  padding-top: 20px;
+  text-align: center;
+  font-size: 12px;
+  color: #6B5B4E;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .pet-layout { grid-template-columns: 1fr; gap: 32px; }
+  .pet-page-main { padding: 32px 24px; }
+  .public-nav { padding: 0 24px; }
+  .public-nav-links { gap: 16px; }
+  .public-footer { padding: 32px 24px; }
+  .public-footer-top { grid-template-columns: 1fr; gap: 24px; }
+}
+
+/* Compatibility: public-footer mapped to pawpal-footer */
+.public-footer { display: none; } /* replaced by pawpal-footer */
+
+/* Public nav logo bigger */
+.public-nav-logo img { height: 42px; }

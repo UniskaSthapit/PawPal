@@ -1,0 +1,108 @@
+/* ============================================================
+   FOOTER.CSS — Admin panel page footer
+   ============================================================ */
+
+footer {
+  background: var(--color-white);
+  border-top: 1px solid var(--color-border);
+  padding: 32px 40px 20px;
+  margin-top: auto;
+}
+
+.footer-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.footer-top {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
+  gap: 24px;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.footer-logo-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.footer-logo-wrap img {
+  height: 40px;
+  width: auto;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.footer-logo {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.footer-tagline {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  font-style: italic;
+  margin-top: 2px;
+}
+
+.footer-links {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.footer-links a {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.footer-links a:hover { color: var(--color-primary); }
+
+.footer-social {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.footer-social a {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1.5px solid var(--color-border);
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.footer-social a:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.footer-social svg { width: 15px; height: 15px; }
+
+.footer-bottom {
+  border-top: 1px solid var(--color-border);
+  padding-top: 16px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.footer-motto {
+  font-size: 12px;
+  color: var(--color-primary);
+  font-style: italic;
+  font-weight: 500;
+}

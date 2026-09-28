@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600" role="img">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFF8EC"/><stop offset="1" stop-color="#FBE7C6"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="42%" r="55%">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".55"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="800" height="600" fill="url(#bg)"/>
+  <g opacity=".14" fill="#D4A853">
+    <ellipse cx="96" cy="512" rx="30" ry="24"/><ellipse cx="60" cy="470" rx="12" ry="16"/>
+    <ellipse cx="84" cy="446" rx="12" ry="16"/><ellipse cx="110" cy="446" rx="12" ry="16"/><ellipse cx="134" cy="470" rx="12" ry="16"/>
+  </g>
+  <g opacity=".10" fill="#D4A853">
+    <ellipse cx="712" cy="112" rx="24" ry="19"/><ellipse cx="684" cy="80" rx="10" ry="13"/>
+    <ellipse cx="703" cy="60" rx="10" ry="13"/><ellipse cx="724" cy="60" rx="10" ry="13"/><ellipse cx="742" cy="80" rx="10" ry="13"/>
+  </g>
+  <rect width="800" height="600" fill="url(#glow)"/>
+
+  <ellipse cx="400" cy="524" rx="190" ry="42" fill="#B5873A" opacity=".10"/>
+  <ellipse cx="336" cy="180" rx="40" ry="122" fill="#D4A853" transform="rotate(-9 336 180)"/>
+  <ellipse cx="464" cy="180" rx="40" ry="122" fill="#D4A853" transform="rotate(9 464 180)"/>
+  <ellipse cx="336" cy="188" rx="20" ry="94" fill="#E8C9A0" transform="rotate(-9 336 188)"/>
+  <ellipse cx="464" cy="188" rx="20" ry="94" fill="#E8C9A0" transform="rotate(9 464 188)"/>
+  <ellipse cx="400" cy="372" rx="158" ry="140" fill="#D4A853"/>
+  <ellipse cx="400" cy="416" rx="72" ry="52" fill="#E8C9A0" opacity=".7"/>
+  <path d="M400 398c-12 0-20 10-20 18 0 12 12 18 20 18s20-6 20-18c0-8-8-18-20-18z" fill="#B5873A"/>
+  <circle cx="344" cy="344" r="19" fill="#B5873A"/><circle cx="456" cy="344" r="19" fill="#B5873A"/>
+  <circle cx="350" cy="338" r="6" fill="#fff"/><circle cx="462" cy="338" r="6" fill="#fff"/>
+  <g stroke="#B5873A" stroke-width="6" stroke-linecap="round" opacity=".6"><path d="M330 424 262 414M470 424l68-10"/></g>
+
+</svg>

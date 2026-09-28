@@ -1,0 +1,377 @@
+/* ============================================================
+   MY-APPLICATIONS.CSS — Styles for the user's application
+   tracking page. Public/user-facing, own nav and sidebar.
+   ============================================================ */
+
+/* ── HEADER ── */
+.app-header {
+  width: 100%;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 64px;
+  border-bottom: 1px solid #EDD9C8;
+  background: #fff;
+  flex-shrink: 0;
+}
+
+.app-header-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 20px;
+  font-weight: 700;
+  color: #2C2417;
+  text-decoration: none;
+  font-family: var(--font-body);
+}
+
+.app-header-logo svg { width: 22px; height: 22px; color: #D4675A; }
+
+.app-header-nav {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
+.app-header-nav a {
+  font-size: 15px;
+  color: #6B5B4E;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.app-header-nav a:hover { color: #D4675A; }
+
+.app-header-signin {
+  padding: 10px 24px;
+  background: #D4675A;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.app-header-signin:hover { opacity: 0.85; }
+
+/* ── BODY LAYOUT ── */
+.app-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+/* ── USER SIDEBAR ── */
+.app-sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  background: #FFDFD3;
+  border-right: 1px solid #EDD9C8;
+  padding: 32px 16px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Decorative paw watermark at bottom of user sidebar */
+.app-sidebar::after {
+  content: '🐾';
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  font-size: 48px;
+  opacity: 0.12;
+  pointer-events: none;
+  transform: rotate(-10deg);
+}
+
+.app-sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 500;
+  font-family: var(--font-body);
+  color: #2C2417;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  transition: background 0.15s, color 0.15s;
+  text-decoration: none;
+}
+
+.app-sidebar-item svg { width: 20px; height: 20px; flex-shrink: 0; }
+
+.app-sidebar-item:hover { background: rgba(212,103,90,.1); }
+
+.app-sidebar-item.active {
+  background: #D4675A;
+  color: #fff;
+}
+
+/* ── MAIN CONTENT ── */
+.app-main {
+  flex: 1;
+  padding: 48px 64px;
+  max-width: 1200px;
+}
+
+.app-main h1 {
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 700;
+  color: #2C2417;
+  margin-bottom: 32px;
+}
+
+/* Application cards container */
+.app-cards { display: flex; flex-direction: column; gap: 24px; }
+
+/* ── APPLICATION CARD ── */
+.app-card {
+  background: #fff;
+  border: 1px solid #EDD9C8;
+  border-radius: 14px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.04);
+  transition: box-shadow 0.2s, transform 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+
+.app-card:hover {
+  box-shadow: 0 6px 20px rgba(200,90,62,.1);
+  transform: translateY(-1px);
+}
+
+/* Left accent bar */
+.app-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 4px;
+  background: var(--color-primary-soft);
+  border-radius: 14px 0 0 14px;
+}
+
+/* Top row: pet info + status badge */
+.app-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.app-card-pet {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.app-card-img {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.app-card-name {
+  font-size: 18px;
+  font-weight: 700;
+  color: #2C2417;
+  margin-bottom: 2px;
+}
+
+.app-card-breed { font-size: 13px; color: #6B5B4E; }
+
+.app-card-status {
+  padding: 6px 16px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #2C2417;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Submitted date */
+.app-card-date { font-size: 13px; color: #6B5B4E; margin-bottom: 24px; }
+
+/* ── PROGRESS TRACKER ── */
+.progress-tracker {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 0 16px;
+  margin-top: 8px;
+}
+
+/* Each step = circle + label */
+.progress-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  position: relative;
+}
+
+/* The last step doesn't flex-1 the line */
+.progress-step:last-child { flex: none; }
+
+/* Step circle */
+.step-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  flex-shrink: 0;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.step-circle.completed {
+  background: #9DAF94;
+  border: none;
+}
+
+.step-circle.current {
+  background: #D4675A;
+  border: none;
+}
+
+.step-circle.future {
+  background: transparent;
+  border: 2px solid #D1D5DB;
+}
+
+/* Checkmark inside completed */
+.step-circle.completed svg { width: 20px; height: 20px; color: #fff; }
+
+/* Pulsing ring around current step */
+.step-pulse {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: #D4675A;
+  opacity: 0.3;
+  animation: ping 1.4s ease-out infinite;
+}
+
+/* White dot inside current step */
+.step-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #fff;
+  position: relative;
+  z-index: 1;
+}
+
+/* Step label */
+.step-label {
+  font-size: 13px;
+  color: #6B5B4E;
+  text-align: center;
+  max-width: 80px;
+  line-height: 1.35;
+}
+
+/* Connecting line between steps */
+.step-line {
+  flex: 1;
+  height: 2px;
+  margin: 0 8px;
+  margin-top: 20px; /* align with circle center */
+  align-self: flex-start;
+  flex-shrink: 0;
+}
+
+.step-line.done   { background: #9DAF94; }
+.step-line.pending { background: #D1D5DB; }
+
+/* Pulse animation */
+@keyframes ping {
+  0%   { transform: scale(1);   opacity: 0.3; }
+  70%  { transform: scale(1.8); opacity: 0; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+
+/* ── FOOTER ── */
+.app-footer {
+  background: #FDF8F2;
+  border-top: 1px solid #EDD9C8;
+  padding: 40px 64px 24px;
+  flex-shrink: 0;
+}
+
+.app-footer-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 32px;
+}
+
+.app-footer-brand-name {
+  font-size: 18px;
+  font-weight: 700;
+  color: #2C2417;
+  margin-bottom: 6px;
+  font-family: var(--font-body);
+}
+
+.app-footer-tagline { font-size: 13px; color: #6B5B4E; }
+
+.app-footer-links {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.app-footer-links a {
+  font-size: 13px;
+  color: #6B5B4E;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.app-footer-links a:hover { color: #D4675A; }
+
+.app-footer-social { display: flex; gap: 16px; }
+
+.app-footer-social a {
+  color: #D4675A;
+  text-decoration: none;
+  transition: opacity 0.15s;
+}
+
+.app-footer-social a:hover { opacity: 0.6; }
+.app-footer-social svg { width: 24px; height: 24px; display: block; }
+
+.app-footer-bottom {
+  text-align: center;
+  font-size: 13px;
+  color: #6B5B4E;
+  border-top: 1px solid #EDD9C8;
+  padding-top: 20px;
+}
+
+/* Compatibility: app-footer now uses pawpal-footer */
+.app-footer { display: none; } /* replaced by pawpal-footer */
+
+/* Keep app-header-logo working if referenced */
+.app-header-logo img { height: 42px; }

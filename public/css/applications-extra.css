@@ -1,0 +1,18 @@
+/* extracted from original applications.html */
+
+    .app-summary-strip {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      background: #fff;
+      border: 1px solid var(--color-border);
+      border-radius: 12px;
+      padding: 16px 24px;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow-sm);
+    }
+    .app-summary-item { display: flex; align-items: center; gap: 8px; }
+    .app-summary-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+    .app-summary-num { font-family: var(--font-display); font-size: 20px; font-weight: 700; color: var(--color-text); }
+    .app-summary-lbl { font-size: 13px; color: var(--color-text-muted); }
+  

@@ -1,0 +1,274 @@
+/* ============================================================
+   SHARED-NAV.CSS — Universal navbar for ALL pages
+   PawPal Design System
+   ============================================================ */
+
+/* ── Universal Nav Base ── */
+.pawpal-nav {
+  background: #fff;
+  border-bottom: 1px solid #EDD9C8;
+  padding: 0 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 70px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 1px 8px rgba(42,36,25,.07);
+}
+
+/* ── Logo ── */
+.pawpal-nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.pawpal-nav-logo img {
+  height: 40px;
+  width: auto;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.pawpal-nav-logo-text {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  color: #C85A3E;
+  white-space: nowrap;
+}
+
+/* ── Center Nav Links ── */
+.pawpal-nav-center {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pawpal-nav-link {
+  font-size: 14px;
+  color: #6B5B4E;
+  text-decoration: none;
+  font-weight: 500;
+  padding: 7px 12px;
+  border-radius: 8px;
+  transition: color 0.18s, background 0.18s;
+  white-space: nowrap;
+}
+
+.pawpal-nav-link:hover {
+  color: #C85A3E;
+  background: #FEF3EE;
+}
+
+/* ── Dropdown ── */
+.pawpal-dropdown-wrap { position: relative; }
+
+.pawpal-dropdown-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 14px;
+  color: #6B5B4E;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-weight: 500;
+  padding: 7px 12px;
+  border-radius: 8px;
+  transition: color 0.18s, background 0.18s;
+}
+
+.pawpal-dropdown-btn svg {
+  width: 14px; height: 14px;
+  transition: transform 0.2s;
+}
+
+.pawpal-dropdown-btn:hover,
+.pawpal-dropdown-btn.open {
+  color: #C85A3E;
+  background: #FEF3EE;
+}
+
+.pawpal-dropdown-btn.open svg { transform: rotate(180deg); }
+
+.pawpal-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #fff;
+  border: 1px solid #EDD9C8;
+  border-radius: 12px;
+  box-shadow: 0 8px 28px rgba(42,36,25,.12);
+  padding: 8px;
+  min-width: 180px;
+  display: none;
+  z-index: 200;
+}
+
+.pawpal-dropdown-menu.open { display: block; }
+
+.pawpal-dropdown-menu a {
+  display: block;
+  padding: 9px 14px;
+  font-size: 14px;
+  color: #6B5B4E;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: color 0.15s, background 0.15s;
+}
+
+.pawpal-dropdown-menu a:hover {
+  color: #C85A3E;
+  background: #FEF3EE;
+}
+
+/* ── Auth Buttons (public pages) ── */
+.pawpal-nav-auth {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.pawpal-btn-login {
+  background: none;
+  border: 1.5px solid #C85A3E;
+  color: #C85A3E;
+  padding: 9px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s;
+}
+
+.pawpal-btn-login:hover {
+  background: #FEF3EE;
+}
+
+.pawpal-btn-signup {
+  background: #C85A3E;
+  border: none;
+  color: #fff;
+  padding: 9px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: background 0.18s, box-shadow 0.18s;
+  box-shadow: 0 2px 8px rgba(200,90,62,.25);
+}
+
+.pawpal-btn-signup:hover {
+  background: #A8452E;
+  box-shadow: 0 4px 14px rgba(200,90,62,.35);
+}
+
+/* ── CTA Button variant ── */
+.pawpal-btn-cta {
+  background: #C85A3E;
+  border: none;
+  color: #fff;
+  padding: 9px 22px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: background 0.18s, box-shadow 0.18s;
+  box-shadow: 0 2px 8px rgba(200,90,62,.25);
+  white-space: nowrap;
+}
+
+.pawpal-btn-cta:hover {
+  background: #A8452E;
+  box-shadow: 0 4px 14px rgba(200,90,62,.35);
+}
+
+/* ── Admin Badge ── */
+.pawpal-badge-admin {
+  background: #C85A3E;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 999px;
+  letter-spacing: 0.02em;
+}
+
+/* ── Nav Right (admin pages) ── */
+.pawpal-nav-right {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.pawpal-nav-right a {
+  color: #6B5B4E;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 6px 10px;
+  border-radius: 6px;
+  transition: color 0.2s, background 0.2s;
+}
+
+.pawpal-nav-right a:hover {
+  color: #C85A3E;
+  background: #FEF3EE;
+}
+
+/* ── Minimal / Exit Nav (wizard/chatbot) ── */
+.pawpal-nav-minimal {
+  background: #fff;
+  border-bottom: 1px solid #EDD9C8;
+  padding: 0 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 70px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 1px 6px rgba(42,36,25,.06);
+}
+
+.pawpal-nav-exit {
+  background: none;
+  border: 1.5px solid #EDD9C8;
+  color: #6B5B4E;
+  padding: 7px 18px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: border-color 0.18s, color 0.18s, background 0.18s;
+}
+
+.pawpal-nav-exit:hover {
+  border-color: #C85A3E;
+  color: #C85A3E;
+  background: #FEF3EE;
+}
+
+/* ── Responsive ── */
+@media (max-width: 960px) {
+  .pawpal-nav { padding: 0 24px; }
+  .pawpal-nav-center { display: none; }
+}
+
+@media (max-width: 640px) {
+  .pawpal-nav-auth .pawpal-btn-login { display: none; }
+  .pawpal-nav { padding: 0 16px; }
+}

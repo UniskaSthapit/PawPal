@@ -1,0 +1,133 @@
+/* ============================================================
+   SHARED-FOOTER.CSS — Universal footer for ALL pages (except home special footer)
+   Based on pet-profile.html footer design
+   ============================================================ */
+
+/* ── Standard Footer (all pages except home) ── */
+.pawpal-footer {
+  background: #fff;
+  border-top: 1px solid #EDD9C8;
+  padding: 40px 48px 20px;
+  margin-top: auto;
+}
+
+.pawpal-footer-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.pawpal-footer-top {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr;
+  gap: 32px;
+  align-items: start;
+  margin-bottom: 28px;
+}
+
+/* Logo block */
+.pawpal-footer-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  text-decoration: none;
+}
+
+.pawpal-footer-logo img {
+  height: 40px;
+  width: auto;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.pawpal-footer-logo-text {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  color: #C85A3E; /* brand orange as requested */
+}
+
+.pawpal-footer-tagline {
+  font-size: 13px;
+  color: #6B5B4E;
+  margin-top: 2px;
+  line-height: 1.5;
+}
+
+.pawpal-footer-motto {
+  font-size: 12px;
+  color: #C85A3E;
+  font-style: italic;
+  font-weight: 600;
+  margin-top: 4px;
+  letter-spacing: 0.02em;
+}
+
+/* Links block */
+.pawpal-footer-links {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pawpal-footer-links a {
+  font-size: 13px;
+  color: #6B5B4E;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.18s;
+}
+
+.pawpal-footer-links a:hover { color: #C85A3E; }
+
+/* Social block */
+.pawpal-footer-social {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.pawpal-footer-social a {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1.5px solid #EDD9C8;
+  color: #6B5B4E;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  transition: border-color 0.18s, color 0.18s, background 0.18s;
+}
+
+.pawpal-footer-social a:hover {
+  border-color: #C85A3E;
+  color: #C85A3E;
+  background: #FEF3EE;
+}
+
+.pawpal-footer-social svg { width: 16px; height: 16px; }
+
+/* Bottom bar */
+.pawpal-footer-bottom {
+  border-top: 1px solid #EDD9C8;
+  padding-top: 18px;
+  text-align: center;
+  font-size: 12px;
+  color: #6B5B4E;
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .pawpal-footer-top {
+    grid-template-columns: 1fr 1fr;
+  }
+  .pawpal-footer { padding: 32px 24px 16px; }
+}
+
+@media (max-width: 600px) {
+  .pawpal-footer-top {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+}

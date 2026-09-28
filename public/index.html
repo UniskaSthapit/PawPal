@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PawPal Admin — Dashboard</title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/global.css"/>
+  <link rel="stylesheet" href="css/shared-nav.css"/>
+  <link rel="stylesheet" href="css/shared-footer.css"/>
+  <link rel="stylesheet" href="css/nav.css"/>
+  <link rel="stylesheet" href="css/sidebar.css"/>
+  <link rel="stylesheet" href="css/cards.css"/>
+  <link rel="stylesheet" href="css/table.css"/>
+  <link rel="stylesheet" href="css/dashboard-extra.css"/>
+  <link rel="stylesheet" href="css/app.css"/>
+  <link rel="stylesheet" href="css/pages.css"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png"><link rel="icon" type="image/png" sizes="192x192" href="images/favicon-192.png"><link rel="apple-touch-icon" href="images/apple-touch-icon.png"><link rel="canonical" href="YOUR_CANONICAL_URL">
+<meta property="og:title" content="PawPal Admin — Dashboard"><meta property="og:type" content="website"><meta property="og:image" content="YOUR_OG_IMAGE_URL"><link rel="stylesheet" href="css/pp-system.css">
+</head>
+<body class="page-admin">
+
+<nav class="pawpal-nav" data-nav="admin"></nav>
+<div class="layout">
+  <aside data-sidebar="admin" aria-label="Admin navigation"></aside>
+  <main id="main">
+    <div class="main-inner">
+      <div class="top-bar">
+        <h1>Overview</h1>
+        <span class="date" id="today"></span>
+      </div>
+
+      <div class="dashboard-welcome">
+        <div class="dashboard-welcome-text">
+          <div class="dashboard-welcome-eyebrow" id="greet">🐾 Welcome back</div>
+          <h2 class="dashboard-welcome-title">Welcome back to PawPal</h2>
+          <p class="dashboard-welcome-sub" id="welcomeSub">Here's what's happening with your shelter today.</p>
+        </div>
+        <div class="dashboard-welcome-paws" aria-hidden="true"><svg viewBox="0 0 200 80" fill="none" xmlns="http://www.w3.org/2000/svg" class="paw-deco-svg">
+            <ellipse cx="40" cy="55" rx="16" ry="20" fill="#C85A3E" opacity="0.12"/>
+            <circle cx="22" cy="38" r="7" fill="#C85A3E" opacity="0.10"/>
+            <circle cx="40" cy="32" r="8" fill="#C85A3E" opacity="0.10"/>
+            <circle cx="58" cy="38" r="7" fill="#C85A3E" opacity="0.10"/>
+            <ellipse cx="120" cy="55" rx="16" ry="20" fill="#C85A3E" opacity="0.08"/>
+            <circle cx="102" cy="38" r="7" fill="#C85A3E" opacity="0.06"/>
+            <circle cx="120" cy="32" r="8" fill="#C85A3E" opacity="0.06"/>
+            <circle cx="138" cy="38" r="7" fill="#C85A3E" opacity="0.06"/>
+          </svg></div>
+        <div class="dashboard-quick-actions">
+          <a href="add-pet.html" class="dashboard-quick-btn"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add New Pet</a>
+          <a href="applications.html" class="dashboard-quick-btn dashboard-quick-btn-outline"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>View Applications</a>
+        </div>
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#FFE5D9"><svg fill="none" stroke="#C85A3E" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2z"/><path d="M8 9a1 1 0 1 0 2 0A1 1 0 0 0 8 9zm6 0a1 1 0 1 0 2 0A1 1 0 0 0 14 9zm-7 6s1.5 2 5 2 5-2 5-2"/></svg></div>
+          <div class="stat-label">Available Pets</div>
+          <div class="stat-value" id="sAvail">–</div>
+          <div class="stat-trend" id="tAvail">&nbsp;</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#E8F5E7"><svg fill="none" stroke="#8BA888" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
+          <div class="stat-label">Open Applications</div>
+          <div class="stat-value" id="sOpen">–</div>
+          <div class="stat-trend" id="tOpen">&nbsp;</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#FEF3E7"><svg fill="none" stroke="#F4A259" stroke-width="2" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
+          <div class="stat-label">Adopted This Month</div>
+          <div class="stat-value" id="sAdopted">–</div>
+          <div class="stat-trend" id="tAdopted">&nbsp;</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#F0ECF5"><svg fill="none" stroke="#8B7AA8" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
+          <div class="stat-label">Email Success Rate</div>
+          <div class="stat-value" id="sEmail">–</div>
+          <div class="stat-trend" id="tEmail">&nbsp;</div>
+        </div>
+      </div>
+
+      <div class="dash-grid">
+        <div class="table-card">
+          <div class="card-head-row"><h3>Recent Applications</h3><a class="pp-link-btn" href="applications.html">View all</a></div>
+          <div class="table-scroll">
+            <table>
+              <thead><tr><th>Applicant</th><th>Pet</th><th>AI Score</th><th>Date</th><th>Status</th><th><span class="sr-only">Action</span></th></tr></thead>
+              <tbody id="recentBody"><tr><td colspan="6"><div class="skeleton skeleton-line"></div></td></tr></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="pp-card visits-card">
+          <h3>Upcoming visits</h3>
+          <div id="visitsList"><div class="skeleton skeleton-line"></div></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+<footer data-footer></footer>
+<script src="js/api.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/pages/dashboard.js"></script>
+<script src="config.js"></script><script src="js/pp-enhance.js" defer></script></body>
+</html>

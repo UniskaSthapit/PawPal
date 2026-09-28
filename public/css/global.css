@@ -1,0 +1,126 @@
+/* ============================================================
+   GLOBAL.CSS — Reset, CSS Variables, Body
+   PawPal UI Refresh — "Because Every Paw Matters"
+   ============================================================ */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --color-primary:      #C85A3E;
+  --color-primary-dark: #A8452E;
+  --color-primary-soft: #FFE5D9;
+  --color-primary-pale: #FEF3EE;
+  --color-bg:           #FDF8F2;
+  --color-white:        #ffffff;
+  --color-text:         #2A2419;
+  --color-text-muted:   #6B5B4E;
+  --color-border:       #EDD9C8;
+  --color-border-light: #F5E8DC;
+  --color-sidebar-bg:   #FFE5D9;
+  --color-accent-green: #7FA882;
+  --color-accent-gold:  #D4A853;
+
+  --font-display: 'Playfair Display', serif;
+  --font-body:    'DM Sans', sans-serif;
+  --font-mono:    'DM Mono', monospace;
+
+  --shadow-sm:   0 1px 3px rgba(42,36,25,.06);
+  --shadow-md:   0 4px 12px rgba(42,36,25,.08);
+  --shadow-lg:   0 12px 32px rgba(42,36,25,.12);
+  --shadow-card: 0 2px 8px rgba(200,90,62,.08);
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--color-bg);
+  color: var(--color-text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  -webkit-font-smoothing: antialiased;
+}
+
+.layout { display: flex; flex: 1; }
+
+main { flex: 1; padding: 36px 40px; }
+
+.main-inner { max-width: 1100px; margin: 0 auto; }
+
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+}
+
+.top-bar h1 {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.top-bar .date {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  background: var(--color-primary-pale);
+  padding: 6px 14px;
+  border-radius: 999px;
+}
+
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* Shared logo image sizing */
+.logo-img    { height: 36px; width: auto; object-fit: contain; display: block; flex-shrink: 0; }
+.logo-img-sm { height: 28px; width: auto; object-fit: contain; display: block; flex-shrink: 0; }
+.logo-img-lg { height: 48px; width: auto; object-fit: contain; display: block; flex-shrink: 0; }
+
+/* ── Decorative paw print SVG helper (inline use) ── */
+.paw-accent {
+  color: var(--color-primary);
+  opacity: 0.3;
+  font-size: 14px;
+}
+
+/* Enhanced top-bar h1 */
+.top-bar h1 {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+}
+
+/* Subtle page-section divider */
+.section-divider {
+  height: 1px;
+  background: var(--color-border-light);
+  margin: 28px 0;
+}
+
+/* Responsive: hide sidebar on small screens */
+@media (max-width: 768px) {
+  aside { display: none; }
+  main { padding: 24px 20px; }
+  .stat-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* Subtle warm background texture for main content */
+main {
+  background: linear-gradient(160deg, #FDF8F2 0%, #FFF5EE 100%);
+}

@@ -1,0 +1,35 @@
+# One-click deploy on Render (https://render.com) — "New +" → "Blueprint" → pick this repo.
+services:
+  - type: web
+    name: pawpal
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: 20.19.0
+      - key: JWT_SECRET
+        generateValue: true
+      - key: APP_URL
+        sync: false   # e.g. https://pawpal.onrender.com
+      - key: MONGODB_URI
+        sync: false   # MongoDB Atlas connection string (required on Render — its disk is wiped on redeploy)
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        value: 465
+      - key: SMTP_SECURE
+        value: true
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: GOOGLE_MAPS_API_KEY
+        sync: false
+      - key: ALLOW_DEMO_RESET
+        value: false

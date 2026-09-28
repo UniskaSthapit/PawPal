@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PawPal — Adoption inquiry</title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/global.css"/>
+  <link rel="stylesheet" href="css/shared-nav.css"/>
+  <link rel="stylesheet" href="css/shared-footer.css"/>
+  <link rel="stylesheet" href="css/inquiry-form.css"/>
+  <link rel="stylesheet" href="css/app.css"/>
+  <link rel="stylesheet" href="css/pages.css"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png"><link rel="icon" type="image/png" sizes="192x192" href="images/favicon-192.png"><link rel="apple-touch-icon" href="images/apple-touch-icon.png"><link rel="canonical" href="YOUR_CANONICAL_URL">
+<meta property="og:title" content="PawPal — Adoption inquiry"><meta property="og:type" content="website"><meta property="og:image" content="YOUR_OG_IMAGE_URL"><link rel="stylesheet" href="css/pp-system.css">
+</head>
+<body class="page-inquiry">
+
+<nav class="pawpal-nav" data-nav="public"></nav>
+
+<main class="inq-main" id="main">
+  <div class="inq-inner">
+    <div class="inq-breadcrumb" role="navigation" aria-label="Breadcrumb">
+      <a href="home.html#pets">Browse Pets</a><span aria-hidden="true">›</span>
+      <a href="home.html" id="crumbPet">Pet</a><span aria-hidden="true">›</span><span>Apply</span>
+    </div>
+
+    <h1 class="inq-title">Adoption Inquiry Form</h1>
+    <p class="inq-subtitle">Tell us about your home and lifestyle so we can make sure it's a happy match for everyone.</p>
+
+    <div class="inq-pet-card" id="petSummary"><div class="skeleton" style="height:84px;width:100%"></div></div>
+
+    <div class="inq-card">
+      <div class="inq-progress" aria-hidden="true">
+        <div class="inq-step done"><div class="inq-step-dot">✓</div><span class="inq-step-label">Account</span><div class="inq-step-line"></div></div>
+        <div class="inq-step active" id="stepApp"><div class="inq-step-dot">2</div><span class="inq-step-label">Application</span><div class="inq-step-line"></div></div>
+        <div class="inq-step" id="stepReview"><div class="inq-step-dot">3</div><span class="inq-step-label">Shelter review</span></div>
+      </div>
+
+      <form id="inquiryForm" novalidate>
+        <div id="formAlert" class="pp-alert pp-alert-error" hidden role="alert"></div>
+
+        <div class="inq-section">
+          <h2 class="inq-section-title">About You</h2>
+          <div class="inq-grid-2">
+            <div class="inq-field"><label class="inq-label" for="fullName">Full name <span class="req" aria-hidden="true">*</span></label><input class="inq-input" id="fullName" type="text" autocomplete="name" required/></div>
+            <div class="inq-field"><label class="inq-label" for="email">Email address <span class="req" aria-hidden="true">*</span></label><input class="inq-input" id="email" type="email" autocomplete="email" required/></div>
+            <div class="inq-field"><label class="inq-label" for="phone">Phone number</label><input class="inq-input" id="phone" type="tel" autocomplete="tel" placeholder="04xx xxx xxx"/></div>
+            <div class="inq-field"><label class="inq-label" for="address">Suburb and state</label><input class="inq-input" id="address" type="text" autocomplete="address-level2" placeholder="e.g. Footscray VIC"/></div>
+          </div>
+        </div>
+
+        <div class="inq-section">
+          <h2 class="inq-section-title">Your Lifestyle</h2>
+          <div class="inq-grid-3">
+            <div class="inq-field">
+              <label class="inq-label" for="livingType">Living arrangement <span class="req" aria-hidden="true">*</span></label>
+              <div class="inq-select-wrap"><select class="inq-select" id="livingType" required><option value="" disabled selected>Select</option><option value="House with yard">House with a yard</option><option value="House without yard">House without a yard</option><option value="Apartment">Apartment or unit</option><option value="Farm / acreage">Farm or acreage</option></select></div>
+            </div>
+            <div class="inq-field">
+              <label class="inq-label" for="activityLevel">Activity level <span class="req" aria-hidden="true">*</span></label>
+              <div class="inq-select-wrap"><select class="inq-select" id="activityLevel" required><option value="" disabled selected>Select</option><option value="3">Very active</option><option value="2">Moderate</option><option value="1">Relaxed</option></select></div>
+            </div>
+            <div class="inq-field">
+              <label class="inq-label" for="hoursAlone">Hours the pet would be alone <span class="req" aria-hidden="true">*</span></label>
+              <div class="inq-select-wrap"><select class="inq-select" id="hoursAlone" required><option value="" disabled selected>Select</option><option value="1">0–2 hours</option><option value="3">2–4 hours</option><option value="5">4–6 hours</option><option value="7">6–8 hours</option><option value="9">8+ hours</option></select></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="inq-section">
+          <h2 class="inq-section-title">Your Home</h2>
+          <div class="inq-grid-2">
+            <div>
+              <p class="inq-pill-label" id="hasChildrenLabel">Children at home? <span class="req" aria-hidden="true">*</span></p>
+              <div class="inq-pill-row" role="radiogroup" aria-labelledby="hasChildrenLabel" data-group="hasChildren">
+                <button type="button" class="inq-pill" role="radio" aria-checked="false" data-value="true">Yes</button>
+                <button type="button" class="inq-pill" role="radio" aria-checked="false" data-value="false">No</button>
+              </div>
+            </div>
+            <div>
+              <p class="inq-pill-label" id="hasOtherPetsLabel">Other pets at home? <span class="req" aria-hidden="true">*</span></p>
+              <div class="inq-pill-row" role="radiogroup" aria-labelledby="hasOtherPetsLabel" data-group="hasOtherPets">
+                <button type="button" class="inq-pill" role="radio" aria-checked="false" data-value="true">Yes</button>
+                <button type="button" class="inq-pill" role="radio" aria-checked="false" data-value="false">No</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="inq-section">
+          <h2 class="inq-section-title">Experience &amp; Motivation</h2>
+          <div class="inq-grid-3" style="margin-bottom:16px">
+            <div class="inq-field">
+              <label class="inq-label" for="experience">Pet ownership experience <span class="req" aria-hidden="true">*</span></label>
+              <div class="inq-select-wrap"><select class="inq-select" id="experience" required><option value="" disabled selected>Select</option><option value="First-time owner">First-time owner</option><option value="Some experience">Some experience</option><option value="Experienced">Experienced owner</option></select></div>
+            </div>
+          </div>
+          <div class="inq-field" style="margin-bottom:16px">
+            <label class="inq-label" for="experienceDetails">Tell us about pets you've had</label>
+            <textarea class="inq-textarea short" id="experienceDetails" maxlength="1500" placeholder="Breeds, how long you had them, any training…"></textarea>
+          </div>
+          <div class="inq-field">
+            <label class="inq-label" for="motivation">Why would you like to adopt <span class="js-pet-name">this pet</span>? <span class="req" aria-hidden="true">*</span></label>
+            <textarea class="inq-textarea tall" id="motivation" maxlength="2000" required placeholder="Share what you're looking for and how the pet would fit into your life…"></textarea>
+            <span class="pp-hint" id="motivationCount">0 / 2000 · at least 20 characters</span>
+          </div>
+        </div>
+
+        <label class="pp-check inq-consent"><input type="checkbox" id="consent" required/> I confirm these details are true and agree to a home check if shortlisted.</label>
+
+        <div class="inq-form-footer">
+          <div class="inq-secure"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>Your information is only shared with the shelter team</div>
+          <div class="inq-btn-row">
+            <a class="inq-btn-cancel" href="home.html" id="cancelLink">Cancel</a>
+            <button type="submit" class="inq-btn-submit" id="submitBtn">Submit Application</button>
+          </div>
+        </div>
+      </form>
+
+      <div class="inq-success" id="successMsg">
+        <div class="inq-success-icon"><svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg></div>
+        <h2>Application Submitted!</h2>
+        <p id="successText">Thank you for applying. Our team will review your application and get back to you within 2–3 business days.</p>
+        <a class="inq-success-btn" href="my-applications.html">Track My Application</a>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer data-footer></footer>
+
+<script src="js/api.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/pages/inquiry-form.js"></script>
+<script src="config.js"></script><script src="js/pp-enhance.js" defer></script></body>
+</html>

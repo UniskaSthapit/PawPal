@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PawPal — Contact us</title>
+  <meta name="description" content="Contact the PawPal shelter team — enquiry form, phone, email, shelter address and opening hours."/>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/global.css"/>
+  <link rel="stylesheet" href="css/shared-nav.css"/>
+  <link rel="stylesheet" href="css/shared-footer.css"/>
+  <link rel="stylesheet" href="css/app.css"/>
+  <link rel="stylesheet" href="css/pages.css"/>
+  <link rel="stylesheet" href="css/sections.css"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png"><link rel="icon" type="image/png" sizes="192x192" href="images/favicon-192.png"><link rel="apple-touch-icon" href="images/apple-touch-icon.png"><link rel="canonical" href="YOUR_CANONICAL_URL">
+<meta property="og:title" content="PawPal — Contact us"><meta property="og:type" content="website"><meta property="og:image" content="YOUR_OG_IMAGE_URL"><meta property="og:description" content="Contact the PawPal shelter team — enquiry form, phone, email, shelter address and opening hours."><link rel="stylesheet" href="css/pp-system.css">
+</head>
+<body class="page-contact">
+
+<nav class="pawpal-nav" data-nav="public"></nav>
+
+<header class="pp-page-hero">
+  <div class="pp-page-hero-inner">
+    <nav class="pp-crumbs" aria-label="Breadcrumb"><a href="home.html">Home</a><span aria-hidden="true">›</span><span>Contact us</span></nav>
+    <span class="pp-eyebrow" data-icon="mail">We answer every message</span>
+    <h1>Talk to the shelter team</h1>
+    <p>Questions about a specific animal, an application already lodged, fostering, volunteering or donating — send us
+       a message and an adoption coordinator will reply, usually within one business day.</p>
+    <div class="pp-page-hero-actions">
+      <button class="pp-btn pp-btn-primary pp-btn-lg" data-contact-modal>Send a message</button>
+      <a class="pp-btn pp-btn-ghost pp-btn-lg" href="about.html">About PawPal</a>
+    </div>
+  </div>
+  <div class="pp-page-hero-art" data-icon="mail"></div>
+</header>
+
+<main id="main">
+  <section class="pp-section">
+    <div class="pp-wrap pp-split" style="align-items:start">
+      <!-- enquiry form -->
+      <div class="pp-card" id="formCard">
+        <div class="pp-card-head-icon" style="margin-bottom:16px">
+          <div class="pp-icon-tile" data-icon="clipboard"></div>
+          <div><h2 style="font-size:1.35rem">Enquiry form</h2><p class="pp-small">All fields except phone are required.</p></div>
+        </div>
+        <form id="contactForm" novalidate>
+          <div class="pp-grid pp-grid-2" style="gap:14px">
+            <div class="pp-field"><label for="cName">Your name</label><input class="pp-input" id="cName" autocomplete="name"/></div>
+            <div class="pp-field"><label for="cEmail">Email address</label><input class="pp-input" id="cEmail" type="email" autocomplete="email"/></div>
+          </div>
+          <div class="pp-grid pp-grid-2" style="gap:14px">
+            <div class="pp-field"><label for="cPhone">Phone <span class="pp-muted">(optional)</span></label><input class="pp-input" id="cPhone" autocomplete="tel"/></div>
+            <div class="pp-field"><label for="cSubject">What is it about?</label>
+              <select class="pp-select" id="cSubject">
+                <option>A specific pet</option><option>An application I have lodged</option>
+                <option>Fostering</option><option>Volunteering</option><option>Donating</option><option>Something else</option>
+              </select>
+            </div>
+          </div>
+          <div class="pp-field"><label for="cMsg">Your message</label>
+            <textarea class="pp-textarea" id="cMsg" placeholder="Tell us how we can help…"></textarea>
+            <span class="pp-hint">Please do not include payment details in a message.</span>
+          </div>
+          <button class="pp-btn pp-btn-primary pp-btn-lg" id="cSend" type="submit" data-icon="mail">Send message</button>
+        </form>
+        <div id="formDone" hidden></div>
+      </div>
+
+      <!-- contact details -->
+      <div class="pp-stack">
+        <div class="pp-facts" id="contactFacts"></div>
+        <div class="pp-card">
+          <div class="pp-card-head-icon" style="margin-bottom:12px">
+            <div class="pp-icon-tile pp-icon-tile-sage" data-icon="clock"></div>
+            <h3 style="font-size:1.1rem">Opening hours</h3>
+          </div>
+          <table class="pp-hours" id="hours"></table>
+          <p class="pp-small pp-muted" style="margin-top:12px">Meet-and-greets are by appointment so animals are not
+             handled by many visitors in one day.</p>
+        </div>
+        <div class="pp-note-row">
+          <div class="pp-icon-tile pp-icon-tile-gold" data-icon="alert"></div>
+          <p><strong>Found an injured or stray animal?</strong> Call the shelter line rather than using this form, so
+             we can respond straight away.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="pp-section pp-section-sand" id="who-to-contact">
+    <div class="pp-wrap">
+      <div class="pp-section-head">
+        <span class="pp-eyebrow" data-icon="info">Save yourself a wait</span>
+        <h2>Who to contact for what</h2>
+        <p>Some questions have a faster answer than an email.</p>
+      </div>
+      <div class="pp-grid pp-grid-3" id="routeGrid"></div>
+    </div>
+  </section>
+
+  <section class="pp-section" id="visit">
+    <div class="pp-wrap pp-split" style="align-items:start">
+      <div>
+        <span class="pp-eyebrow" data-icon="pin">Visiting us</span>
+        <h2>Coming to the shelter</h2>
+        <p style="margin:12px 0 18px">Meet-and-greets are booked once an application is shortlisted, so that animals
+           are not handled by dozens of visitors in one day. If you have an appointment, here is what to expect.</p>
+        <ul class="pp-tick-list" id="visitList"></ul>
+      </div>
+      <div class="pp-card">
+        <div class="pp-card-head-icon" style="margin-bottom:14px">
+          <div class="pp-icon-tile" data-icon="building"></div>
+          <div><h3 style="font-size:1.15rem">Shelter location</h3>
+          <p class="pp-small">14 Ballarat Road, Footscray VIC 3011</p></div>
+        </div>
+        <div class="pp-media pp-media-wide" style="margin-bottom:14px">
+          <img src="images/pets/dog-b.svg" alt="" aria-hidden="true"/>
+          <span class="pp-media-tag" data-icon="pin">Demo address for this prototype</span>
+        </div>
+        <ul class="pp-tick-list" style="margin:0">
+          <li data-icon="check"><span>Street parking on Ballarat Road, plus four accessible bays on site</span></li>
+          <li data-icon="check"><span>A short walk from Footscray station and the 82 tram</span></li>
+          <li data-icon="check"><span>Step-free entry, and assistance animals are welcome</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer data-footer></footer>
+
+<script src="js/api.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/pages/contact.js"></script>
+<script src="config.js"></script><script src="js/pp-enhance.js" defer></script></body>
+</html>

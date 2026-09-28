@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PawPal — Ending animal cruelty</title>
+  <meta name="description" content="How to report animal cruelty, what counts as cruelty, what happens after a report, educational resources, shelter news and how to support prevention work."/>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/global.css"/>
+  <link rel="stylesheet" href="css/shared-nav.css"/>
+  <link rel="stylesheet" href="css/shared-footer.css"/>
+  <link rel="stylesheet" href="css/app.css"/>
+  <link rel="stylesheet" href="css/pages.css"/>
+  <link rel="stylesheet" href="css/sections.css"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png"><link rel="icon" type="image/png" sizes="192x192" href="images/favicon-192.png"><link rel="apple-touch-icon" href="images/apple-touch-icon.png"><link rel="canonical" href="YOUR_CANONICAL_URL">
+<meta property="og:title" content="PawPal — Ending animal cruelty"><meta property="og:type" content="website"><meta property="og:image" content="YOUR_OG_IMAGE_URL"><meta property="og:description" content="How to report animal cruelty, what counts as cruelty, what happens after a report, educational resources, shelter news and how to support prevention work."><link rel="stylesheet" href="css/pp-system.css">
+</head>
+<body class="page-cruelty">
+
+<nav class="pawpal-nav" data-nav="public"></nav>
+
+<header class="pp-page-hero cruelty-hero">
+  <div class="pp-page-hero-inner">
+    <nav class="pp-crumbs" aria-label="Breadcrumb"><a href="home.html">Home</a><span aria-hidden="true">›</span><span>Ending animal cruelty</span></nav>
+    <span class="pp-eyebrow" data-icon="shield">Report · Prevent · Educate</span>
+    <h1>Ending animal cruelty starts with someone making a call</h1>
+    <p>Most cruelty is not dramatic. It is a dog left in a yard with no shelter, a cat nobody has fed for a fortnight,
+       twenty animals in a house that got away from someone. If something looks wrong, report it — you do not need
+       proof, and you do not need to be certain.</p>
+    <div class="pp-page-hero-actions">
+      <a class="pp-btn pp-btn-primary pp-btn-lg" href="#report" data-icon="phone">Report cruelty now</a>
+      <a class="pp-btn pp-btn-ghost pp-btn-lg" href="#educate">Learn the warning signs</a>
+    </div>
+  </div>
+  <div class="pp-page-hero-art" data-icon="shield"></div>
+</header>
+
+<main id="main">
+  <div class="pp-subnav" role="navigation" aria-label="On this page">
+    <div class="pp-wrap pp-subnav-inner">
+      <a href="#report">Report cruelty</a>
+      <a href="#what-counts">What counts as cruelty</a>
+      <a href="#after">After you report</a>
+      <a href="#educate">Education</a>
+      <a href="#news">News</a>
+      <a href="#support">Support the work</a>
+    </div>
+  </div>
+
+  <!-- ============ REPORT: help numbers ============ -->
+  <section class="pp-section" id="report">
+    <div class="pp-wrap">
+      <div class="pp-section-head">
+        <span class="pp-eyebrow" data-icon="phone">Help numbers</span>
+        <h2>Who to contact, and when</h2>
+        <p>Use the line that matches the situation. If an animal is in immediate danger, ring rather than email — a
+           written report can wait hours for someone to open it.</p>
+      </div>
+      <div class="pp-grid pp-grid-3" id="helpLines"></div>
+
+      <div class="cruelty-alert" data-reveal>
+        <div class="pp-icon-tile pp-icon-tile-solid" data-icon="alert"></div>
+        <div>
+          <h3>If an animal is in immediate danger</h3>
+          <p>An animal locked in a hot car, actively being harmed, badly injured or unable to stand needs an urgent
+             response. Call the urgent line above straight away. Do not break into a vehicle or property yourself —
+             tell the operator exactly where you are and stay nearby if it is safe to do so.</p>
+        </div>
+      </div>
+
+      <div class="pp-split" style="margin-top:40px;align-items:start">
+        <div class="pp-card">
+          <div class="pp-card-head-icon" style="margin-bottom:14px">
+            <div class="pp-icon-tile" data-icon="clipboard"></div>
+            <div><h3 style="font-size:1.18rem">What to include in a report</h3>
+            <p class="pp-small">The more of this you have, the faster an inspector can act.</p></div>
+          </div>
+          <ul class="pp-tick-list" id="reportList"></ul>
+        </div>
+        <div class="pp-card" id="reportFormCard">
+          <div class="pp-card-head-icon" style="margin-bottom:14px">
+            <div class="pp-icon-tile pp-icon-tile-gold" data-icon="mail"></div>
+            <div><h3 style="font-size:1.18rem">Report in writing</h3>
+            <p class="pp-small">For non-urgent concerns. You can stay anonymous.</p></div>
+          </div>
+          <form id="reportForm" novalidate>
+            <div class="pp-field"><label for="rWhere">Where is the animal?</label>
+              <input class="pp-input" id="rWhere" placeholder="Street, suburb or nearest landmark"/></div>
+            <div class="pp-grid pp-grid-2" style="gap:14px">
+              <div class="pp-field"><label for="rType">Type of concern</label>
+                <select class="pp-select" id="rType">
+                  <option>Neglect — food, water or shelter</option>
+                  <option>Untreated injury or illness</option>
+                  <option>Abandonment</option>
+                  <option>Too many animals at one property</option>
+                  <option>Physical harm</option>
+                  <option>Animal left in a vehicle</option>
+                  <option>Something else</option>
+                </select></div>
+              <div class="pp-field"><label for="rContact">Your contact <span class="pp-muted">(optional)</span></label>
+                <input class="pp-input" id="rContact" placeholder="Email or phone"/></div>
+            </div>
+            <div class="pp-field"><label for="rWhat">What have you seen?</label>
+              <textarea class="pp-textarea" id="rWhat" placeholder="Describe what you saw, and when. Dates and times help."></textarea>
+              <span class="pp-hint">Please do not enter anyone's full name or licence details here.</span></div>
+            <button class="pp-btn pp-btn-primary pp-btn-lg" id="rSend" type="submit" data-icon="shield">Submit report</button>
+            <p class="pp-small pp-muted" style="margin-top:12px">Prototype form — reports are recorded as a shelter
+               enquiry in this demo rather than sent to a real authority.</p>
+          </form>
+          <div id="reportDone" hidden></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ WHAT COUNTS ============ -->
+  <section class="pp-section pp-section-sand" id="what-counts">
+    <div class="pp-wrap">
+      <div class="pp-section-head">
+        <span class="pp-eyebrow" data-icon="info">Educational information</span>
+        <h2>What counts as animal cruelty</h2>
+        <p>Cruelty is not only deliberate violence. In every Australian state, failing to provide for an animal's basic
+           needs is an offence in its own right.</p>
+      </div>
+      <div class="pp-grid pp-grid-3" id="typesGrid"></div>
+      <p class="pp-small pp-muted" style="margin-top:20px">General educational information for this prototype. Animal
+         welfare law differs between states and territories — check your local legislation for the wording that applies
+         to you.</p>
+    </div>
+  </section>
+
+  <!-- ============ AFTER YOU REPORT ============ -->
+  <section class="pp-section" id="after">
+    <div class="pp-wrap">
+      <div class="pp-section-head">
+        <span class="pp-eyebrow" data-icon="clipboard">The process</span>
+        <h2>What happens after you report</h2>
+        <p>People often hesitate because they do not know what they are setting in motion. Usually it is far less
+           dramatic than they fear.</p>
+      </div>
+      <ol class="pp-steps pp-steps-2" id="afterSteps"></ol>
+      <div class="pp-note-row">
+        <div class="pp-icon-tile pp-icon-tile-sage" data-icon="shield"></div>
+        <p><strong>Most cases end in education, not prosecution.</strong> The common outcome is advice, a direction to
+           get veterinary treatment, and a follow-up visit. Animals are only removed where there is no safe
+           alternative.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ EDUCATION ============ -->
+  <section class="pp-section pp-section-white" id="educate">
+    <div class="pp-wrap">
+      <div class="pp-section-head">
+        <span class="pp-eyebrow" data-icon="bulb">Prevention</span>
+        <h2>Warning signs, and how prevention actually works</h2>
+        <p>Cruelty investigations are the last line. Most suffering is prevented earlier, by desexing, by affordable
+           veterinary care, and by owners knowing what an animal needs before they take one home.</p>
+      </div>
+      <div class="pp-split" style="align-items:start">
+        <div class="pp-card">
+          <div class="pp-card-head-icon" style="margin-bottom:14px">
+            <div class="pp-icon-tile pp-icon-tile-gold" data-icon="eye"></div>
+            <h3 style="font-size:1.18rem">Warning signs to look for</h3>
+          </div>
+          <ul class="pp-tick-list" id="signsList"></ul>
+        </div>
+        <div class="pp-stack">
+          <div class="pp-grid pp-grid-2" id="preventGrid"></div>
+          <div class="pp-card">
+            <h3 style="font-size:1.1rem;margin-bottom:12px">For schools and community groups</h3>
+            <p class="pp-small">Our outreach volunteers run free sessions on responsible pet ownership, animal body
+               language and what to do if you are worried about an animal. Sessions run about 45 minutes and suit
+               primary or secondary students.</p>
+            <a class="pp-btn pp-btn-ghost pp-btn-sm" style="margin-top:14px" href="contact.html?subject=Something else">Request a session</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ NEWS ============ -->
+  <section class="pp-section" id="news">
+    <div class="pp-wrap">
+      <div class="pp-section-head">
+        <span class="pp-eyebrow" data-icon="info">News and updates</span>
+        <h2>What our cruelty prevention team has been doing</h2>
+        <p>Demo updates written for this prototype.</p>
+      </div>
+      <div class="pp-grid pp-grid-3" id="newsGrid"></div>
+    </div>
+  </section>
+
+  <!-- ============ DONATION PORTAL ============ -->
+  <section class="pp-section pp-section-sand" id="support">
+    <div class="pp-wrap pp-split" style="align-items:start">
+      <div>
+        <span class="pp-eyebrow" data-icon="gift">Donation portal</span>
+        <h2>Fund the work that stops cruelty before it starts</h2>
+        <p style="margin:12px 0 18px">Investigations, emergency veterinary treatment and community desexing are the
+           three things that change outcomes, and none of them are covered by adoption fees.</p>
+        <ul class="pp-tick-list" id="fundList"></ul>
+      </div>
+      <div class="pp-card" id="portalCard">
+        <h3 style="font-size:1.3rem;margin-bottom:6px">Give to cruelty prevention</h3>
+        <p class="pp-small">Choose an amount — you will see exactly what it funds.</p>
+        <div class="pp-amounts" id="cAmounts" role="group" aria-label="Donation amount"></div>
+        <div class="pp-field"><label for="cOwn">Or enter your own amount</label>
+          <div class="pp-input-group" data-icon="dollar"><input class="pp-input" id="cOwn" type="number" min="1" max="10000" placeholder="Amount in AUD"/></div>
+        </div>
+        <button class="pp-btn pp-btn-primary pp-btn-lg" id="cGive" data-icon="heart">Donate <span id="cAmt">$75</span></button>
+        <a class="pp-btn pp-btn-ghost pp-btn-lg" href="contact.html?subject=Donating" style="margin-top:10px">Other ways to give</a>
+        <p class="pp-dialog-note" style="margin-top:14px">Prototype only — no payment is processed and no card details
+           are collected.</p>
+        <div id="cDone" hidden style="margin-top:16px"></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer data-footer></footer>
+
+<script src="js/api.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/pages/cruelty.js"></script>
+<script src="config.js"></script><script src="js/pp-enhance.js" defer></script></body>
+</html>

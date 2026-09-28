@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PawPal — Pet profile</title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/global.css"/>
+  <link rel="stylesheet" href="css/shared-nav.css"/>
+  <link rel="stylesheet" href="css/shared-footer.css"/>
+  <link rel="stylesheet" href="css/home.css"/>
+  <link rel="stylesheet" href="css/pet-profile.css"/>
+  <link rel="stylesheet" href="css/app.css"/>
+  <link rel="stylesheet" href="css/pages.css"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png"><link rel="icon" type="image/png" sizes="192x192" href="images/favicon-192.png"><link rel="apple-touch-icon" href="images/apple-touch-icon.png"><link rel="canonical" href="YOUR_CANONICAL_URL">
+<meta property="og:title" content="PawPal — Pet profile"><meta property="og:type" content="website"><meta property="og:image" content="YOUR_OG_IMAGE_URL"><link rel="stylesheet" href="css/pp-system.css">
+</head>
+<body class="page-pet">
+
+<nav class="pawpal-nav" data-nav="public"></nav>
+
+<main class="pet-page-main">
+  <div class="pet-page-inner">
+    <div class="inq-breadcrumb pet-crumbs" role="navigation" aria-label="Breadcrumb"><a href="home.html#pets">Browse Pets</a><span aria-hidden="true">›</span><span id="crumbName">Pet profile</span></div>
+    <div class="pet-layout" id="petRoot">
+      <div class="pet-gallery"><div class="skeleton" style="aspect-ratio:4/3;border-radius:22px"></div></div>
+      <div class="pet-info"><div class="skeleton skeleton-line" style="width:40%;height:34px"></div><div class="skeleton skeleton-line" style="width:70%"></div><div class="skeleton" style="height:180px"></div></div>
+    </div>
+    <section class="similar-section" id="similarSection" hidden>
+      <h2>You might also love</h2>
+      <div class="pet-grid similar-grid" id="similarGrid"></div>
+    </section>
+  </div>
+</main>
+
+<footer data-footer></footer>
+
+<script src="js/api.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/pages/pet-profile.js"></script>
+<script src="config.js"></script><script src="js/pp-enhance.js" defer></script></body>
+</html>

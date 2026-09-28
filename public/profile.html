@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PawPal — My profile</title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/global.css"/>
+  <link rel="stylesheet" href="css/shared-nav.css"/>
+  <link rel="stylesheet" href="css/shared-footer.css"/>
+  <link rel="stylesheet" href="css/my-applications.css"/>
+  <link rel="stylesheet" href="css/home.css"/>
+  <link rel="stylesheet" href="css/app.css"/>
+  <link rel="stylesheet" href="css/pages.css"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png"><link rel="icon" type="image/png" sizes="192x192" href="images/favicon-192.png"><link rel="apple-touch-icon" href="images/apple-touch-icon.png"><link rel="canonical" href="YOUR_CANONICAL_URL">
+<meta property="og:title" content="PawPal — My profile"><meta property="og:type" content="website"><meta property="og:image" content="YOUR_OG_IMAGE_URL"><link rel="stylesheet" href="css/pp-system.css">
+</head>
+<body class="page-profile">
+
+<nav class="pawpal-nav" data-nav="public"></nav>
+<div class="app-body">
+  <aside class="app-sidebar" data-sidebar="user" aria-label="Account navigation"></aside>
+  <main class="app-main" id="main">
+    <div class="myapp-top-bar"><div><h1>My Profile</h1><p class="myapp-subtitle">Manage your account details and password.</p></div></div>
+    <div class="pp-grid-2 profile-grid">
+      <form class="pp-card" id="profileForm" novalidate>
+        <h3>Account details</h3>
+        <div class="pp-field"><label for="pName">Full name</label><input class="pp-input" id="pName" autocomplete="name" required/></div>
+        <div class="pp-field"><label for="pEmail">Email</label><input class="pp-input" id="pEmail" disabled/><span class="pp-hint" id="verifiedHint"></span></div>
+        <div class="pp-field"><label for="pPhone">Phone</label><input class="pp-input" id="pPhone" type="tel" autocomplete="tel" placeholder="04xx xxx xxx"/></div>
+        <button class="pp-btn pp-btn-primary" type="submit" id="saveProfile">Save changes</button>
+      </form>
+      <form class="pp-card" id="passwordForm" novalidate>
+        <h3>Change password</h3>
+        <div class="pp-field"><label for="curPw">Current password</label><input class="pp-input" id="curPw" type="password" autocomplete="current-password" required/></div>
+        <div class="pp-field"><label for="newPw">New password</label><input class="pp-input" id="newPw" type="password" autocomplete="new-password" required/><span class="pp-hint">At least 8 characters, including a letter and a number.</span></div>
+        <div class="pp-field"><label for="newPw2">Confirm new password</label><input class="pp-input" id="newPw2" type="password" autocomplete="new-password" required/></div>
+        <button class="pp-btn pp-btn-primary" type="submit" id="savePw">Update password</button>
+      </form>
+    </div>
+    <div class="pp-card profile-favs"><h3>Saved pets</h3><div class="pet-grid fav-grid" id="favGrid"><p class="pp-muted">Loading…</p></div></div>
+  </main>
+</div>
+<footer data-footer></footer>
+<script src="js/api.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/pages/profile.js"></script>
+<script src="config.js"></script><script src="js/pp-enhance.js" defer></script></body>
+</html>

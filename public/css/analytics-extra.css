@@ -1,0 +1,17 @@
+/* extracted from original analytics.html */
+
+        .analytics-insight-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          background: linear-gradient(90deg, var(--color-primary-pale) 0%, #fff 100%);
+          border: 1px solid var(--color-border);
+          border-radius: 999px;
+          padding: 10px 20px;
+          font-size: 13.5px;
+          color: var(--color-text);
+          margin-bottom: 20px;
+          box-shadow: var(--shadow-sm);
+        }
+        .analytics-insight-pill strong { color: var(--color-primary); }
+      

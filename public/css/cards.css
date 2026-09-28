@@ -1,0 +1,88 @@
+/* ============================================================
+   CARDS.CSS — Stat cards and shared card components
+   ============================================================ */
+
+/* ── STAT GRID ── */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+  margin-bottom: 28px;
+}
+
+@media (max-width: 1100px) { .stat-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 640px)  { .stat-grid { grid-template-columns: 1fr; } }
+
+/* ── STAT CARD ── */
+.stat-card {
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.2s, transform 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Subtle paw watermark in top-right corner of stat card */
+.stat-card::after {
+  content: '🐾';
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  font-size: 22px;
+  opacity: 0.07;
+  pointer-events: none;
+  transform: rotate(15deg);
+}
+
+.stat-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.stat-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.stat-icon svg { width: 22px; height: 22px; }
+
+.stat-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.stat-value {
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--color-text);
+  font-family: var(--font-display);
+  line-height: 1.1;
+}
+
+.stat-trend {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.stat-trend svg { width: 13px; height: 13px; }
+
+.trend-up  { color: #5D9B6A; }
+.trend-down { color: #C85A3E; }
