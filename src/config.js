@@ -31,8 +31,20 @@ module.exports = {
   resendApiKey: env.RESEND_API_KEY || '',
   mailFrom: env.MAIL_FROM || 'PawPal <no-reply@pawpal.app>',
 
+  // AI — Anthropic (Claude) is used when its key is set, otherwise OpenAI, otherwise
+  // PawPal's built-in rules engine (which still works on the real database).
+  anthropicKey: env.ANTHROPIC_API_KEY || '',
+  anthropicModel: env.ANTHROPIC_MODEL || 'claude-sonnet-5-5',
   openaiKey: env.OPENAI_API_KEY || '',
   openaiModel: env.OPENAI_MODEL || 'gpt-4o-mini',
+
+  // SMS one-time codes for phone verification (Twilio Programmable Messaging)
+  twilio: {
+    accountSid: env.TWILIO_ACCOUNT_SID || '',
+    authToken: env.TWILIO_AUTH_TOKEN || '',
+    from: env.TWILIO_FROM_NUMBER || '',
+  },
+  defaultCountryCode: env.DEFAULT_COUNTRY_CODE || '+61',
 
   mapsKey: env.GOOGLE_MAPS_API_KEY || '',
 
