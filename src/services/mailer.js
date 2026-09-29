@@ -1,15 +1,17 @@
-// Email service (Nodemailer + Resend).
-// - With RESEND_API_KEY: sends real emails over HTTPS (works even where SMTP ports are blocked).
-// - With SMTP settings (no Resend key): sends real emails over SMTP.
-// - With neither ("dev mailbox" mode): emails are saved to the database
-//   and shown at /dev-mailbox.html so verification and notifications still work.
+// Email service. The first configured provider is used:
+// - RESEND_API_KEY: Resend over HTTPS (needs a domain you own for the sender).
+// - BREVO_API_KEY:  Brevo over HTTPS — can send from a single verified address such as a Gmail account.
+// - SMTP_HOST:      any SMTP server (note: Render's free plan blocks SMTP ports).
+// - none:           "dev mailbox" mode — emails are saved to the database and shown at /dev-mailbox.html
+//                   (local development only; disabled in production).
 const nodemailer = require('nodemailer');
 const config = require('../config');
 const db = require('../db');
 const { newId, now, escapeHtml } = require('../utils');
 
-const resendEnabled = Boolean(config.resendApiKey);
-const smtpEnabled = !resendEnabled && Boolean(config.smtp.host);
+const emailMode = config.resendApiKey ? 'resend' : config.brevoApiKey ? 'brevo' : config.smtp.host ? 'smtp' : 'dev';
+const resendEnabled = emailMode === 'resend';
+const smtpEnabled = emailMode === 'smtp';
 const transporter = smtpEnabled
   ? nodemailer.createTransport({
     host: config.smtp.host,
@@ -21,17 +23,35 @@ const transporter = smtpEnabled
   })
   : null;
 
-// Resend's HTTPS API — used instead of SMTP when RESEND_API_KEY is set, since some
-// hosts (Render's free plan included) block outbound SMTP ports but always allow
-// normal HTTPS requests, which is how the site itself and the database already work.
-async function sendViaResend({ to, subject, html }) {
-  const r = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${config.resendApiKey}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ from: config.mailFrom, to, subject, html }),
-  });
-  if (!r.ok) throw new Error(`Resend ${r.status}: ${(await r.text()).slice(0, 300)}`);
+// "PawPal <team@example.com>" → { name: 'PawPal', email: 'team@example.com' }
+function parseFrom(from) {
+  const m = /^\s*"?([^"<]*?)"?\s*<([^>]+)>\s*$/.exec(from || '');
+  return m ? { name: m[1].trim() || 'PawPal', email: m[2].trim() } : { name: 'PawPal', email: String(from || '').trim() };
 }
+
+const HTTP_PROVIDERS = {
+  async resend({ to, subject, html }) {
+    const r = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${config.resendApiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ from: config.mailFrom, to, subject, html }),
+      signal: AbortSignal.timeout(15000),
+    });
+    if (!r.ok) throw new Error(`Resend ${r.status}: ${(await r.text()).slice(0, 300)}`);
+  },
+  async brevo({ to, subject, html }) {
+    const r = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: { 'api-key': config.brevoApiKey, 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({ sender: parseFrom(config.mailFrom), to: [{ email: to }], subject, htmlContent: html }),
+      signal: AbortSignal.timeout(15000),
+    });
+    if (!r.ok) throw new Error(`Brevo ${r.status}: ${(await r.text()).slice(0, 300)}`);
+  },
+  async smtp({ to, subject, html }) {
+    await transporter.sendMail({ from: config.mailFrom, to, subject, html });
+  },
+};
 
 // Branded HTML wrapper so every email looks like PawPal (table layout + inline styles for email clients)
 function layout({ heading, body, buttonText, buttonUrl }) {
@@ -61,29 +81,20 @@ function layout({ heading, body, buttonText, buttonUrl }) {
 
 async function sendMail({ to, subject, heading, body, buttonText, buttonUrl, type = 'general' }) {
   const html = layout({ heading: heading || subject, body, buttonText, buttonUrl });
-  const record = { id: newId('mail'), to, subject, type, html, link: buttonUrl || null,
-    mode: resendEnabled ? 'resend' : smtpEnabled ? 'smtp' : 'dev', status: 'sent', sentAt: now() };
-
-  if (resendEnabled) {
-    try {
-      await sendViaResend({ to, subject, html });
-    } catch (err) {
-      record.status = 'failed';
-      record.error = err.message;
-      console.error('✉️  Email failed (Resend):', err.message);
-    }
-  } else if (smtpEnabled) {
-    try {
-      await transporter.sendMail({ from: config.mailFrom, to, subject, html });
-    } catch (err) {
-      record.status = 'failed';
-      record.error = err.message;
-      console.error('✉️  Email failed:', err.message);
-    }
-  } else {
+  const record = { id: newId('mail'), to, subject, type, html, link: buttonUrl || null, mode: emailMode, status: 'sent', sentAt: now() };
+  if (emailMode === 'dev') {
     console.log(`✉️  [dev mailbox] To: ${to} | ${subject}${buttonUrl ? ' | ' + buttonUrl : ''}`);
+  } else {
+    try {
+      await HTTP_PROVIDERS[emailMode]({ to, subject, html });
+    } catch (err) {
+      record.status = 'failed';
+      record.error = err.message;
+      console.error(`✉️  Email failed (${emailMode}):`, err.message);
+    }
   }
-  await db.insert('emails', record);
+  // Keep a copy for the dev mailbox and delivery statistics; links in real emails are not needed after sending
+  await db.insert('emails', emailMode === 'dev' ? record : { ...record, html: undefined, link: undefined });
   return record;
 }
 
@@ -127,6 +138,13 @@ const emails = {
       p(`Email: <b>${escapeHtml(user.email)}</b><br>Temporary password: <b>${escapeHtml(tempPassword)}</b>`) +
       p('Please log in and change your password in Settings straight away.'),
     buttonText: 'Go to staff login', buttonUrl: `${config.appUrl}/login.html?role=staff`,
+  }),
+  ownerSetup: (user, link) => sendMail({
+    to: user.email, type: 'password-reset', subject: 'Set up your PawPal administrator account',
+    heading: 'Your PawPal administrator account is ready',
+    body: p('This address has been set as the administrator of your PawPal site. Choose a password to finish setting up your account.') +
+      p('This link works once and expires in 24 hours. If it expires, use “Forgot password” on the log in page.'),
+    buttonText: 'Choose my password', buttonUrl: link,
   }),
   applicationReceived: (app) => sendMail({
     to: app.email, type: 'application', subject: `We received your application for ${app.petName}`,
@@ -177,4 +195,4 @@ const emails = {
   }),
 };
 
-module.exports = { sendMail, emails, smtpEnabled, resendEnabled, emailMode: resendEnabled ? 'resend' : smtpEnabled ? 'smtp' : 'dev' };
+module.exports = { sendMail, emails, smtpEnabled, resendEnabled, emailMode, parseFrom };

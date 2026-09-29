@@ -29,7 +29,11 @@ module.exports = {
   // Use this on hosts (like Render's free plan) that block outbound SMTP ports.
   // If set, it's used instead of SMTP. Get a free key at https://resend.com/api-keys
   resendApiKey: env.RESEND_API_KEY || '',
-  mailFrom: env.MAIL_FROM || 'PawPal <no-reply@pawpal.app>',
+  // Brevo can send from a single verified address (e.g. a Gmail account) over HTTPS: https://app.brevo.com/settings/keys/api
+  brevoApiKey: env.BREVO_API_KEY || '',
+  // The owner's address: becomes the administrator account on start-up and the default sender
+  adminEmail: (env.ADMIN_EMAIL || '').trim().toLowerCase(),
+  mailFrom: env.MAIL_FROM || (env.ADMIN_EMAIL ? `PawPal <${env.ADMIN_EMAIL.trim()}>` : 'PawPal <no-reply@pawpal.app>'),
 
   // AI — Anthropic (Claude) is used when its key is set, otherwise OpenAI, otherwise
   // PawPal's built-in rules engine (which still works on the real database).

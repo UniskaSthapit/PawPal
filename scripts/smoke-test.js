@@ -310,6 +310,25 @@ const mailFor = async (anon, email, type) => (await anon('GET', `/api/dev/emails
   const legacy = await db.findOne('applications', { id: 'app_legacy' });
   check('Legacy statuses are upgraded', legacy.status === 'Meet & Greet' && legacy.history[0].status === 'Submitted' && legacy.appointmentAt && legacy.shelterId);
 
+  console.log('\nOwner administrator & production safeguards');
+  const config = require('../src/config');
+  const { ensureOwnerAdmin, disableDemoAccountsInProduction } = require('../src/services/bootstrap');
+  const created = await ensureOwnerAdmin('owner@example.com');
+  check('ADMIN_EMAIL creates an administrator account', created.status === 'created' && created.user.role === 'admin');
+  const setup = await mailFor(anon, 'owner@example.com', 'password-reset');
+  check('Owner is emailed a single-use set-password link', Boolean(setup) && /reset-password\.html\?token=/.test(setup.link));
+  r = await anon('POST', '/api/auth/reset-password', { token: new URL(setup.link).searchParams.get('token'), password: 'OwnerPaws99' });
+  const owner = client();
+  r = await owner('POST', '/api/auth/login', { email: 'owner@example.com', password: 'OwnerPaws99', role: 'staff' });
+  check('Owner can set a password and log in as administrator', r.status === 200 && r.body.user.role === 'admin');
+  check('Running the bootstrap again changes nothing', (await ensureOwnerAdmin('owner@example.com')).status === 'ok');
+  config.isProd = true;
+  const disabled = await disableDemoAccountsInProduction();
+  config.isProd = false;
+  check('Production deactivates demo accounts that still use published passwords', disabled.includes('staff@pawpal.com') && disabled.includes('user@pawpal.com'));
+  r = await staff('GET', '/api/auth/me');
+  check('Deactivated demo sessions end immediately', r.body.user === null);
+
   server.close();
   await db.flush();
   fs.rmSync(dataFile, { force: true });

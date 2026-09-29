@@ -25,12 +25,15 @@ No database, email, SMS or AI keys are needed to try everything: PawPal uses a f
 | Role | Email | Password |
 |---|---|---|
 | Administrator | `admin@pawpal.com` | `Admin@123` |
+
+These demo logins are for local use. In production they are deactivated automatically while they still use these
+passwords; set `ADMIN_EMAIL` to create your real administrator account.
 | Shelter staff (Melbourne) | `staff@pawpal.com` | `Staff@123` |
 | Adopter | `user@pawpal.com` | `User@123` |
 
 ```bash
 npm run dev        # auto-restart on changes
-npm test           # 109 end-to-end API checks (throwaway database)
+npm test           # 115 end-to-end API checks (throwaway database)
 npm run test:ui    # 28 real-browser journeys (needs Playwright — see the script header)
 npm run seed       # wipe and reload the demo data
 ```
@@ -100,9 +103,10 @@ shows which mode each service is in.
 | Service | Variables | Without it |
 |---|---|---|
 | MongoDB Atlas | `MONGODB_URI`, `MONGODB_DB` | File database `data/pawpal-db.json` |
-| Email | `RESEND_API_KEY` **or** `SMTP_*`, plus `MAIL_FROM` | Dev mailbox (local only) |
+| Owner admin | `ADMIN_EMAIL` | Demo admin only (local) |
+| Email | `BREVO_API_KEY` (single verified sender, e.g. Gmail) **or** `RESEND_API_KEY` (own domain) **or** `SMTP_*` | Dev mailbox (local only) |
 | SMS | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER` | Codes in dev mailbox locally; disabled in production |
-| AI | `ANTHROPIC_API_KEY` (preferred) or `OPENAI_API_KEY` | Rules engine on the same live data |
+| AI | `ANTHROPIC_API_KEY` — Claude, PawPal's AI provider (`OPENAI_API_KEY` also supported) | Rules engine on the same live data |
 | Maps | `GOOGLE_MAPS_API_KEY` | Keyless Google Maps embed |
 
 Existing databases are upgraded automatically on start (versioned migration): legacy statuses
@@ -127,7 +131,8 @@ src/
     matching.js           Lifestyle parser + explainable compatibility engine
     ai.js / llm.js        AI features (Claude/OpenAI) with grounded prompts and rules fallback
     knowledge.js          FAQ + application question explanations
-    mailer.js / sms.js    Email (Resend/SMTP/dev) and SMS (Twilio/dev)
+    mailer.js / sms.js    Email (Resend/Brevo/SMTP/dev) and SMS (Twilio/dev)
+    bootstrap.js          Owner administrator (ADMIN_EMAIL) and production demo-account lockout
     notify.js             In-app notifications
     migrate.js / seed.js  Schema upgrades and demo data
 public/                   Vanilla HTML/CSS/JS (no build step)

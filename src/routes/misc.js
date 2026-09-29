@@ -306,7 +306,7 @@ router.get('/config', (req, res) => res.json({
 router.get('/system/status', requireAdmin, asyncHandler(async (req, res) => {
   const [pets, apps, users, mails, shelters] = await Promise.all([db.count('pets'), db.count('applications'), db.count('users'), db.count('emails'), db.count('shelters')]);
   res.json({ database: db.name,
-    email: { resend: 'Resend API', smtp: `SMTP (${config.smtp.host})`, dev: 'Dev mailbox (no email provider configured)' }[emailMode],
+    email: { resend: `Resend API (from ${config.mailFrom})`, brevo: `Brevo API (from ${config.mailFrom})`, smtp: `SMTP (${config.smtp.host})`, dev: 'Dev mailbox (no email provider configured)' }[emailMode],
     sms: { twilio: 'Twilio', dev: 'Dev SMS log (no SMS provider configured)', disabled: 'Not configured' }[smsMode],
     ai: llm.providerLabel, maps: maps.mapsEnabled ? 'Google Places API' : 'Keyless Google Maps embed',
     counts: { pets, apps, users, mails, shelters }, allowDemoReset: config.allowDemoReset });
@@ -315,6 +315,7 @@ router.get('/system/status', requireAdmin, asyncHandler(async (req, res) => {
 router.post('/system/reset', requireAdmin, asyncHandler(async (req, res) => {
   if (!config.allowDemoReset) throw new HttpError(403, 'Demo reset is turned off on this server.');
   await seedIfEmpty({ force: true });
+  await require('../services/bootstrap').ensureOwnerAdmin(); // keep the owner's administrator account
   res.json({ message: 'All data was reset to the sample data. Please log in again.' });
 }));
 
