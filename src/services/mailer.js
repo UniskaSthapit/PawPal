@@ -1,13 +1,15 @@
-// Email service (Nodemailer).
-// - With SMTP settings: sends real emails.
-// - Without SMTP settings ("dev mailbox" mode): emails are saved to the database
+// Email service (Nodemailer + Resend).
+// - With RESEND_API_KEY: sends real emails over HTTPS (works even where SMTP ports are blocked).
+// - With SMTP settings (no Resend key): sends real emails over SMTP.
+// - With neither ("dev mailbox" mode): emails are saved to the database
 //   and shown at /dev-mailbox.html so verification and notifications still work.
 const nodemailer = require('nodemailer');
 const config = require('../config');
 const db = require('../db');
 const { newId, now, escapeHtml } = require('../utils');
 
-const smtpEnabled = Boolean(config.smtp.host);
+const resendEnabled = Boolean(config.resendApiKey);
+const smtpEnabled = !resendEnabled && Boolean(config.smtp.host);
 const transporter = smtpEnabled
   ? nodemailer.createTransport({
     host: config.smtp.host,
@@ -18,6 +20,18 @@ const transporter = smtpEnabled
     connectionTimeout: 15000,
   })
   : null;
+
+// Resend's HTTPS API — used instead of SMTP when RESEND_API_KEY is set, since some
+// hosts (Render's free plan included) block outbound SMTP ports but always allow
+// normal HTTPS requests, which is how the site itself and the database already work.
+async function sendViaResend({ to, subject, html }) {
+  const r = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${config.resendApiKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ from: config.mailFrom, to, subject, html }),
+  });
+  if (!r.ok) throw new Error(`Resend ${r.status}: ${(await r.text()).slice(0, 300)}`);
+}
 
 // Branded HTML wrapper so every email looks like PawPal
 function layout({ heading, body, buttonText, buttonUrl }) {
@@ -41,9 +55,17 @@ function layout({ heading, body, buttonText, buttonUrl }) {
 async function sendMail({ to, subject, heading, body, buttonText, buttonUrl, type = 'general' }) {
   const html = layout({ heading: heading || subject, body, buttonText, buttonUrl });
   const record = { id: newId('mail'), to, subject, type, html, link: buttonUrl || null,
-    mode: smtpEnabled ? 'smtp' : 'dev', status: 'sent', sentAt: now() };
+    mode: resendEnabled ? 'resend' : smtpEnabled ? 'smtp' : 'dev', status: 'sent', sentAt: now() };
 
-  if (smtpEnabled) {
+  if (resendEnabled) {
+    try {
+      await sendViaResend({ to, subject, html });
+    } catch (err) {
+      record.status = 'failed';
+      record.error = err.message;
+      console.error('✉️  Email failed (Resend):', err.message);
+    }
+  } else if (smtpEnabled) {
     try {
       await transporter.sendMail({ from: config.mailFrom, to, subject, html });
     } catch (err) {

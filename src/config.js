@@ -25,6 +25,10 @@ module.exports = {
     user: env.SMTP_USER || '',
     pass: env.SMTP_PASS || '',
   },
+  // Resend sends mail over a normal HTTPS request instead of a raw SMTP connection.
+  // Use this on hosts (like Render's free plan) that block outbound SMTP ports.
+  // If set, it's used instead of SMTP. Get a free key at https://resend.com/api-keys
+  resendApiKey: env.RESEND_API_KEY || '',
   mailFrom: env.MAIL_FROM || 'PawPal <no-reply@pawpal.app>',
 
   openaiKey: env.OPENAI_API_KEY || '',
