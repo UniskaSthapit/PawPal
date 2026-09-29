@@ -6,14 +6,18 @@
 3. **Connect → Drivers** → copy the `mongodb+srv://…` string into `MONGODB_URI`.
    On first start PawPal loads demo data into an empty database, or upgrades an existing PawPal database in place.
 
-## 2. Email (required for sign-up, password reset and notifications)
-Render's free plan blocks SMTP ports, so use **Resend**:
-1. https://resend.com → add and verify your domain (DNS records).
-2. Create an API key → `RESEND_API_KEY`.
-3. Set `MAIL_FROM="PawPal <no-reply@your-verified-domain>"`.
+## 2. Owner account and email (required)
+PawPal sends from your own address — **pawpaladmin@gmail.com** — through **Brevo** (HTTPS, so it works on
+Render's free plan, which blocks SMTP; Resend can't be used because it needs a domain you own).
+1. Create a free account at https://www.brevo.com (300 emails/day).
+2. **Senders & IPs → Senders → Add a sender** → `pawpaladmin@gmail.com` → click the confirmation email Brevo sends.
+3. **SMTP & API → API keys → Generate a new API key** → put it in `BREVO_API_KEY`.
+4. Set `ADMIN_EMAIL=pawpaladmin@gmail.com`. On start-up PawPal makes this account the administrator and emails
+   it a link to choose a password (valid 24 hours; afterwards use *Forgot password*). `MAIL_FROM` defaults to
+   `PawPal <pawpaladmin@gmail.com>`.
 
-(Gmail SMTP with an App Password still works locally or on hosts that allow SMTP: `SMTP_HOST=smtp.gmail.com`,
-`SMTP_PORT=465`, `SMTP_SECURE=true`, `SMTP_USER`, `SMTP_PASS`.)
+Deliverability tip: mail sent "from" a Gmail address by another service can land in spam for some recipients.
+If you later buy a domain, verify it in Brevo (or Resend) and switch `MAIL_FROM` to e.g. `hello@yourdomain.com`.
 
 ## 3. SMS phone verification (optional)
 1. https://console.twilio.com → copy the **Account SID** and **Auth Token**.
@@ -21,19 +25,22 @@ Render's free plan blocks SMTP ports, so use **Resend**:
    verified numbers.
 Without these, phone verification is switched off in production (the UI says so) — nothing is faked.
 
-## 4. AI (optional)
-Set `ANTHROPIC_API_KEY` (Claude, preferred) or `OPENAI_API_KEY`. Without a key the rules engine still answers from
-live data. AI endpoints are rate-limited.
+## 4. AI — Claude (recommended)
+1. https://console.anthropic.com → **Settings → API keys → Create key**, and add a small amount of credit under Billing.
+2. Put it in `ANTHROPIC_API_KEY` (model: `ANTHROPIC_MODEL=claude-sonnet-5-5`, already set in `render.yaml`).
+The startup log should then say `AI: Claude (claude-sonnet-5-5)`. Without a key the rules engine still answers
+from live data. AI endpoints are rate-limited, and the home page's live example never calls the model.
 
 ## 5. Deploy on Render
 1. Push this repo to GitHub (`.env` is git-ignored).
 2. Render → **New + → Blueprint** → choose the repo. `render.yaml` creates the service and generates `JWT_SECRET`.
-3. Fill in `APP_URL` (your Render URL), `MONGODB_URI`, `RESEND_API_KEY`, `MAIL_FROM`, and any optional keys.
+3. Fill in `APP_URL` (your Render URL), `MONGODB_URI`, `ADMIN_EMAIL`, `BREVO_API_KEY`, `ANTHROPIC_API_KEY`, and any optional keys.
 4. After the first deploy, fix `APP_URL` if the real URL differs, then redeploy.
 
 ## 6. After going live
-- Log in as `admin@pawpal.com` / `Admin@123` and **change the password immediately** (Settings), then change or
-  deactivate the demo staff and adopter accounts in **Users & shelters**.
+- Open the set-password email sent to `ADMIN_EMAIL`, choose a password and log in with the **Shelter staff** tab.
+- In production, demo accounts that still use their published passwords are deactivated automatically on every
+  start. Invite your real staff from **Users & shelters**.
 - Edit the shelters (names, addresses, phone numbers, hours) to your real details.
 - Keep `ALLOW_DEMO_RESET=false` in production.
 - Have the privacy policy and terms reviewed and add your organisation's legal details.
