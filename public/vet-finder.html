@@ -1,58 +1,33 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>PawPal — Find a vet</title>
-  
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="css/global.css"/>
-  <link rel="stylesheet" href="css/shared-nav.css"/>
-  <link rel="stylesheet" href="css/shared-footer.css"/>
-  <link rel="stylesheet" href="css/app.css"/>
-  <link rel="stylesheet" href="css/pages.css"/>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-<link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png"><link rel="icon" type="image/png" sizes="192x192" href="images/favicon-192.png"><link rel="apple-touch-icon" href="images/apple-touch-icon.png"><link rel="canonical" href="YOUR_CANONICAL_URL">
-<meta property="og:title" content="PawPal — Find a vet"><meta property="og:type" content="website"><meta property="og:image" content="YOUR_OG_IMAGE_URL"><link rel="stylesheet" href="css/pp-system.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Find a vet near you — PawPal</title>
+  <meta name="description" content="Find veterinary clinics near you.">
+  <meta name="theme-color" content="#221610">
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
+  <link rel="preload" href="fonts/fraunces-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/plus-jakarta-sans-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/pawpal.css">
+  <script src="js/api.js" defer></script>
+  <script src="js/ui.js" defer></script>
+  <script src="js/chat.js" defer></script>
+  <script src="js/pages/vet-finder.js" defer></script>
 </head>
-<body class="page-vet">
-
-<nav class="pawpal-nav" data-nav="public"></nav>
-
-<main class="vet-main" id="main">
-  <div class="vet-inner">
-    <header class="vet-head">
-      <h1>Find a vet near you</h1>
-      <p>Search by suburb or postcode to find veterinary clinics for check-ups, vaccinations and emergencies.</p>
-      <form class="vet-search" id="vetForm" role="search">
-        <input class="pp-input" id="vetQuery" placeholder="Suburb or postcode, e.g. Footscray VIC" aria-label="Suburb or postcode" autocomplete="address-level2"/>
-        <button class="pp-btn pp-btn-primary" type="submit">Search</button>
-        <button class="pp-btn pp-btn-ghost" type="button" id="locateBtn">Use my location</button>
-      </form>
-    </header>
-    <div class="vet-layout">
-      <div class="vet-map-wrap"><iframe id="vetMap" title="Map of nearby veterinary clinics" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe></div>
-      <aside class="vet-side">
-        <div id="vetResults"></div>
-        <div class="pp-card vet-tips">
-          <h3>Before your first visit</h3>
-          <ul>
-            <li>Bring your adoption papers and any vaccination records from the shelter.</li>
-            <li>Ask about microchip registration, desexing and a parasite prevention plan.</li>
-            <li>Book a check-up within two weeks of bringing your pet home.</li>
-          </ul>
-          <p class="vet-emergency"><b>Emergency?</b> Call your nearest 24-hour animal hospital straight away.</p>
-        </div>
-      </aside>
-    </div>
-  </div>
+<body data-layout="public" data-page="vets">
+<main id="main" tabindex="-1">
+<section class="page-hero"><div class="container">
+  <span class="eyebrow">Care after adoption</span><h1 class="h1">Find a vet near you</h1>
+  <p class="lead">A first check-up within two weeks of adoption is a great start. Search by suburb or use your location.</p>
+  <form class="nl-search" id="vetForm" style="margin-top:22px;max-width:760px"><div class="input-group"><span data-icon="pin"></span><label class="sr-only" for="vetQ">Suburb or postcode</label><input class="input" id="vetQ" placeholder="Suburb or postcode, e.g. Footscray" maxlength="100"></div>
+    <div class="row" style="flex-wrap:nowrap"><button class="btn btn-primary" type="submit">Search</button><button class="btn" type="button" id="nearMe"><span data-icon="pin"></span>Near me</button></div></form>
+</div></section>
+<section class="section-sm"><div class="container" style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:24px" id="vetGrid">
+  <div id="vetList" class="stack" style="--stack:12px"><p class="muted">Search to see clinics.</p></div>
+  <div class="card" style="overflow:hidden;min-height:420px"><iframe id="vetMap" title="Map of veterinary clinics" style="width:100%;height:100%;min-height:420px;border:0" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div>
+</div></section>
+<style>@media (max-width:900px){#vetGrid{grid-template-columns:minmax(0,1fr)!important}}</style>
 </main>
-
-<footer data-footer></footer>
-
-<script src="js/api.js"></script>
-<script src="js/ui.js"></script>
-<script src="js/pages/vet-finder.js"></script>
-<script src="config.js"></script><script src="js/pp-enhance.js" defer></script></body>
+</body>
 </html>

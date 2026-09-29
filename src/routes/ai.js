@@ -4,7 +4,7 @@ const express = require('express');
 const rateLimit = require('express-rate-limit');
 const db = require('../db');
 const ai = require('../services/ai');
-const { describeProfile, evaluateMatch, rankPets, sanitizeProfile, profileIsEmpty, emptyProfile } = require('../services/matching');
+const { describeProfile, evaluateMatch, rankPets, sanitizeProfile, profileIsEmpty, emptyProfile, parseProfile } = require('../services/matching');
 const { requireAuth, requireStaff, isStaff, shelterScope, inScope } = require('../middleware/auth');
 const { toPublic, applyFilters, keywordFilter, publicPets } = require('./pets');
 const { missingSections } = require('./applications');
@@ -51,7 +51,9 @@ router.post('/match', asyncHandler(async (req, res) => {
   const pets = await publicPets();
   const locations = [...new Set(pets.map((p) => p.location).filter(Boolean))];
   const base = sanitizeProfile(answersToProfile(req.body), emptyProfile());
-  const { profile, source: readSource } = await ai.understandLifestyle(text, base, locations);
+  // The home page's live example uses the rules engine only: no model call and no analytics event per page view
+  const demo = toBool(req.body?.demo);
+  const { profile, source: readSource } = demo ? { profile: parseProfile(text, base, locations), source: 'rules' } : await ai.understandLifestyle(text, base, locations);
   const understood = describeProfile(profile);
   if (!text && profileIsEmpty(profile)) throw new HttpError(400, 'Tell PawPal a little about your home and lifestyle first.');
   const userId = req.user?.role === 'user' ? req.user.id : null;
@@ -59,12 +61,12 @@ router.post('/match', asyncHandler(async (req, res) => {
   if (hint) { profile.preferredType = hint; understood.push(`Leaning towards ${hint === 'other' ? 'small pets' : hint + 's'} (from your saved favourites)`); }
 
   const ranked = rankPets(pets, profile, toInt(req.body.limit, 1, 12, 6));
-  const { matches, source } = await ai.explainMatches(profile, ranked);
-  if (userId) {
+  const { matches, source } = demo ? { matches: ranked.map((m) => ({ ...m, summary: m.reasons[0] || '' })), source: 'rules' } : await ai.explainMatches(profile, ranked);
+  if (userId && !demo) {
     await db.update('users', userId, { preferences: profile, preferencesText: text || null, preferencesAt: now() });
     await db.insert('matches', { id: newId('match'), userId, profile, text, results: matches.map((m) => ({ petId: m.pet.id, score: m.score })), at: now() });
   }
-  await db.insert('events', { id: newId('evt'), type: 'ai_match', at: now() });
+  if (!demo) await db.insert('events', { id: newId('evt'), type: 'ai_match', at: now() });
   res.json({ profile, understood, matches: matches.map(shapeMatch), source: source === 'rules' && readSource !== 'rules' ? readSource : source, saved: Boolean(userId) });
 }));
 
@@ -74,6 +76,15 @@ router.get('/recommendations', requireAuth, asyncHandler(async (req, res) => {
   if (!profile || profileIsEmpty(profile)) return res.json({ matches: [], understood: [], hasProfile: false });
   const ranked = rankPets(await publicPets(), profile, toInt(req.query.limit, 1, 12, 4));
   res.json({ matches: ranked.map((m) => shapeMatch({ ...m, summary: m.reasons[0] || '' })), understood: describeProfile(profile), hasProfile: true, text: req.user.preferencesText || '' });
+}));
+
+// ---- Compatibility of one pet with the signed-in adopter's saved lifestyle ----
+router.get('/compatibility/:petId', requireAuth, asyncHandler(async (req, res) => {
+  const pet = await db.findOne('pets', { id: req.params.petId });
+  if (!pet || !['Available', 'On Hold'].includes(pet.status)) throw new HttpError(404, 'Pet not found.');
+  const profile = req.user.preferences;
+  if (!profile || profileIsEmpty(profile)) return res.json({ hasProfile: false });
+  res.json({ hasProfile: true, ...evaluateMatch(pet, profile), understood: describeProfile(profile) });
 }));
 
 // ---- Natural language search ----

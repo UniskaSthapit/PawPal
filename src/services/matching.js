@@ -30,7 +30,7 @@ function parseProfile(text, prev = {}, knownLocations = []) {
 
   // Activity
   if (has(/\b(very active|run|running|marathon|hike|hiking|jog|jogging|sporty|athletic|cycling|trail)\b/)) p.activity = 3;
-  else if (has(/\b(not (too|very|extremely) active|doesnt (require|need) (extremely |very |too )?(high|much|lots of) exercise|low[- ]maintenance|moderate|daily walks?|short walks?|balanced|some exercise)\b/)) p.activity = 2;
+  else if (has(/\b(not (too|very|extremely) active|doesnt (require|need) (extremely |very |too )?(high|much|lots of) exercise|low[- ]maintenance|moderate|moderately active|fairly active|daily walks?|short walks?|balanced|some exercise)\b/)) p.activity = 2;
   if (has(/\b(relaxed|homebody|lazy|couch|quiet life|low energy|not active|sedentary|retired|elderly|limited mobility)\b/)) p.activity = 1;
   if (p.activity === null && has(/\b(active|energetic|outdoorsy|adventur)/)) p.activity = 3;
 

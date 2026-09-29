@@ -1,19 +1,16 @@
-// Reset password page (link from the password reset email).
-(() => {
-  const { $, params, setBusy, esc } = PawPal;
-  const alertBox = $('#resetAlert');
-  const show = (type, msg) => { alertBox.className = `pp-alert pp-alert-${type}`; alertBox.innerHTML = `<span>${msg}</span>`; alertBox.hidden = false; };
-  const token = params.get('token');
-  if (!token) { show('error', 'This reset link is incomplete. Please request a new one from the <a href="login.html">log in page</a>.'); $('#resetForm').hidden = true; }
+// Password reset form (single-use token from the email link).
+(async () => {
+  const { $, setBusy, errorHTML } = PawPal;
+  await PawPal.booted;
+  const token = PawPal.params.get('token');
+  if (!token) $('#resetMsg').innerHTML = errorHTML('This reset link is incomplete. Request a new one from the log in page.');
   $('#resetForm').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const pw = $('#newPw').value;
-    if (pw.length < 8 || !/[A-Za-z]/.test(pw) || !/\d/.test(pw)) return show('error', 'Password must be at least 8 characters and include a letter and a number.');
-    if (pw !== $('#newPw2').value) return show('error', 'The two passwords do not match.');
-    setBusy($('#resetBtn'), true, 'Updating…');
-    try {
-      await PawPalAPI.post('/auth/reset-password', { token, password: pw });
-      location.href = 'login.html?reset=1';
-    } catch (err) { show('error', esc(err.message)); setBusy($('#resetBtn'), false); }
+    const a = $('#pw1').value; const b = $('#pw2').value;
+    if (a.length < 8 || !/[A-Za-z]/.test(a) || !/\d/.test(a)) return void ($('#resetMsg').innerHTML = errorHTML('Use at least 8 characters with a letter and a number.'));
+    if (a !== b) return void ($('#resetMsg').innerHTML = errorHTML('The two passwords don\'t match.'));
+    const btn = $('#resetBtn'); setBusy(btn, true, 'Saving…');
+    try { await PawPalAPI.post('/auth/reset-password', { token, password: a }); location.href = 'login.html?reset=1'; }
+    catch (err) { setBusy(btn, false); $('#resetMsg').innerHTML = `${errorHTML(err.message)}<p class="small" style="margin-top:8px"><a href="login.html?mode=forgot">Request a new reset link</a></p>`; }
   });
 })();

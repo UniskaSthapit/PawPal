@@ -1,125 +1,86 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>PawPal Admin — Add pet</title>
-  
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="css/global.css"/>
-  <link rel="stylesheet" href="css/shared-nav.css"/>
-  <link rel="stylesheet" href="css/shared-footer.css"/>
-  <link rel="stylesheet" href="css/nav.css"/>
-  <link rel="stylesheet" href="css/sidebar.css"/>
-  <link rel="stylesheet" href="css/cards.css"/>
-  <link rel="stylesheet" href="css/table.css"/>
-  <link rel="stylesheet" href="css/add-pet.css"/>
-  <link rel="stylesheet" href="css/app.css"/>
-  <link rel="stylesheet" href="css/pages.css"/>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-<link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png"><link rel="icon" type="image/png" sizes="192x192" href="images/favicon-192.png"><link rel="apple-touch-icon" href="images/apple-touch-icon.png"><link rel="canonical" href="YOUR_CANONICAL_URL">
-<meta property="og:title" content="PawPal Admin — Add pet"><meta property="og:type" content="website"><meta property="og:image" content="YOUR_OG_IMAGE_URL"><link rel="stylesheet" href="css/pp-system.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Add a pet — PawPal shelter portal</title>
+  <meta name="description" content="Create or edit a pet listing.">
+  <meta name="theme-color" content="#221610">
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
+  <link rel="preload" href="fonts/fraunces-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/plus-jakarta-sans-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/pawpal.css">
+  <script src="js/api.js" defer></script>
+  <script src="js/ui.js" defer></script>
+  <script src="js/pages/add-pet.js" defer></script>
 </head>
-<body class="page-admin">
+<body data-layout="staff" data-page="staff-addpet">
+<main id="main" tabindex="-1">
+<div class="app-head"><div><nav class="breadcrumbs" aria-label="Breadcrumb"><a href="pets.html">Pets</a><span aria-hidden="true">/</span><span id="crumb">Add a pet</span></nav><h1 id="pageTitle" style="margin-top:6px">Add a pet</h1><p>Public fields appear on the website. Internal fields are only ever shown to shelter staff.</p></div><span id="statusPill"></span></div>
+<form id="petForm" novalidate class="grid" style="grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);align-items:start">
+  <div class="stack" style="--stack:20px">
+    <section class="card"><div class="card-head"><div><span class="src-label src-shelter"><span data-icon="eye"></span>Public</span><h2>Basics</h2></div></div><div class="card-body form-grid">
+      <div class="field"><label for="name">Name *</label><input class="input" id="name" maxlength="40" required></div>
+      <div class="field"><label for="type">Species *</label><select class="select" id="type"><option>Dog</option><option>Cat</option><option>Rabbit</option><option>Bird</option><option>Guinea Pig</option><option>Other</option></select></div>
+      <div class="field"><label for="breed">Breed *</label><input class="input" id="breed" maxlength="60" placeholder="e.g. Kelpie cross or Mixed breed" required></div>
+      <div class="field"><label for="colour">Colour</label><input class="input" id="colour" maxlength="40"></div>
+      <div class="field"><label for="age">Age (years)</label><input class="input" id="age" type="number" min="0" max="30" value="1"><span class="hint">Use 0 for under one year.</span></div>
+      <div class="field"><label for="gender">Sex</label><select class="select" id="gender"><option>Female</option><option>Male</option><option>Unknown</option></select></div>
+      <div class="field"><label for="size">Size</label><select class="select" id="size"><option>Small</option><option selected>Medium</option><option>Large</option></select></div>
+      <div class="field"><label for="adoptionFee">Adoption fee ($)</label><input class="input" id="adoptionFee" type="number" min="0" max="5000" value="0"></div>
+      <div class="field"><label for="location">Location</label><input class="input" id="location" maxlength="80" placeholder="Suburb, STATE"></div>
+      <div class="field" id="shelterField" hidden><label for="shelterId">Shelter</label><select class="select" id="shelterId"></select></div>
+    </div></section>
 
-<nav class="pawpal-nav" data-nav="admin"></nav>
-<div class="layout">
-  <aside data-sidebar="admin" aria-label="Admin navigation"></aside>
-  <main id="main">
-    <div class="main-inner">
-      <div class="breadcrumb" role="navigation" aria-label="Breadcrumb">
-        <a href="index.html">Admin</a><span class="sep">›</span><a href="pets.html">Manage Pets</a><span class="sep">›</span><span class="current" id="crumb">Add New Pet</span>
+    <section class="card"><div class="card-head"><div><span class="src-label src-shelter"><span data-icon="eye"></span>Public &middot; used for matching</span><h2>Personality &amp; compatibility</h2></div></div><div class="card-body form-grid">
+      <div class="field"><label for="energyLevel">Energy level</label><select class="select" id="energyLevel"><option value="1">Calm</option><option value="2" selected>Moderate</option><option value="3">High</option></select></div>
+      <div class="field"><label for="traits">Personality traits</label><input class="input" id="traits" placeholder="Gentle, Playful, Loyal"><span class="hint">Comma separated, up to 10.</span></div>
+      <div class="field full"><span class="label">Compatibility</span><div class="choice-grid">
+        <label class="check"><input type="checkbox" id="goodWithChildren" checked> Good with children</label>
+        <label class="check"><input type="checkbox" id="goodWithOtherPets" checked> Good with other pets</label>
+        <label class="check"><input type="checkbox" id="requiresYard"> Needs a secure yard</label>
+        <label class="check"><input type="checkbox" id="firstTimeFriendly"> Suits first-time owners</label>
+        <label class="check"><input type="checkbox" id="specialNeeds"> Has special needs</label></div></div>
+      <div class="field full"><label for="idealHome">Ideal home (one sentence)</label><input class="input" id="idealHome" maxlength="600" placeholder="e.g. An active family with a secure yard"></div>
+      <div class="field full"><span class="label">Health</span><div class="row" style="gap:18px">
+        <label class="check"><input type="checkbox" id="vaccinated"> Vaccinated</label><label class="check"><input type="checkbox" id="desexed"> Desexed</label><label class="check"><input type="checkbox" id="microchipped"> Microchipped</label></div></div>
+    </div></section>
+
+    <section class="card"><div class="card-head"><div><span class="src-label src-shelter"><span data-icon="eye"></span>Public</span><h2>Description</h2></div>
+      <button type="button" class="btn btn-sm btn-dark" id="aiBtn"><span data-icon="sparkle"></span>Generate with AI</button></div>
+      <div class="card-body"><label class="sr-only" for="description">Public description</label><textarea class="textarea" id="description" maxlength="2500" style="min-height:180px" placeholder="What makes this pet special? Or fill in the fields above and press Generate with AI."></textarea>
+      <p class="disclaimer" style="margin-top:10px"><span data-icon="info"></span>AI drafts use only the public fields above &mdash; never the internal notes. Always read and edit before publishing.</p><div id="aiNote"></div></div></section>
+
+    <section class="card" style="border-color:#E3CDBE;background:#FFFBF7"><div class="card-head"><div><span class="src-label" style="color:var(--brand-ink)"><span data-icon="lock"></span>Internal &mdash; staff only</span><h2>Private notes</h2></div></div><div class="card-body stack">
+      <div class="field"><label for="medicalHistory">Medical history</label><textarea class="textarea" id="medicalHistory" maxlength="2000" style="min-height:90px"></textarea></div>
+      <div class="field"><label for="rescueBackground">Rescue background</label><textarea class="textarea" id="rescueBackground" maxlength="2000" style="min-height:90px"></textarea></div>
+      <div class="field"><label for="internalNotes">Behaviour &amp; handling notes</label><textarea class="textarea" id="internalNotes" maxlength="2000" style="min-height:90px"></textarea></div>
+    </div></section>
+  </div>
+
+  <div class="stack" style="--stack:20px;position:sticky;top:calc(var(--nav-h) + 20px)" id="sideCol">
+    <section class="card"><div class="card-head"><h2>Photos</h2><span class="small muted" id="photoCount">0 / 8</span></div><div class="card-body stack">
+      <div class="dropzone" id="dropZone" tabindex="0" role="button" aria-label="Upload photos"><span data-icon="camera"></span><b>Drop photos here or click to upload</b><p class="small muted">JPG, PNG or WebP. Resized automatically. The first photo is the cover.</p></div>
+      <input type="file" id="photoInput" accept="image/jpeg,image/png,image/webp" multiple hidden>
+      <div class="photo-grid" id="photoGrid"></div>
+      <div class="row" style="flex-wrap:nowrap"><label class="sr-only" for="photoUrl">Image link</label><input class="input" id="photoUrl" placeholder="&hellip;or paste an https:// image link"><button type="button" class="btn" id="addUrl">Add</button></div>
+    </div></section>
+    <section class="card card-pad stack" style="--stack:10px">
+      <div id="formMsg"></div>
+      <button type="submit" class="btn btn-primary btn-lg btn-block" id="publishBtn">Publish pet</button>
+      <button type="button" class="btn btn-block" id="draftBtn">Save as draft</button>
+      <div id="editActions" class="stack" style="--stack:10px" hidden>
+        <div class="divider" style="margin:6px 0"></div>
+        <a class="btn btn-block btn-ghost" id="viewPublic" target="_blank"><span data-icon="external"></span>View public profile</a>
+        <button type="button" class="btn btn-block" data-status="Adopted"><span data-icon="home"></span>Mark as adopted</button>
+        <button type="button" class="btn btn-block" data-status="Archived"><span data-icon="archive"></span>Archive listing</button>
+        <button type="button" class="btn btn-block btn-ghost" id="deleteBtn" style="color:var(--danger)"><span data-icon="trash"></span>Delete</button>
       </div>
-
-      <div class="top-bar">
-        <h1 id="pageTitle">Add New Pet</h1>
-        <span class="date" id="statusPill" hidden></span>
-      </div>
-
-      <div id="formAlert" class="pp-alert pp-alert-error" hidden role="alert"></div>
-
-      <form id="petForm" novalidate>
-      <div class="form-section">
-        <h2>Basic Information</h2>
-        <div class="form-grid">
-          <div class="form-group"><label class="form-label" for="petName">Pet name <span class="req">*</span></label><input class="form-input" id="petName" type="text" maxlength="40" placeholder="e.g., Bella"/></div>
-          <div class="form-group">
-            <label class="form-label" for="type">Type <span class="req">*</span></label>
-            <div class="select-wrapper"><select class="form-select" id="type"><option value="Dog">Dog</option><option value="Cat">Cat</option><option value="Rabbit">Rabbit</option><option value="Bird">Bird</option><option value="Other">Other</option></select></div>
-          </div>
-          <div class="form-group"><label class="form-label" for="breed">Breed <span class="req">*</span></label><input class="form-input" id="breed" type="text" maxlength="60" placeholder="e.g., Golden Retriever or Mixed"/></div>
-          <div class="form-group"><label class="form-label" for="age">Age (years)</label><input class="form-input" id="age" type="number" min="0" max="30" step="1" value="1"/><p class="form-hint">Use 0 for pets under one year.</p></div>
-          <div class="form-group">
-            <label class="form-label" for="gender">Gender</label>
-            <div class="select-wrapper"><select class="form-select" id="gender"><option value="Female">Female</option><option value="Male">Male</option><option value="Unknown">Unknown</option></select></div>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="size">Size</label>
-            <div class="select-wrapper"><select class="form-select" id="size"><option value="Small">Small</option><option value="Medium">Medium</option><option value="Large">Large</option></select></div>
-          </div>
-          <div class="form-group"><label class="form-label" for="location">Location</label><input class="form-input" id="location" type="text" maxlength="80" placeholder="e.g., Footscray, VIC"/></div>
-          <div class="form-group">
-            <label class="form-label" for="energyLevel">Energy level</label>
-            <div class="select-wrapper"><select class="form-select" id="energyLevel"><option value="1">Relaxed</option><option value="2">Moderate</option><option value="3">High</option></select></div>
-          </div>
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="keywords">Behaviour keywords</label>
-          <input class="form-input" id="keywords" type="text" placeholder="e.g., Friendly, Playful, Good with Kids"/>
-          <p class="form-hint">Separate keywords with commas. They appear as personality tags and help the AI match pets with adopters.</p>
-        </div>
-        <div class="form-group">
-          <span class="form-label">Compatibility and health</span>
-          <div class="pp-toggle-row">
-            <label class="pp-check"><input type="checkbox" id="goodWithChildren" checked/> Good with children</label><label class="pp-check"><input type="checkbox" id="goodWithOtherPets" checked/> Good with other pets</label><label class="pp-check"><input type="checkbox" id="requiresYard" /> Needs a yard</label>
-            <label class="pp-check"><input type="checkbox" id="vaccinated" checked/> Vaccinated</label><label class="pp-check"><input type="checkbox" id="desexed" /> Desexed</label><label class="pp-check"><input type="checkbox" id="microchipped" checked/> Microchipped</label>
-          </div>
-        </div>
-      </div>
-
-      <div class="form-section ai-section">
-        <div class="ai-header">
-          <div class="ai-title"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="width:20px;height:20px;color:#E5B85F"><path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z"/><path d="M5 18l.75 2.25L8 21l-2.25.75L5 24l-.75-2.25L2 21l2.25-.75L5 18z"/><path d="M19 3l.5 1.5L21 5l-1.5.5L19 7l-.5-1.5L17 5l1.5-.5L19 3z"/></svg><h2>AI Generated Description</h2></div>
-          <button type="button" class="btn btn-primary" id="genBtn">Generate Description</button>
-        </div>
-        <textarea class="form-textarea" id="aiDescription" maxlength="2000" placeholder="Fill in the details above, then click 'Generate Description' to create an engaging adoption profile. You can edit the text afterwards."></textarea>
-        <p class="form-hint" id="aiSource"></p>
-      </div>
-
-      <div class="form-section">
-        <h2>Photos</h2>
-        <div class="upload-area" id="dropZone" tabindex="0" role="button" aria-label="Upload photos">
-          <svg class="upload-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
-          <p class="upload-title">Drag photos here or choose files</p>
-          <p class="upload-hint">Up to 8 photos (JPG, PNG or WebP). Large photos are resized automatically. The first photo is the cover.</p>
-          <input type="file" id="photoInput" accept="image/jpeg,image/png,image/webp" multiple hidden/>
-        </div>
-        <div class="photo-url-row"><input class="form-input" id="photoUrl" type="url" placeholder="…or paste an image link (https://)"/><button type="button" class="btn btn-outline" id="addUrl">Add link</button></div>
-        <div class="photo-grid" id="photoGrid"></div>
-      </div>
-
-      <div class="form-section staff-section">
-        <div class="staff-header"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="width:20px;height:20px"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><h2>Staff Only Information</h2></div>
-        <p class="form-hint staff-hint">Never shown on the public website (FR-03).</p>
-        <div class="staff-fields">
-          <div class="form-group"><label class="form-label" for="medical">Medical history</label><textarea class="form-textarea" id="medical" maxlength="2000" placeholder="Medical conditions, treatments or health notes…"></textarea></div>
-          <div class="form-group"><label class="form-label" for="rescue">Rescue background</label><textarea class="form-textarea" id="rescue" maxlength="2000" placeholder="Rescue story, previous home or behaviour notes…"></textarea></div>
-        </div>
-      </div>
-
-      <div class="form-actions">
-        <a class="btn btn-outline" href="pets.html">Cancel</a>
-        <button type="button" class="btn btn-outline" id="draftBtn">Save as Draft</button>
-        <button type="submit" class="btn btn-primary" id="publishBtn">Publish Pet Profile</button>
-      </div>
-      </form>
-    </div>
-  </main>
-</div>
-<footer data-footer></footer>
-<script src="js/api.js"></script>
-<script src="js/ui.js"></script>
-<script src="js/pages/add-pet.js"></script>
-<script src="config.js"></script><script src="js/pp-enhance.js" defer></script></body>
+    </section>
+  </div>
+</form>
+<style>@media (max-width: 1100px){ #petForm{grid-template-columns:minmax(0,1fr)!important} #sideCol{position:static!important} }
+#dropZone [data-icon] svg{width:30px;height:30px;margin:0 auto 8px;color:var(--brand)}</style>
+</main>
+</body>
 </html>

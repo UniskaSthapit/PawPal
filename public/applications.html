@@ -1,57 +1,40 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>PawPal Admin — Applications</title>
-  
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="css/global.css"/>
-  <link rel="stylesheet" href="css/shared-nav.css"/>
-  <link rel="stylesheet" href="css/shared-footer.css"/>
-  <link rel="stylesheet" href="css/nav.css"/>
-  <link rel="stylesheet" href="css/sidebar.css"/>
-  <link rel="stylesheet" href="css/cards.css"/>
-  <link rel="stylesheet" href="css/table.css"/>
-  <link rel="stylesheet" href="css/applications-extra.css"/>
-  <link rel="stylesheet" href="css/app.css"/>
-  <link rel="stylesheet" href="css/pages.css"/>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-<link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png"><link rel="icon" type="image/png" sizes="192x192" href="images/favicon-192.png"><link rel="apple-touch-icon" href="images/apple-touch-icon.png"><link rel="canonical" href="YOUR_CANONICAL_URL">
-<meta property="og:title" content="PawPal Admin — Applications"><meta property="og:type" content="website"><meta property="og:image" content="YOUR_OG_IMAGE_URL"><link rel="stylesheet" href="css/pp-system.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Applications — PawPal shelter portal</title>
+  <meta name="description" content="Review and manage adoption applications.">
+  <meta name="theme-color" content="#221610">
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
+  <link rel="preload" href="fonts/fraunces-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/plus-jakarta-sans-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/pawpal.css">
+  <script src="js/api.js" defer></script>
+  <script src="js/ui.js" defer></script>
+  <script src="js/pages/staff-applications.js" defer></script>
 </head>
-<body class="page-admin">
-
-<nav class="pawpal-nav" data-nav="admin"></nav>
-<div class="layout">
-  <aside data-sidebar="admin" aria-label="Admin navigation"></aside>
-  <main id="main">
-    <div class="main-inner">
-      <div class="top-bar"><h1>Applications</h1><span class="date" id="today"></span></div>
-
-      <div class="status-filter" id="statusChips" role="group" aria-label="Filter by status"></div>
-
-      <div class="table-card">
-        <div class="pp-toolbar">
-          <input class="pp-input pp-grow" id="appSearch" type="search" placeholder="Search applicant, email or pet" aria-label="Search applications"/>
-          <select class="pp-select" id="petFilter" aria-label="Filter by pet"><option value="">All pets</option></select>
-          <select class="pp-select" id="sortSel" aria-label="Sort"><option value="newest">Newest first</option><option value="score">Highest AI score</option></select>
-        </div>
-        <p class="rank-note" id="rankNote" hidden>Applicants for this pet are ranked by AI suitability score (FR-08). Scores support your decision — they don't make it.</p>
-        <div class="table-scroll">
-          <table>
-            <thead><tr><th>Applicant</th><th>Pet</th><th>AI Score</th><th>Submitted</th><th>Status</th><th><span class="sr-only">Action</span></th></tr></thead>
-            <tbody id="appBody"><tr><td colspan="6"><div class="skeleton skeleton-line"></div></td></tr></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </main>
+<body data-layout="staff" data-page="staff-apps">
+<main id="main" tabindex="-1">
+<div class="app-head"><div><h1>Applications</h1><p>Review applicants, move them through the pipeline and keep them informed. Every status change emails and notifies the adopter.</p></div>
+  <a class="btn" id="exportBtn" href="/api/analytics/export?type=applications"><span data-icon="download"></span>Export CSV</a></div>
+<div class="tabs" role="tablist" id="appTabs"></div>
+<div class="row" style="margin-bottom:16px">
+  <div class="input-group" style="flex:1;min-width:220px;max-width:380px"><span data-icon="search"></span><label class="sr-only" for="appQ">Search applicants</label><input class="input" id="appQ" placeholder="Search applicant or pet"></div>
+  <label class="sr-only" for="appPet">Filter by pet</label><select class="select" id="appPet" style="width:auto;min-height:44px"><option value="">All pets</option></select>
+  <label class="sr-only" for="appSort">Sort</label><select class="select" id="appSort" style="width:auto;min-height:44px"><option value="newest">Newest first</option><option value="oldest">Oldest first (queue)</option><option value="score">Highest suitability</option></select>
 </div>
-<footer data-footer></footer>
-<script src="js/api.js"></script>
-<script src="js/ui.js"></script>
-<script src="js/pages/applications.js"></script>
-<script src="config.js"></script><script src="js/pp-enhance.js" defer></script></body>
+<div class="grid" style="grid-template-columns:minmax(0,380px) minmax(0,1fr);align-items:start" id="appsLayout">
+  <div class="card" style="overflow:hidden" id="appList" role="list"><div class="card-body"><div class="skeleton" style="height:64px"></div></div></div>
+  <div id="appDetail" style="position:sticky;top:calc(var(--nav-h) + 20px)"></div>
+</div>
+<style>@media (max-width:1100px){#appsLayout{grid-template-columns:minmax(0,1fr)!important}#appDetail{position:static!important}}
+.app-row{display:grid;grid-template-columns:44px 1fr auto;gap:12px;align-items:center;padding:12px 16px;border:0;border-bottom:1px solid var(--line-2);background:none;width:100%;text-align:left}
+.app-row:hover{background:var(--paper)}.app-row[aria-current="true"]{background:var(--brand-tint);box-shadow:inset 3px 0 0 var(--brand)}
+.app-row img{width:44px;height:44px;border-radius:10px;object-fit:cover;background:var(--paper-2)}.app-row b{display:block;font-size:14.5px}
+.score-ring{--p:80;width:76px;height:76px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--sage) calc(var(--p)*1%),var(--paper-3) 0);flex:none}
+.score-ring span{width:62px;height:62px;border-radius:50%;background:var(--card);display:grid;place-items:center;font-weight:800;font-size:20px}
+.breakdown li{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px dashed var(--line-2);font-size:14px}</style>
+</main>
+</body>
 </html>

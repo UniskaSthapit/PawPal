@@ -1,14 +1,5 @@
-// ============================================================
-// RESCUE STORIES
-// Six fictional demo rescue stories, written for this university
-// prototype. They are labelled as demo content wherever they appear and
-// do not describe real animals, people or organisations.
-//
-// Any page can render them:
-//   <div class="stories-grid" data-stories="3"></div>
-// Cards show an excerpt; "Read the full story" opens a dialog.
-// ============================================================
-(() => {
+// Rescue stories — fictional demo content written for PawPal. Rendered by PawPalStories.render().
+const PawPalStories = (() => {
   const STORIES = [
     {
       id: 'biscuit',
@@ -123,104 +114,25 @@
         'Our carers played soft recordings and whistled to her daily. In the third week she answered back. She now lives with a retired teacher who whistles good morning, and Kiwi whistles it right back.'] }
   ];
 
-  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const { esc } = PawPal;
+  const cardHTML = (s) => `<article class="story-card" data-reveal>
+    <div class="media"><img src="${esc(s.photo)}" alt="${esc(s.name)}, a rescued ${esc(s.species.toLowerCase())}" loading="lazy" data-fallback="${esc(s.art || PawPal.PLACEHOLDER)}"/></div>
+    <div class="body"><div class="row"><span class="badge badge-sage">${PawPal.icons.check}${esc(s.outcome)}</span><span class="tiny muted">${esc(s.when)}</span></div>
+      <h3>${esc(s.title)}</h3><p>${esc(s.excerpt)}</p>
+      <button class="link-btn" data-story="${esc(s.id)}" style="align-self:flex-start;margin-top:auto">Read ${esc(s.name)}'s story</button></div></article>`;
 
-  function cardHTML(s) {
-    return `<article class="story-card">
-      <div class="pp-media pp-media-hover story-media">
-        <img src="${esc(s.photo)}" alt="${esc(s.name)}, a rescued ${esc(s.species.toLowerCase())}" loading="lazy"
-             onerror="this.onerror=null;this.src='${esc(s.art)}'"/>
-        <span class="pp-media-tag" data-icon="check">${esc(s.outcome)}</span>
-      </div>
-      <div class="story-body">
-        <span class="story-when" data-icon="calendar">${esc(s.when)}</span>
-        <h3>${esc(s.title)}</h3>
-        <p>${esc(s.excerpt)}</p>
-        <div class="story-tags">${s.tags.map((t) => `<span class="pp-chip">${esc(t)}</span>`).join('')}</div>
-        <button class="pp-link-btn" data-story="${esc(s.id)}">Read ${esc(s.name)}'s full story</button>
-      </div>
-    </article>`;
+  function render(el, n = 3) {
+    el.innerHTML = STORIES.slice(0, n).map(cardHTML).join('');
+    PawPal.reveal(el);
   }
-
-  function openStory(id) {
-    const s = STORIES.find((x) => x.id === id);
-    if (!s) return;
-    const icons = (typeof PawPal !== 'undefined' && PawPal.icons) || {};
-    const wrap = document.createElement('div');
-    wrap.className = 'pp-dialog-backdrop';
-    wrap.setAttribute('role', 'dialog');
-    wrap.setAttribute('aria-modal', 'true');
-    wrap.setAttribute('aria-label', `${s.name}'s rescue story`);
-    wrap.innerHTML = `<div class="pp-dialog story-dialog">
-        <div class="pp-dialog-art story-dialog-art">
-          <img src="${esc(s.photo)}" alt="" onerror="this.onerror=null;this.src='${esc(s.art)}'"/>
-          <button class="pp-dialog-close" aria-label="Close story">${icons.close || '&times;'}</button>
-        </div>
-        <div class="pp-dialog-body">
-          <span class="pp-eyebrow">${icons.paw || ''} Rescue story · ${esc(s.when)}</span>
-          <h2>${esc(s.title)}</h2>
-          <div class="story-tags" style="margin:12px 0 16px">${s.tags.map((t) => `<span class="pp-chip">${esc(t)}</span>`).join('')}</div>
-          ${s.body.map((para) => `<p style="margin-bottom:12px">${esc(para)}</p>`).join('')}
-          <p class="pp-dialog-note">Demo story written for this university prototype. It does not describe a real
-             animal, person or organisation.</p>
-          <div class="pp-dialog-actions">
-            <a class="pp-btn pp-btn-primary" href="home.html#pets">Meet pets waiting now</a>
-            <a class="pp-btn pp-btn-ghost" href="ending-animal-cruelty.html#support">Support the shelter</a>
-          </div>
-        </div>
-      </div>`;
-    const close = () => { wrap.remove(); document.removeEventListener('keydown', onKey); };
-    const onKey = (e) => { if (e.key === 'Escape') close(); };
-    wrap.addEventListener('click', (e) => { if (e.target === wrap || e.target.closest('.pp-dialog-close')) close(); });
-    document.addEventListener('keydown', onKey);
-    document.body.appendChild(wrap);
-    if (typeof PawPal !== 'undefined') PawPal.hydrateIcons(wrap);
-    wrap.querySelector('.pp-dialog-close').focus();
-  }
-
-  // Horizontal carousel: arrow buttons + gentle auto-scroll while in view (paused on hover/focus/touch, off for reduced motion)
-  function carousel(host) {
-    if (host.dataset.carousel) return;
-    host.dataset.carousel = '1';
-    host.tabIndex = 0; host.setAttribute('role', 'region'); host.setAttribute('aria-label', 'Rescue stories carousel');
-    const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const nav = document.createElement('div');
-    nav.className = 'stories-nav';
-    nav.innerHTML = '<button type="button" aria-label="Previous stories">&#8249;</button><button type="button" aria-label="Next stories">&#8250;</button>';
-    host.after(nav);
-    const go = (d) => host.scrollBy({ left: d * (Math.min(360, host.clientWidth * 0.85) + 24), behavior: still ? 'auto' : 'smooth' });
-    nav.children[0].onclick = () => go(-1); nav.children[1].onclick = () => go(1);
-    if (still) return;
-    let inView = false, paused = false, looping = false, pos = 0, dir = 1;
-    const tick = () => {
-      if (!inView) { looping = false; return; }
-      if (!paused) {
-        const max = host.scrollWidth - host.clientWidth;
-        pos += 0.6 * dir;
-        if (pos >= max) { pos = max; dir = -1; } else if (pos <= 0) { pos = 0; dir = 1; }
-        host.scrollLeft = pos;
-      }
-      requestAnimationFrame(tick);
-    };
-    const hold = () => { paused = true; }, free = () => { pos = host.scrollLeft; paused = false; };
-    ['pointerenter', 'focusin', 'touchstart'].forEach((ev) => host.addEventListener(ev, hold, { passive: true }));
-    ['pointerleave', 'focusout', 'touchend'].forEach((ev) => host.addEventListener(ev, free, { passive: true }));
-    new IntersectionObserver(([e]) => { inView = e.isIntersecting; if (inView && !looping) { looping = true; pos = host.scrollLeft; requestAnimationFrame(tick); } }, { threshold: 0.35 }).observe(host);
-  }
-
-  function render() {
-    document.querySelectorAll('[data-stories]').forEach((host) => {
-      const limit = Number(host.dataset.stories) || STORIES.length;
-      host.innerHTML = STORIES.slice(0, limit).map(cardHTML).join('');
-      if (typeof PawPal !== 'undefined') { PawPal.hydrateIcons(host); PawPal.reveal(host); }
-      carousel(host);
-    });
-  }
-
   document.addEventListener('click', (e) => {
-    const btn = e.target.closest('[data-story]');
-    if (btn) { e.preventDefault(); openStory(btn.dataset.story); }
+    const b = e.target.closest('[data-story]');
+    if (!b) return;
+    const s = STORIES.find((x) => x.id === b.dataset.story);
+    if (!s) return;
+    PawPal.modal({ title: s.title, wide: true, body: `<img src="${esc(s.photo)}" alt="" data-fallback="${esc(s.art || PawPal.PLACEHOLDER)}" style="width:100%;aspect-ratio:16/8;object-fit:cover;border-radius:16px;margin-bottom:18px"/>
+      <div class="prose">${(s.body || [s.excerpt]).map((p) => `<p>${esc(p)}</p>`).join('')}</div>
+      <p class="tiny muted" style="margin-top:18px">Illustrative story written for the PawPal demo.</p>` });
   });
-  document.addEventListener('DOMContentLoaded', render);
-  window.PawPalStories = { STORIES, render, openStory };
+  return { STORIES, render };
 })();

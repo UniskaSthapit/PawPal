@@ -1,148 +1,99 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>PawPal — Log In or Sign Up</title>
-  
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="css/global.css"/>
-  <link rel="stylesheet" href="css/shared-nav.css"/>
-  <link rel="stylesheet" href="css/shared-footer.css"/>
-  <link rel="stylesheet" href="css/login.css"/>
-  <link rel="stylesheet" href="css/app.css"/>
-  <link rel="stylesheet" href="css/pages.css"/>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-<link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png"><link rel="icon" type="image/png" sizes="192x192" href="images/favicon-192.png"><link rel="apple-touch-icon" href="images/apple-touch-icon.png"><link rel="canonical" href="YOUR_CANONICAL_URL">
-<meta property="og:title" content="PawPal — Log In or Sign Up"><meta property="og:type" content="website"><meta property="og:image" content="YOUR_OG_IMAGE_URL"><link rel="stylesheet" href="css/pp-system.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Log in or sign up — PawPal</title>
+  <meta name="description" content="Log in to PawPal to save favourites, apply to adopt and track your application.">
+  <meta name="theme-color" content="#221610">
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
+  <link rel="preload" href="fonts/fraunces-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/plus-jakarta-sans-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/pawpal.css">
+  <script src="js/api.js" defer></script>
+  <script src="js/ui.js" defer></script>
+  <script src="js/pages/login.js" defer></script>
 </head>
-<body class="page-login">
-
-<nav class="pawpal-nav" data-nav="public"></nav>
-
-<main class="auth-main">
-  <div class="auth-card">
-
-    <!-- ── LEFT PANEL ── -->
-    <div class="auth-left">
-
-      <!-- Background Image (full opacity) -->
-      <img
-        class="auth-bg-img"
-        src="https://images.unsplash.com/photo-1450778869180-41d0601e046e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080"
-        alt="Cute pets"
-      />
-
-      <!-- Overlay: centered logo + brand text -->
-      <div class="auth-overlay">
-        <div class="auth-logo-img-wrap">
-          <img
-            class="auth-logo-centered"
-            src="images/imagelogo.png"
-            alt="PawPal Logo"
-          />
-          <div class="auth-logo-brand">PawPal</div>
-          <div class="auth-logo-divider"></div>
-          <div class="auth-logo-motto">Because Every Paw Matters</div>
-        </div>
-      </div>
-
-      <!-- Bottom Trust Pill -->
-      <div class="auth-pill">
-        <div class="auth-pill-inner">
-          ✦ &nbsp;Every paw matters
-        </div>
-      </div>
-
+<body data-layout="auth" data-page="login">
+<main id="main" tabindex="-1">
+  <div class="auth">
+    <div class="auth-art">
+      <img src="https://images.unsplash.com/photo-1450778869180-41d0601e046e?w=1400&h=1600&fit=crop&auto=format&q=75" alt="" data-fallback="images/pets/dog-a.svg">
+      <div><blockquote>“The right match changes two lives — theirs and yours.”</blockquote><p>Join PawPal to save favourites, apply online and follow every step of your adoption.</p></div>
     </div>
+    <div class="auth-panel">
+      <div class="auth-card">
+        <div class="seg" role="tablist" aria-label="Account type" id="roleSeg">
+          <button type="button" role="tab" aria-selected="true" data-role="user">I'm adopting</button>
+          <button type="button" role="tab" aria-selected="false" data-role="staff">Shelter staff</button>
+        </div>
 
-    <!-- ── VERTICAL DIVIDER ── -->
-    <div class="auth-vline"></div>
-
-    <!-- ── RIGHT PANEL ── -->
-    <div class="auth-right">
-
-      <div class="role-switcher" role="tablist" aria-label="Account type">
-        <button class="role-btn active" id="roleUser" role="tab" aria-selected="true" data-role="user">User Login</button>
-        <button class="role-btn" id="roleStaff" role="tab" aria-selected="false" data-role="staff">Staff Login</button>
-      </div>
-
-      <!-- Main form: login / sign up / forgot password -->
-      <div id="formView">
-        <h1 class="auth-title" id="authTitle">Welcome Back</h1>
-        <p class="auth-sub" id="authSub">Sign in to continue your journey with PawPal.</p>
-
-        <div id="formAlert" class="pp-alert" hidden role="alert"></div>
-
-        <form class="auth-form" id="authForm" novalidate>
-          <div class="field-wrap hidden" id="nameField">
-            <div class="field-icon"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
-            <input class="auth-input" id="nameInput" type="text" placeholder="Full name" autocomplete="name" aria-label="Full name"/>
+        <!-- Log in -->
+        <form id="loginForm" style="margin-top:28px" novalidate>
+          <h1 id="loginTitle">Welcome back</h1>
+          <p class="muted" id="loginSub" style="margin-top:6px">Log in to see your matches, favourites and applications.</p>
+          <div id="loginMsg" style="margin-top:18px"></div>
+          <div class="stack" style="margin-top:18px">
+            <div class="field"><label for="lEmail">Email</label><input class="input" id="lEmail" type="email" autocomplete="email" required></div>
+            <div class="field"><div class="row-between"><label for="lPassword">Password</label><button type="button" class="link-btn small" data-show="forgot">Forgot password?</button></div>
+              <input class="input" id="lPassword" type="password" autocomplete="current-password" required></div>
+            <label class="check"><input type="checkbox" id="lRemember"> Keep me signed in for 30 days</label>
+            <button class="btn btn-primary btn-lg btn-block" type="submit" id="loginBtn">Log in</button>
           </div>
-
-          <div class="field-wrap">
-            <div class="field-icon"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
-            <input class="auth-input" id="emailInput" type="email" placeholder="Email address" autocomplete="email" aria-label="Email address" required/>
-          </div>
-
-          <div class="field-wrap" id="passwordField">
-            <div class="field-icon"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
-            <input class="auth-input has-eye" id="passwordInput" type="password" placeholder="Password" autocomplete="current-password" aria-label="Password"/>
-            <button type="button" class="eye-btn" data-eye="passwordInput" aria-label="Show password"><svg id="eyeIcon1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
-          </div>
-          <p class="pw-hint hidden" id="pwHint">At least 8 characters, including a letter and a number.</p>
-
-          <div class="field-wrap hidden" id="confirmField">
-            <div class="field-icon"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
-            <input class="auth-input has-eye" id="confirmInput" type="password" placeholder="Confirm password" autocomplete="new-password" aria-label="Confirm password"/>
-            <button type="button" class="eye-btn" data-eye="confirmInput" aria-label="Show password"><svg id="eyeIcon2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
-          </div>
-
-          <div class="remember-row" id="rememberRow">
-            <label class="remember-label">
-              <input type="checkbox" id="rememberInput" class="sr-only"/>
-              <div class="custom-check" id="rememberCheck"><svg fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"  id="checkIcon"><polyline points="20 6 9 17 4 12"/></svg></div>
-              <span class="remember-text">Remember me</span>
-            </label>
-            <button type="button" class="forgot-link pp-link-btn" id="forgotBtn">Forgot password?</button>
-          </div>
-
-          <button class="auth-submit" id="submitBtn" type="submit">Log In</button>
-
-          <div class="or-divider" id="orDivider">
-            <div class="or-line"></div><span class="or-text">OR</span><div class="or-line"></div>
-          </div>
-
-          <div class="mode-toggle" id="modeToggle">
-            <span class="mode-toggle-text" id="modeToggleText">Don't have an account? </span>
-            <button type="button" class="mode-toggle-btn" id="modeToggleBtn">Create New Account</button>
-          </div>
-
-          <p class="staff-note" id="staffNote">Staff accounts are created by a shelter administrator.</p>
+          <p class="center small" style="margin-top:20px" id="toSignup">New to PawPal? <button type="button" class="link-btn" data-show="signup">Create an account</button></p>
         </form>
-      </div>
 
-      <!-- Shown after sign up / when an email needs verifying -->
-      <div id="checkEmailView" class="check-email" hidden>
-        <div class="check-email-icon" aria-hidden="true">✉️</div>
-        <h1 class="auth-title">Check your email</h1>
-        <p class="auth-sub">We sent a verification link to <b id="sentTo"></b>. Click it to activate your account, then come back to log in.</p>
-        <div class="pp-alert pp-alert-info" id="devMailNote" hidden>
-          <span>Running without an email server: open the <a href="dev-mailbox.html" target="_blank" rel="noopener">PawPal dev mailbox</a> to find your verification email.</span>
+        <!-- Sign up -->
+        <form id="signupForm" style="margin-top:28px" novalidate hidden>
+          <h1>Create your account</h1>
+          <p class="muted" style="margin-top:6px">Free, and it only takes a minute. We'll email you a link to confirm your address.</p>
+          <div id="signupMsg" style="margin-top:18px"></div>
+          <div class="stack" style="margin-top:18px">
+            <div class="field"><label for="sName">Full name</label><input class="input" id="sName" autocomplete="name" required maxlength="80"></div>
+            <div class="field"><label for="sEmail">Email</label><input class="input" id="sEmail" type="email" autocomplete="email" required></div>
+            <div class="field"><label for="sPassword">Password</label><input class="input" id="sPassword" type="password" autocomplete="new-password" required minlength="8" aria-describedby="pwHint">
+              <div class="pw-meter" id="pwMeter" data-s="0" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+              <span class="hint" id="pwHint">At least 8 characters, including a letter and a number.</span></div>
+            <label class="check"><input type="checkbox" id="sTerms" required> <span>I agree to the <a href="terms.html" target="_blank">terms</a> and <a href="privacy.html" target="_blank">privacy policy</a>.</span></label>
+            <button class="btn btn-primary btn-lg btn-block" type="submit" id="signupBtn">Create account</button>
+          </div>
+          <p class="center small" style="margin-top:20px">Already have an account? <button type="button" class="link-btn" data-show="login">Log in</button></p>
+        </form>
+
+        <!-- Forgot password -->
+        <form id="forgotForm" style="margin-top:28px" novalidate hidden>
+          <h1>Reset your password</h1>
+          <p class="muted" style="margin-top:6px">Enter your email and we'll send a link to choose a new password. The link works once and expires in an hour.</p>
+          <div id="forgotMsg" style="margin-top:18px"></div>
+          <div class="stack" style="margin-top:18px">
+            <div class="field"><label for="fEmail">Email</label><input class="input" id="fEmail" type="email" autocomplete="email" required></div>
+            <button class="btn btn-primary btn-lg btn-block" type="submit" id="forgotBtn">Send reset link</button>
+          </div>
+          <p class="center small" style="margin-top:20px"><button type="button" class="link-btn" data-show="login">Back to log in</button></p>
+        </form>
+
+        <!-- Check your email -->
+        <div id="sentPanel" style="margin-top:28px" hidden>
+          <div class="empty" style="text-align:left;padding:28px">
+            <div class="e-icon" style="margin:0 0 16px"><span data-icon="mail"></span></div>
+            <h1 style="font-size:30px">Check your inbox</h1>
+            <p style="margin:10px 0 18px;max-width:none" id="sentText">We've sent a verification link to your email. Click it to activate your account, then log in.</p>
+            <div class="row"><button class="btn" id="resendBtn">Resend link</button><button class="btn btn-ghost" data-show="login">Back to log in</button></div>
+            <p class="small muted" id="devHint" style="margin-top:16px" hidden>Running locally without an email provider? Open the <a href="dev-mailbox.html" target="_blank">development mailbox</a>.</p>
+          </div>
         </div>
-        <button class="auth-submit" id="backToLogin" type="button">Back to log in</button>
-        <p class="resend-row">Didn't get it? <button class="pp-link-btn" id="resendBtn" type="button">Send a new link</button></p>
+
+        <div class="demo-box" id="demoBox" hidden>
+          <b>Demo accounts</b> — try the site with sample data:
+          <div class="row" style="margin-top:8px;gap:6px">
+            <button type="button" class="chip" data-demo="user@pawpal.com|User@123|user">Adopter</button>
+            <button type="button" class="chip" data-demo="staff@pawpal.com|Staff@123|staff">Shelter staff</button>
+            <button type="button" class="chip" data-demo="admin@pawpal.com|Admin@123|staff">Administrator</button>
+          </div>
+        </div>
       </div>
     </div>
-
   </div>
 </main>
-
-<footer data-footer></footer>
-
-<script src="js/api.js"></script>
-<script src="js/ui.js"></script>
-<script src="js/pages/login.js"></script>
-<script src="config.js"></script><script src="js/pp-enhance.js" defer></script></body>
+</body>
 </html>

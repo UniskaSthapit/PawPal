@@ -5,6 +5,6 @@ const { seedIfEmpty } = require('../src/services/seed');
   await db.init();
   await seedIfEmpty({ force: true });
   await db.flush();
-  console.log('✅ Sample data loaded. Staff: admin@pawpal.com / Admin@123 | Adopter: user@pawpal.com / User@123');
+  console.log('✅ Demo data loaded. Admin: admin@pawpal.com / Admin@123 | Staff: staff@pawpal.com / Staff@123 | Adopter: user@pawpal.com / User@123');
   process.exit(0);
 })().catch((e) => { console.error(e); process.exit(1); });

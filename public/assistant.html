@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI assistant — PawPal shelter portal</title>
+  <meta name="description" content="Ask questions about your shelter data.">
+  <meta name="theme-color" content="#221610">
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
+  <link rel="preload" href="fonts/fraunces-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/plus-jakarta-sans-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/pawpal.css">
+  <script src="js/api.js" defer></script>
+  <script src="js/ui.js" defer></script>
+  <script src="js/pages/assistant.js" defer></script>
+</head>
+<body data-layout="staff" data-page="staff-assistant">
+<main id="main" tabindex="-1">
+<div class="app-head"><div><span class="src-label src-ai"><span data-icon="sparkle"></span>Shelter assistant</span><h1 style="margin-top:6px">Ask about your shelter</h1><p>Answers come only from your shelter's data — applications, pets, enquiries and appointments you're allowed to see.</p></div></div>
+<div class="grid" style="grid-template-columns:minmax(0,1fr) 300px;align-items:start" id="asstLayout">
+  <section class="card" style="display:flex;flex-direction:column;min-height:560px">
+    <div class="chat-body" id="asstBody" style="border-radius:20px 20px 0 0;min-height:420px" aria-live="polite">
+      <div class="msg msg-bot">Hi! Ask me what needs attention — for example which applications need review, which are incomplete, or which pets aren't getting any enquiries.</div>
+    </div>
+    <form class="chat-form" id="asstForm" style="border-radius:0 0 20px 20px"><label class="sr-only" for="asstQ">Your question</label><textarea id="asstQ" rows="1" maxlength="500" placeholder="Ask about applications, pets or enquiries…"></textarea><button class="btn btn-primary" aria-label="Ask"><span data-icon="send"></span></button></form>
+  </section>
+  <aside class="card card-pad"><h2 class="h3" style="font-size:19px">Try asking</h2><div class="chat-suggest" style="margin-top:12px;flex-direction:column;align-items:stretch" id="asstSuggest">
+    <button type="button">Which applications need review?</button><button type="button">Which applications are incomplete?</button><button type="button">Which pets have received the most enquiries?</button>
+    <button type="button">Which pets have received no enquiries?</button><button type="button">What appointments are coming up?</button><button type="button">Which pets have been waiting the longest?</button></div>
+    <p class="tiny muted" style="margin-top:14px">Contact details are never sent to the AI model. To summarise a specific application, open it and press “Summarise”.</p></aside>
+</div>
+<style>@media (max-width:1000px){#asstLayout{grid-template-columns:minmax(0,1fr)!important}}</style>
+</main>
+</body>
+</html>

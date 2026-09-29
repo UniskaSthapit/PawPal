@@ -1,6 +1,6 @@
 // FR-08 AI-Based Adopter Suitability Ranking
 // Follows "Pseudocode 1" in the PawPal proposal exactly: 5 checks, max 100 points.
-// FR-05 pet matching reuses the same compatibility idea from the adopter's side.
+// Pet matching for adopters lives in matching.js.
 
 const LIVING_TYPES = ['House with yard', 'House without yard', 'Apartment', 'Farm / acreage'];
 const EXPERIENCE = ['First-time owner', 'Some experience', 'Experienced'];
@@ -51,30 +51,4 @@ function calculateSuitabilityScore(inquiry, pet) {
   return { score: total, label, breakdown, notes };
 }
 
-// FR-05 — rank pets for an adopter's quiz answers (0–100)
-function petMatchScore(pet, a) {
-  let s = 0;
-  const hasYard = a.homeType === 'house' || a.homeType === 'farm';
-  if (pet.requiresYard) s += hasYard ? 25 : 5; else s += a.homeType === 'apartment' ? 25 : 20;
-  const diff = Math.abs(Number(pet.energyLevel || 2) - Number(a.activity || 2));
-  s += diff === 0 ? 25 : diff === 1 ? 15 : 0;
-  s += a.hasChildren ? (pet.goodWithChildren ? 20 : 0) : 20;
-  s += a.hasOtherPets ? (pet.goodWithOtherPets ? 15 : 5) : 15;
-  if (!a.preferredType || a.preferredType === 'any') s += 15;
-  else if (a.preferredType === 'other') s += ['Dog', 'Cat'].includes(pet.type) ? 0 : 15;
-  else s += pet.type.toLowerCase() === a.preferredType.toLowerCase() ? 15 : 0;
-  if (a.hoursAlone >= 8 && Number(pet.energyLevel) >= 3) s -= 10;
-  return Math.max(0, Math.min(100, s));
-}
-
-function matchReasons(pet, a) {
-  const r = [];
-  if (!pet.requiresYard && a.homeType === 'apartment') r.push('happy in apartments');
-  if (pet.requiresYard && a.homeType !== 'apartment') r.push('will love your outdoor space');
-  if (Number(pet.energyLevel) === Number(a.activity)) r.push(['calm', 'balanced', 'high'][pet.energyLevel - 1] + ' energy like you');
-  if (a.hasChildren && pet.goodWithChildren) r.push('great with kids');
-  if (a.hasOtherPets && pet.goodWithOtherPets) r.push('gets along with other pets');
-  return r.slice(0, 2);
-}
-
-module.exports = { calculateSuitabilityScore, petMatchScore, matchReasons, LIVING_TYPES, EXPERIENCE };
+module.exports = { calculateSuitabilityScore, LIVING_TYPES, EXPERIENCE };
