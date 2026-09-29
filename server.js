@@ -4,11 +4,10 @@
 // ============================================================
 // Some hosts (Render's free plan included) advertise IPv6 but can't actually
 // route it, so anything that connects out — like sending email via Gmail —
-// fails with ENETUNREACH/timeout unless Node is told to prefer IPv4 addresses
+// fails with ENETUNREACH/timeout unless Node is 
+// told to prefer IPv4 addresses
 // when it resolves a hostname. This must run before anything else connects out.
 require('dns').setDefaultResultOrder('ipv4first');
-
-const path = require('path');
 
 const path = require('path');
 const express = require('express');
