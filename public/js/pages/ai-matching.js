@@ -1,155 +1,73 @@
-// AI matching: step-by-step quiz with live ranked results (FR-05) + chatbot (FR-10).
-(() => {
-  const { $, $$, esc, photo, PLACEHOLDER, ageText, toast } = PawPal;
+// Find My PawPal: free-text lifestyle → /api/ai/match → ranked, explained matches from real pets.
+(async () => {
+  const { $, $$, esc, icons, photo, sized, setBusy, errorHTML, emptyHTML, ageText } = PawPal;
+  const u = await PawPal.booted;
+  if (u?.role === 'user') {
+    $('#saveNote').innerHTML = `${icons.checkCircle} Your lifestyle is saved to your profile, so we can show matches on your dashboard and tell you when a new pet fits.`;
+    try {
+      const me = await PawPalAPI.get('/users/me');
+      if (me.preferencesText) $('#about').value = me.preferencesText;
+    } catch { /* ignore */ }
+  }
+  if (PawPal.isStaffUser(u)) $('#saveNote').textContent = 'You are signed in as shelter staff — results are not saved.';
 
-  const QUESTIONS = [
-    { key: 'homeType', icon: '🏠', title: 'What kind of home do you have?', sub: "We'll match pets who'll be comfortable in your space.", style: 'col',
-      options: [['apartment', '🏢', 'Apartment or small space', 'Unit, flat or townhouse without a yard'], ['house', '🏡', 'House with yard', 'Private garden or outdoor area'],
-        ['farm', '🌿', 'Large property or farm', 'Acreage and lots of open space']] },
-    { key: 'activity', icon: '⚡', title: "What's your lifestyle like?", sub: "We'll match your energy with the right companion.", style: 'row',
-      options: [['3', '🏃', 'Active'], ['2', '🚶', 'Moderate'], ['1', '🛋️', 'Relaxed']] },
-    { key: 'hoursAlone', icon: '⏰', title: 'How long would your pet be home alone?', sub: 'Some pets cope with alone time better than others.', style: 'row',
-      options: [['2', '☕', 'Under 4 hrs'], ['6', '🕓', '4–8 hrs'], ['9', '💼', '8+ hrs']] },
-    { key: 'hasChildren', icon: '👨‍👩‍👧', title: 'Are there children in your home?', sub: 'Including regular visits from young family members.', style: 'row',
-      options: [['true', '🧒', 'Yes'], ['false', '🙂', 'No']] },
-    { key: 'hasOtherPets', icon: '🐕', title: 'Do you already have other pets?', sub: 'Some of our pets prefer to be the only one.', style: 'row',
-      options: [['true', '🐾', 'Yes'], ['false', '✨', 'No']] },
-    { key: 'preferredType', icon: '💛', title: 'What kind of pet are you hoping for?', sub: 'Open to anything? We love that.', style: 'row',
-      options: [['dog', '🐶', 'Dog'], ['cat', '🐱', 'Cat'], ['other', '🐰', 'Other'], ['any', '🌈', 'Any']] },
-  ];
-  const answers = {};
-  let step = 0;
-  let chatPrefs = {};
-  const history = [];
+  $$('[data-example]').forEach((b) => b.addEventListener('click', () => { $('#about').value = b.dataset.example; $('#about').focus(); }));
 
-  // ---------- results panel ----------
-  function renderMatches(list, recText) {
-    $('#aiRec').textContent = recText;
-    if (!list.length) {
-      $('#matchCards').innerHTML = '<p class="pp-muted pp-pad">No available pets match yet — new pets arrive every week.</p>';
-      return;
-    }
-    $('#matchCards').innerHTML = list.map((m, i) => `<a class="match-card" href="pet-profile.html?id=${encodeURIComponent(m.pet.id)}">
-        <div class="match-card-rank" aria-label="Rank ${i + 1}">#${i + 1}</div>
-        <img src="${esc(photo(m.pet))}" alt="${esc(m.pet.name)}" onerror="this.onerror=null;this.src='${PLACEHOLDER}'"/>
-        <div class="match-card-info">
-          <div class="match-card-name">${esc(m.pet.name)}</div>
-          <div class="match-card-breed">${esc(m.pet.breed)} · ${esc(ageText(m.pet.age))}</div>
-          <div class="match-card-traits">${(m.reasons?.length ? m.reasons : m.pet.traits || []).slice(0, 2).map((t) => `<span class="trait-tag">${esc(t)}</span>`).join('')}</div>
+  const ringClass = (n) => (n >= 75 ? '' : 'mid');
+  function matchCardHTML(m, i) {
+    const p = m.pet;
+    return `<article class="match-card" style="animation-delay:${i * 80}ms">
+      <div class="media"><img src="${esc(sized(photo(p), 600))}" alt="${esc(p.name)}, a ${esc(p.breed)}" loading="lazy" data-fallback="${PawPal.FALLBACK[p.type]}">
+        <button class="fav-btn" data-fav="${esc(p.id)}" data-name="${esc(p.name)}" aria-pressed="${PawPal.favs.has(p.id)}" aria-label="Save ${esc(p.name)}">${icons.heart}</button></div>
+      <div class="body">
+        <div class="row-between" style="align-items:flex-start;flex-wrap:nowrap">
+          <div><h3><a href="pet-profile.html?id=${encodeURIComponent(p.id)}">${esc(p.name)}</a></h3>
+            <div class="small muted">${esc(p.breed)} · ${esc(ageText(p.age))} · ${esc(p.size)} · ${esc(p.location || '')}</div></div>
+          <div class="match-ring ${ringClass(m.score)}" style="--p:${m.score}" role="img" aria-label="${m.score}% compatibility"><span>${m.score}%</span></div>
         </div>
-        <div class="match-pct"><span class="match-pct-num">${m.match}%</span><span class="match-pct-label">Match</span></div>
-      </a>`).join('');
+        ${m.summary ? `<div><span class="src-label src-ai">${icons.sparkle}Why ${esc(p.name)} could suit you</span><p style="margin-top:4px">${esc(m.summary)}</p></div>` : ''}
+        ${m.reasons.length ? `<ul class="plain reason-list pos">${m.reasons.map((r) => `<li>${icons.check}<span>${esc(r)}</span></li>`).join('')}</ul>` : ''}
+        ${m.considerations.length ? `<div><span class="src-label" style="color:var(--honey-ink)">${icons.info}Worth considering</span><ul class="plain reason-list con" style="margin-top:6px">${m.considerations.map((r) => `<li>${icons.info}<span>${esc(r)}</span></li>`).join('')}</ul></div>` : ''}
+        <div class="fact-panel" style="padding:10px 12px"><span class="src-label src-shelter">${icons.building}Shelter facts</span>
+          <div class="small" style="margin-top:4px">${esc(PawPal.energyText(p.energyLevel))} · ${p.goodWithChildren ? 'Good with kids' : 'Adult home preferred'} · ${p.goodWithOtherPets ? 'OK with other pets' : 'Only pet'} · ${p.requiresYard ? 'Needs a yard' : 'No yard needed'}${p.status === 'On Hold' ? ' · Currently on hold' : ''}</div></div>
+        <div class="row" style="margin-top:auto"><a class="btn btn-primary btn-sm" href="pet-profile.html?id=${encodeURIComponent(p.id)}">Meet ${esc(p.name)}</a>
+          <button class="btn btn-sm" data-ask="Why did you recommend ${esc(p.name)}?">${icons.message}Ask why</button></div>
+      </div></article>`;
   }
 
-  function recommendation() {
-    const home = { apartment: 'apartment living', house: 'a home with a yard', farm: 'lots of open space' }[answers.homeType];
-    const energy = { 3: 'high-energy', 2: 'easy-going', 1: 'calm' }[answers.activity];
-    const bits = [energy && `${energy} pets`, home && `suited to ${home}`, answers.hasChildren === 'true' && 'gentle with children',
-      answers.hasOtherPets === 'true' && 'happy with other animals'].filter(Boolean);
-    return bits.length ? `Based on your answers, we recommend ${bits.join(', ')}.` : 'Answer a few questions and we\'ll suggest pets that suit your home.';
-  }
-
-  let reqId = 0;
-  async function refresh(final = false) {
-    const id = ++reqId;
-    try {
-      const { matches } = await PawPalAPI.post('/ai/match', { ...answers, final });
-      if (id === reqId) renderMatches(matches, recommendation());
-    } catch (err) { toast(err.message, 'error'); }
-  }
-
-  // ---------- quiz ----------
-  function renderQuestion() {
-    const q = QUESTIONS[step];
-    $('#stepLabel').textContent = `Step ${step + 1} of ${QUESTIONS.length}`;
-    $('#progressFill').style.width = `${((step + 1) / QUESTIONS.length) * 100}%`;
-    const value = answers[q.key];
-    const options = q.style === 'col'
-      ? `<div class="quiz-options-col" role="radiogroup" aria-label="${esc(q.title)}">${q.options.map(([v, ic, t, s]) => `<button class="quiz-option ${value === v ? 'selected' : ''}" role="radio" aria-checked="${value === v}" data-value="${v}">
-          <span class="quiz-option-icon">${ic}</span><span class="quiz-option-text"><strong>${t}</strong><small>${s}</small></span><span class="quiz-option-check" aria-hidden="true">✓</span></button>`).join('')}</div>`
-      : `<div class="quiz-options-row" role="radiogroup" aria-label="${esc(q.title)}">${q.options.map(([v, ic, t]) => `<button class="quiz-option-pill ${value === v ? 'selected' : ''}" role="radio" aria-checked="${value === v}" data-value="${v}">
-          <span class="pill-emoji">${ic}</span>${t}</button>`).join('')}</div>`;
-    $('#questionHost').innerHTML = `<div class="quiz-question"><div class="quiz-question-icon" aria-hidden="true">${q.icon}</div><h2>${q.title}</h2><p>${q.sub}</p>${options}</div>`;
-    $('#backBtn').disabled = step === 0;
-    $('#nextBtn').textContent = step === QUESTIONS.length - 1 ? 'See my matches' : 'Next';
-    $('#nextBtn').disabled = value === undefined;
-  }
-
-  $('#questionHost').addEventListener('click', (e) => {
-    const b = e.target.closest('[data-value]');
-    if (!b) return;
-    answers[QUESTIONS[step].key] = b.dataset.value;
-    renderQuestion();
-    refresh();
-    if (step < QUESTIONS.length - 1) setTimeout(() => { step++; renderQuestion(); }, 260);
-  });
-  $('#backBtn').addEventListener('click', () => { if (step > 0) { step--; renderQuestion(); } });
-  $('#nextBtn').addEventListener('click', async () => {
-    if (step < QUESTIONS.length - 1) { step++; renderQuestion(); return; }
-    await refresh(true);
-    $('#questionHost').innerHTML = `<div class="quiz-question quiz-done"><div class="quiz-question-icon" aria-hidden="true">🎉</div>
-      <h2>Your matches are ready!</h2><p>Tap a pet to see their full profile, or chat with PawPal AI to fine-tune your picks.</p>
-      <div class="quiz-done-actions"><button class="pp-btn pp-btn-primary" data-open-chat>Chat with PawPal AI</button><button class="pp-btn pp-btn-ghost" id="restartQuiz">Start again</button></div></div>`;
-    $('#nextBtn').hidden = true;
-    $('#backBtn').hidden = true;
-    $('#resultsSub').textContent = 'Ranked by compatibility with your answers';
-  });
-  document.addEventListener('click', (e) => {
-    if (e.target.closest('#restartQuiz')) { Object.keys(answers).forEach((k) => delete answers[k]); step = 0; $('#nextBtn').hidden = false; $('#backBtn').hidden = false; renderQuestion(); }
-    if (e.target.closest('[data-open-chat]')) switchTab('chat');
-  });
-
-  // ---------- tabs ----------
-  function switchTab(tab) {
-    $$('.ai-tab').forEach((t) => { const on = t.dataset.tab === tab; t.classList.toggle('active', on); t.setAttribute('aria-selected', on); });
-    $('#quizView').hidden = tab !== 'quiz';
-    $('#chatView').hidden = tab !== 'chat';
-    if (tab === 'chat') {
-      if (!history.length) addBubble('ai', "Hi! I'm PawPal AI 🐾 Tell me about your home and lifestyle — for example, whether you live in an apartment, have kids, or love long walks — and I'll suggest pets that fit.");
-      $('#chatInput').focus();
+  $('#matchForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const text = $('#about').value.trim();
+    const body = { text, homeType: $('#homeType').value, activity: $('#activity').value, hoursAlone: $('#hoursAlone').value, experience: $('#experience').value,
+      preferredType: $('#preferredType').value, limit: 6 };
+    if ($('#hasChildren').checked) body.hasChildren = true;
+    if ($('#hasOtherPets').checked) body.hasOtherPets = true;
+    $('#formError').innerHTML = '';
+    if (text.length < 8 && !Object.values(body).some((v) => v && v !== 6 && v !== text)) {
+      $('#formError').innerHTML = errorHTML('Tell PawPal a little about your home and lifestyle first — even one sentence helps.');
+      return $('#about').focus();
     }
-  }
-  $('.ai-tabs').addEventListener('click', (e) => { const t = e.target.closest('.ai-tab'); if (t) switchTab(t.dataset.tab); });
-
-  // ---------- chat (FR-10) ----------
-  function addBubble(who, text) {
-    const div = document.createElement('div');
-    div.className = `chat-bubble chat-${who}`;
-    div.textContent = text;
-    $('#chatLog').appendChild(div);
-    $('#chatLog').scrollTop = $('#chatLog').scrollHeight;
-    if (who === 'ai' || who === 'user') history.push({ role: who === 'user' ? 'user' : 'assistant', content: text });
-    return div;
-  }
-  async function send(text) {
-    const message = text.trim();
-    if (!message) return;
-    addBubble('user', message);
-    $('#chatInput').value = '';
-    $('#chatSuggest').hidden = true;
-    const typing = document.createElement('div');
-    typing.className = 'chat-bubble chat-ai chat-typing';
-    typing.innerHTML = '<span></span><span></span><span></span>';
-    $('#chatLog').appendChild(typing);
-    $('#chatSend').disabled = true;
+    const btn = $('#matchBtn');
+    setBusy(btn, true, 'Finding your matches…');
+    $('#results').innerHTML = `<div class="ai-panel"><span class="src-label src-ai">${icons.sparkle}Reading your lifestyle…</span><div class="skeleton" style="height:28px;margin-top:10px;width:70%"></div></div>
+      ${[0, 1, 2].map(() => '<div class="skeleton" style="height:240px;margin-top:16px;border-radius:20px"></div>').join('')}`;
     try {
-      const r = await PawPalAPI.post('/ai/chat', { message, history: history.slice(0, -1), prefs: chatPrefs });
-      chatPrefs = r.prefs || chatPrefs;
-      typing.remove();
-      addBubble('ai', r.reply);
-      if (r.picks?.length) { renderMatches(r.picks, 'Picked by PawPal AI from your conversation.'); $('#resultsSub').textContent = 'Based on your chat with PawPal AI'; }
+      const res = await PawPalAPI.post('/ai/match', body);
+      const engine = res.source === 'anthropic' ? 'Claude' : res.source === 'openai' ? 'OpenAI' : 'PawPal matching engine';
+      $('#results').innerHTML = `
+        <div class="ai-panel">
+          <div class="row-between"><span class="src-label src-ai">${icons.sparkle}What PawPal understood</span><span class="tiny muted">${esc(engine)}</span></div>
+          <div class="understood" style="margin-top:10px">${res.understood.length ? res.understood.map((x) => `<span class="badge badge-honey">${esc(x)}</span>`).join('') : '<span class="small muted">Not much yet — add a few details for sharper matches.</span>'}</div>
+          ${res.saved ? `<p class="small" style="margin-top:10px">${icons.checkCircle} Saved to your profile. We'll notify you when a new pet is a strong match.</p>` : ''}
+        </div>
+        <div class="row-between" style="margin:24px 0 14px"><h2 class="h3">${res.matches.length ? `Your top ${res.matches.length} matches` : 'No matches yet'}</h2><a class="small" href="adopt.html">Browse all pets</a></div>
+        <div class="stack" style="--stack:16px">${res.matches.length ? res.matches.map(matchCardHTML).join('') : emptyHTML({ title: 'No pets available right now', text: 'New animals arrive every week. Create an account and we\'ll let you know when a strong match arrives.' })}</div>
+        <p class="disclaimer" style="margin-top:20px">${icons.info}Compatibility compares what you told us with shelter-provided facts. It's guidance, not a guarantee — meet the pet and talk with the shelter before deciding.</p>`;
+      $('#results').scrollIntoView({ behavior: PawPal.reduceMotion ? 'auto' : 'smooth', block: 'start' });
     } catch (err) {
-      typing.remove();
-      addBubble('system', err.message);
-    }
-    $('#chatSend').disabled = false;
-    $('#chatInput').focus();
-  }
-  $('#chatForm').addEventListener('submit', (e) => { e.preventDefault(); send($('#chatInput').value); });
-  $('#chatSuggest').addEventListener('click', (e) => { const b = e.target.closest('[data-say]'); if (b) send(b.dataset.say); });
+      $('#results').innerHTML = errorHTML(err.message);
+    } finally { setBusy(btn, false); }
+  });
 
-  // ---------- start ----------
-  renderQuestion();
-  $('#matchCards').innerHTML = [1, 2, 3].map((n) => `<div class="match-card match-card-empty"><div class="match-card-rank">#${n}</div><span>Your match appears here</span></div>`).join('');
-  if (PawPal.params.get('tab') === 'chat') switchTab('chat');
+  if (PawPal.params.get('text')) { $('#about').value = PawPal.params.get('text'); $('#matchForm').requestSubmit(); }
 })();

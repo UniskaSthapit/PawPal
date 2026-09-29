@@ -1,67 +1,25 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>PawPal Admin — Manage pets</title>
-  
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="css/global.css"/>
-  <link rel="stylesheet" href="css/shared-nav.css"/>
-  <link rel="stylesheet" href="css/shared-footer.css"/>
-  <link rel="stylesheet" href="css/nav.css"/>
-  <link rel="stylesheet" href="css/sidebar.css"/>
-  <link rel="stylesheet" href="css/cards.css"/>
-  <link rel="stylesheet" href="css/table.css"/>
-  <link rel="stylesheet" href="css/pets-extra.css"/>
-  <link rel="stylesheet" href="css/app.css"/>
-  <link rel="stylesheet" href="css/pages.css"/>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-<link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png"><link rel="icon" type="image/png" sizes="192x192" href="images/favicon-192.png"><link rel="apple-touch-icon" href="images/apple-touch-icon.png"><link rel="canonical" href="YOUR_CANONICAL_URL">
-<meta property="og:title" content="PawPal Admin — Manage pets"><meta property="og:type" content="website"><meta property="og:image" content="YOUR_OG_IMAGE_URL"><link rel="stylesheet" href="css/pp-system.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Manage pets — PawPal shelter portal</title>
+  <meta name="description" content="Manage your shelter's pet listings.">
+  <meta name="theme-color" content="#221610">
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
+  <link rel="preload" href="fonts/fraunces-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/plus-jakarta-sans-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/pawpal.css">
+  <script src="js/api.js" defer></script>
+  <script src="js/ui.js" defer></script>
+  <script src="js/pages/staff-pets.js" defer></script>
 </head>
-<body class="page-admin">
-
-<nav class="pawpal-nav" data-nav="admin"></nav>
-<div class="layout">
-  <aside data-sidebar="admin" aria-label="Admin navigation"></aside>
-  <main id="main">
-    <div class="main-inner">
-      <div class="top-bar"><h1>Manage Pets</h1><span class="date" id="today"></span></div>
-
-      <div class="pets-stat-banner">
-        <div class="pets-stat-item"><span class="pets-stat-num" id="cTotal">–</span><span class="pets-stat-lbl">Total Pets</span></div>
-        <div class="pets-stat-divider"></div>
-        <div class="pets-stat-item"><span class="pets-stat-num" style="color:#5D9B6A" id="cAvail">–</span><span class="pets-stat-lbl">Available</span></div>
-        <div class="pets-stat-divider"></div>
-        <div class="pets-stat-item"><span class="pets-stat-num" style="color:#1565C0" id="cPending">–</span><span class="pets-stat-lbl">Adoption pending</span></div>
-        <div class="pets-stat-divider"></div>
-        <div class="pets-stat-item"><span class="pets-stat-num" style="color:#C85A3E" id="cAdopted">–</span><span class="pets-stat-lbl">Adopted</span></div>
-        <div class="pets-stat-divider"></div>
-        <div class="pets-stat-item"><span class="pets-stat-num" style="color:#6B5B4E" id="cDraft">–</span><span class="pets-stat-lbl">Drafts</span></div>
-        <a href="add-pet.html" class="pets-add-btn"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add New Pet</a>
-      </div>
-
-      <div class="table-card">
-        <div class="pp-toolbar">
-          <input class="pp-input pp-grow" id="petSearch" type="search" placeholder="Search by name, breed or location" aria-label="Search pets"/>
-          <select class="pp-select" id="typeFilter" aria-label="Filter by type"><option value="">All types</option><option>Dog</option><option>Cat</option><option>Rabbit</option><option>Bird</option><option>Other</option></select>
-          <select class="pp-select" id="statusFilter" aria-label="Filter by status"><option value="">All statuses</option><option>Available</option><option>Pending Adoption</option><option>Adopted</option><option>Draft</option></select>
-        </div>
-        <div class="table-scroll">
-          <table>
-            <thead><tr><th>Pet</th><th>Type</th><th>Age</th><th>Location</th><th>Status</th><th>Added</th><th><span class="sr-only">Actions</span></th></tr></thead>
-            <tbody id="petBody"><tr><td colspan="7"><div class="skeleton skeleton-line"></div></td></tr></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </main>
-</div>
-<footer data-footer></footer>
-<script src="js/api.js"></script>
-<script src="js/ui.js"></script>
-<script src="js/pages/pets.js"></script>
-<script src="config.js"></script><script src="js/pp-enhance.js" defer></script></body>
+<body data-layout="staff" data-page="staff-pets">
+<main id="main" tabindex="-1">
+<div class="app-head"><div><h1>Pets</h1><p>Every listing your shelter manages. Changes go live immediately.</p></div><a class="btn btn-primary" href="add-pet.html"><span data-icon="plus"></span>Add a pet</a></div>
+<div class="tabs" role="tablist" id="statusTabs"></div>
+<div class="row-between" style="margin-bottom:16px"><div class="input-group" style="flex:1;max-width:420px"><span data-icon="search"></span><label class="sr-only" for="petQ">Search pets</label><input class="input" id="petQ" placeholder="Search by name, breed or location"></div><span class="small muted" id="petCount"></span></div>
+<div class="table-wrap"><table class="table table-cards"><thead><tr><th>Pet</th><th>Status</th><th>Details</th><th>Listed</th><th><span class="sr-only">Actions</span></th></tr></thead><tbody id="petRows"><tr><td colspan="5"><div class="skeleton" style="height:48px"></div></td></tr></tbody></table></div>
+</main>
+</body>
 </html>

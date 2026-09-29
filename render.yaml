@@ -4,8 +4,9 @@ services:
     name: pawpal
     runtime: node
     plan: free
-    buildCommand: npm install
+    buildCommand: npm ci --omit=dev
     startCommand: npm start
+    healthCheckPath: /api/config
     envVars:
       - key: NODE_ENV
         value: production
@@ -16,7 +17,11 @@ services:
       - key: APP_URL
         sync: false   # e.g. https://pawpal.onrender.com
       - key: MONGODB_URI
-        sync: false   # MongoDB Atlas connection string (required on Render — its disk is wiped on redeploy)
+        sync: false   # MongoDB Atlas connection string (required — Render's disk is wiped on redeploy)
+      - key: RESEND_API_KEY
+        sync: false   # recommended on Render (SMTP ports are blocked on the free plan)
+      - key: MAIL_FROM
+        sync: false   # e.g. "PawPal <no-reply@your-domain.com>" on a domain verified in Resend
       - key: SMTP_HOST
         sync: false
       - key: SMTP_PORT
@@ -26,6 +31,14 @@ services:
       - key: SMTP_USER
         sync: false
       - key: SMTP_PASS
+        sync: false
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: TWILIO_FROM_NUMBER
+        sync: false
+      - key: ANTHROPIC_API_KEY
         sync: false
       - key: OPENAI_API_KEY
         sync: false

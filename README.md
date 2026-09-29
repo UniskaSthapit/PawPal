@@ -1,161 +1,155 @@
-# 🐾 PawPal — AI-Powered Pet Adoption Management System
+# 🐾 PawPal — AI-assisted pet adoption
 
 NIT3003/NIT3004 IT Capstone · Victoria University
 Team: Uniska Sthapit, Pratikshya Bhujel, Pemba Sange Sherpa, Sushrit Phuyal
 
-PawPal is a full-stack web app for animal shelters. Adopters browse pets, take an AI matching quiz or chat with PawPal AI, apply online and track their application. Shelter staff publish pets with AI-written descriptions, review applicants ranked by an AI suitability score, schedule visits, and PawPal emails adopters automatically at every step.
+PawPal connects rescue pets with the right homes. Adopters describe their lifestyle in plain English and get
+explained, compatibility-ranked matches from real shelter data, then apply online and follow every step on a
+timeline. Shelter staff manage listings, a full adoption pipeline, enquiries and analytics — with AI helpers
+that only ever work from data they're allowed to see.
 
 ---
 
-## 1. Run it on your computer (5 minutes)
+## Run it locally (5 minutes)
 
-You need **Node.js 20.19 or newer** — download the LTS version from https://nodejs.org.
+Requires **Node.js 20.19+**.
 
 ```bash
-cd pawpal
 npm install
-npm start
+npm start          # http://localhost:3000
 ```
 
-Open **http://localhost:3000**. That's it — no database, email account or API keys are needed to try everything.
+No database, email, SMS or AI keys are needed to try everything: PawPal uses a file database, a **dev mailbox**
+(`/dev-mailbox.html`) for emails and SMS codes, and its built-in **rules engine** for AI features.
 
-| Account | Email | Password | Opens |
-|---|---|---|---|
-| Staff (shelter admin) | `admin@pawpal.com` | `Admin@123` | Staff dashboard (use the **Staff Login** tab) |
-| Adopter | `user@pawpal.com` | `User@123` | My Applications |
-
-Or create your own adopter account with **Sign Up**. Because no email server is configured yet, the verification email appears in the **dev mailbox** at http://localhost:3000/dev-mailbox.html — open it, click **Verify my email**, then log in.
-
-Other commands:
+| Role | Email | Password |
+|---|---|---|
+| Administrator | `admin@pawpal.com` | `Admin@123` |
+| Shelter staff (Melbourne) | `staff@pawpal.com` | `Staff@123` |
+| Adopter | `user@pawpal.com` | `User@123` |
 
 ```bash
-npm run dev    # restarts automatically when you edit a file
-npm test       # runs 56 end-to-end checks of every feature
-npm run seed   # wipes all data and reloads the sample pets/applications
+npm run dev        # auto-restart on changes
+npm test           # 109 end-to-end API checks (throwaway database)
+npm run test:ui    # 28 real-browser journeys (needs Playwright — see the script header)
+npm run seed       # wipe and reload the demo data
 ```
 
 ---
 
-## 2. What works
+## What's in it
 
-### Adopter side
-- **Home** — live pet grid from the database, keyword search, filters (dogs, cats, other, active, apartment friendly, good with kids), sorting, favourites (heart).
-- **Sign up → email verification → login** — passwords hashed with bcrypt, login blocked until the email is verified, "resend link", "forgot password" with a 1-hour reset link, "remember me".
-- **Pet profile** — photo gallery, facts, AI bio, similar pets, apply button that knows whether you're logged in or already applied.
-- **AI matching** — 6-step quiz with live top-3 results, plus a **PawPal AI chatbot** that reads your lifestyle from normal sentences and recommends real pets.
-- **Adoption inquiry form** — validated, pre-filled from your account, confirmation email.
-- **My Applications** — progress tracker (Pending → Shortlisted → Visit Scheduled → Approved → Adopted), visit date, messages from the shelter, withdraw, notification bell.
-- **Find a vet** — Google map of clinics by suburb or your location.
-- **My Profile** — edit details, change password, saved pets.
+### Adopters
+- **Landing page** — photo slideshow (auto-play, swipe, pause, reduced-motion aware), quick species/age/location
+  search, natural-language search, live stats computed from the database, featured pets, a *live* matching example,
+  how-it-works, rescue stories, FAQ.
+- **Adopt** — filters for species, age, size, sex, activity, apartment/kids/other pets/first-time owner, location,
+  breed and availability (synced to the URL), plus natural-language search ("calm dog for an apartment") that shows
+  how PawPal interpreted it and relaxes criteria transparently when nothing matches.
+- **Pet profiles** — gallery, key facts, "good with", health, shelter details, adoption steps, similar pets,
+  favourite, **Ask the shelter** (real enquiry) and **Ask AI about this pet**. Shelter facts and PawPal's
+  interpretation are always labelled separately.
+- **Find My PawPal** — describe your life; PawPal extracts home, schedule, activity, experience, household,
+  species/size/age/temperament preferences and location, then ranks real pets with a match %, reasons and
+  things to consider. Scores are capped at 97% — guidance, never a guarantee.
+- **Chat assistant** on every public page — recommends real pets (as linked cards), answers questions about a
+  specific pet, explains the process/FAQ, explains *why* it recommended a pet, and reports the signed-in adopter's
+  own application status. Conversations are saved to the account.
+- **Accounts** — sign-up, email verification (24h single-use link, resend), login with "remember me", forgot/reset
+  password (1h single-use link), **SMS phone verification** (6-digit code, 10-min expiry, 5 attempts, rate-limited).
+- **Application** — 5-step form with draft autosave, conditional questions, review step and declaration. A
+  **question helper** explains any question on request and never suggests answers.
+- **Dashboard** — nudges (info requested, upcoming appointments, verify phone), recommendations from the saved
+  lifestyle, active applications with progress, favourites, shelter replies, notifications, saved AI chats.
+- **Adoption timeline** — every stage with dates and shelter notes, appointment card with *Add to calendar* (.ics),
+  "action needed" reply box, message thread with the shelter, withdraw.
+- **Notifications** — bell with unread count, mark one/all read, full history page; all triggered by real events.
 
-### Staff portal (protected — visitors and adopters are redirected)
-- **Dashboard** — live stats, recent applications, upcoming visits.
-- **Manage Pets** — search/filter, change status inline, edit, delete.
-- **Add / Edit Pet** — all details, **Generate Description** (AI), photo upload with automatic resizing, drag & drop, cover photo, staff-only medical and rescue notes, drafts.
-- **Applications** — status filter chips, search, filter by pet (auto-ranks applicants by AI score), review window with score ring, line-by-line score breakdown, applicant answers, history timeline, private notes, and status updates that email the applicant. Marking one applicant **Adopted** closes every other open application for that pet and notifies them.
-- **Analytics** — date range, visits, searches, inquiries, adoptions with % change, top keywords, inquiries by weekday, AI matches vs adoptions, status chart, "search gaps" (searches that found nothing), CSV export.
-- **Settings** — account, password, add staff members (they get an invite email), deactivate staff, system status, reset demo data.
+### Shelter staff (scoped to their shelter) and administrators (everything)
+- **Overview** — KPIs, pipeline counts, latest applications, upcoming appointments, assistant shortcut, insights.
+- **Pets** — list by status with inline status changes; **add/edit** with photo upload (resized in the browser,
+  stored in the database), AI-drafted description from public fields only, and clearly separated internal notes.
+  Archive / mark adopted notifies everyone who saved the pet. New listings notify adopters whose saved lifestyle is
+  a ≥80% match.
+- **Applications** — pipeline tabs, search/sort/filter by pet, suitability score with line-by-line breakdown,
+  rank among applicants, **AI summary**, status changes with appointment scheduling and a message (emailed),
+  message thread, private staff notes, full history. Completing an adoption automatically closes and notifies the
+  other applicants.
+- **Enquiries** — answer adopter questions (emailed + in-app) or close them.
+- **Analytics** — date range, KPIs with period-on-period change, weekly trends, adoption funnel (views → enquiries
+  → applications → approved → adopted), interest by age/species/size, status mix, top and zero-result searches,
+  CSV exports and **AI insights** generated only from those numbers.
+- **AI assistant** — "Which applications need review?", "…are incomplete?", "Which pets have the most / no
+  enquiries?", "What's booked this week?" — answered from a permission-scoped snapshot.
+- **Administration** — users (role, shelter assignment, deactivate/reactivate — takes effect immediately),
+  staff invitations, shelter management, system status, demo reset.
+
+### Adoption workflow
+`Submitted → Under Review → (Info Requested) → Interview → Meet & Greet → Approved → Adoption Scheduled → Adopted`,
+or `Declined` / `Withdrawn`. Interview, Meet & Greet and Adoption Scheduled require a date. The pet is placed
+**On Hold** from Meet & Greet onwards and released automatically if no one is progressing. Every change is stored in
+the status history, emailed and posted as an in-app notification.
 
 ---
 
-## 3. Where each proposal requirement lives
+## Connecting real services
 
-| Req | Feature | Main files |
+Copy `.env.example` to `.env` and fill in what you have — every variable is documented there. The startup log
+shows which mode each service is in.
+
+| Service | Variables | Without it |
 |---|---|---|
-| FR-01 | Add pet + admin dashboard | `public/add-pet.html`, `public/pets.html`, `public/index.html`, `src/routes/pets.js` |
-| FR-02 | AI pet description | `src/services/ai.js` → `describePet`, button on Add Pet |
-| FR-03 | Hide sensitive pet info | `toPublic()` in `src/routes/pets.js` strips medical/rescue notes for non-staff |
-| FR-04 | Keyword search | `GET /api/pets?q=` in `src/routes/pets.js`, search bar on Home |
-| FR-05 | AI pet matching | `petMatchScore` in `src/services/scoring.js`, `public/ai-matching.html` |
-| FR-06 | Search & inquiry analytics | `src/routes/misc.js` (analytics), `public/analytics.html` |
-| FR-07 | Adoption inquiry form | `public/inquiry-form.html`, `POST /api/applications` |
-| FR-08 | Adopter suitability ranking | `calculateSuitabilityScore` in `src/services/scoring.js` — follows Pseudocode 1 exactly (25/25/20/15/15, High ≥ 80, Medium ≥ 60) |
-| FR-09 | Status tracking | `PATCH /api/applications/:id/status`, `public/my-applications.html` |
-| FR-10 | AI chatbot | `chat()` in `src/services/ai.js`, "Chat with AI" tab |
-| FR-11 | Nearby vets (Google Maps) | `src/services/maps.js`, `public/vet-finder.html` |
-| FR-12 | Automatic closure notifications | Adopted branch in `src/routes/applications.js` + `src/services/mailer.js` |
+| MongoDB Atlas | `MONGODB_URI`, `MONGODB_DB` | File database `data/pawpal-db.json` |
+| Email | `RESEND_API_KEY` **or** `SMTP_*`, plus `MAIL_FROM` | Dev mailbox (local only) |
+| SMS | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER` | Codes in dev mailbox locally; disabled in production |
+| AI | `ANTHROPIC_API_KEY` (preferred) or `OPENAI_API_KEY` | Rules engine on the same live data |
+| Maps | `GOOGLE_MAPS_API_KEY` | Keyless Google Maps embed |
+
+Existing databases are upgraded automatically on start (versioned migration): legacy statuses
+(Pending/Shortlisted/Visit Scheduled/Rejected) are mapped to the new workflow, shelters are created and assigned,
+inline photos move to the images collection, and the first staff account becomes an administrator.
+
+See **DEPLOY.md** for Render + MongoDB Atlas.
 
 ---
 
-## 4. Connect the real services (all optional)
-
-Copy `.env.example` to `.env`, fill in what you have, and restart with `npm start`. The terminal shows which mode each service is using.
-
-**MongoDB Atlas (database)** — create a free M0 cluster at https://www.mongodb.com/atlas, add a database user, allow your IP (or `0.0.0.0/0` for hosting), then copy the connection string into `MONGODB_URI`. Sample data loads automatically into the empty database. Without it, data is saved to `data/pawpal-db.json`.
-
-**Email (Gmail example)** — turn on 2-Step Verification for the Google account, create an **App Password** at https://myaccount.google.com/apppasswords, then set:
-```
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=465
-SMTP_SECURE=true
-SMTP_USER=yourteam@gmail.com
-SMTP_PASS=the16characterapppassword
-MAIL_FROM="PawPal <yourteam@gmail.com>"
-```
-Once SMTP is set, the dev mailbox switches off and real emails are sent.
-
-**OpenAI (AI descriptions + chatbot)** — create a key at https://platform.openai.com/api-keys and set `OPENAI_API_KEY`. Without a key, PawPal uses its built-in rule-based AI, so the features still work. If OpenAI fails, it falls back automatically.
-
-**Google Maps (vet list)** — in Google Cloud Console enable **Places API (New)** and **Maps Embed API**, create a key, restrict it to your website address, and set `GOOGLE_MAPS_API_KEY`. Without a key the page shows the free Google map embed.
-
----
-
-## 5. Put it online (Render + MongoDB Atlas)
-
-1. Push this folder to a GitHub repository (the `.gitignore` already excludes `node_modules`, `.env` and data).
-2. At https://render.com choose **New + → Blueprint** and select the repo — `render.yaml` sets everything up.
-3. Fill in `MONGODB_URI` (required on Render because its disk resets on every deploy), `APP_URL` (your Render address, e.g. `https://pawpal.onrender.com`) and, ideally, the SMTP settings so users can verify their email.
-
-Railway works the same way: new project from GitHub, start command `npm start`, add the same variables.
-
----
-
-## 6. Project structure
+## Architecture
 
 ```
-pawpal/
-├─ server.js               Express app: security headers, API, page protection, static site
-├─ src/
-│  ├─ config.js            Reads .env
-│  ├─ db/                  Database: MongoDB (Atlas) or file database, same interface
-│  ├─ middleware/auth.js   JWT in httpOnly cookie, requireAuth / requireStaff
-│  ├─ routes/              auth · pets · applications · misc (AI, analytics, users, vets, system)
-│  └─ services/            mailer · scoring (FR-05/08) · ai (FR-02/10) · maps (FR-11) · seed
-├─ public/                 The website (your original HTML/CSS design, now dynamic)
-│  ├─ js/api.js            All calls to the server
-│  ├─ js/ui.js             Shared nav, sidebars, footer, toasts, dialogs, helpers
-│  ├─ js/pages/*.js        One script per page
-│  └─ css/                 Original styles + app.css (components) + pages.css (page additions)
-├─ scripts/smoke-test.js   npm test
-└─ render.yaml             Hosting blueprint
+server.js                 Express: security headers (CSP), API, server-side page protection, static site
+src/
+  config.js               Environment settings
+  constants.js            Roles, pet statuses, adoption workflow
+  db/                     MongoDB or file database behind the same interface (+ indexes)
+  middleware/auth.js      JWT in httpOnly cookie; adopter / staff / admin; shelter scoping
+  routes/                 auth · pets · images · applications · favourites · enquiries · ai · admin · misc
+  services/
+    matching.js           Lifestyle parser + explainable compatibility engine
+    ai.js / llm.js        AI features (Claude/OpenAI) with grounded prompts and rules fallback
+    knowledge.js          FAQ + application question explanations
+    mailer.js / sms.js    Email (Resend/SMTP/dev) and SMS (Twilio/dev)
+    notify.js             In-app notifications
+    migrate.js / seed.js  Schema upgrades and demo data
+public/                   Vanilla HTML/CSS/JS (no build step)
+  css/pawpal.css          The design system
+  js/ui.js · chat.js      Shared layout, components, assistant widget
+  js/pages/*.js           One script per page
+  fonts/                  Self-hosted Fraunces + Plus Jakarta Sans (OFL)
+scripts/                  smoke-test.js · ui-test.js · reset-data.js
 ```
 
-## 7. Security notes
+**Collections:** users, shelters, pets, images, applications (with history + messages), favourites, enquiries,
+notifications, conversations, matches, phoneCodes, emails, sms, searches, events, messages, meta.
 
-Passwords are bcrypt-hashed. Login uses a signed JWT in an httpOnly, SameSite cookie (secure in production). Changing or resetting a password signs out every other session. Login, sign-up, reset, AI and contact routes are rate-limited. Staff pages are protected on the server, not just hidden in the browser. All user text is escaped before display. Email-verification and reset tokens are random, stored only as SHA-256 hashes, and expire (24 h / 1 h). Before going live, set a long random `JWT_SECRET` and configure SMTP (the dev mailbox shows every email to anyone who opens it, so it is for local testing only).
-
-## 8. Differences from the proposal's tech stack
-
-The proposal lists React 18 and Python 3.12. This build keeps the team's existing HTML/CSS design with plain JavaScript on the front end, and implements the AI scoring in Node.js instead of Python so the whole system runs as one service. All twelve functional requirements are implemented. Mention this in your report or check with your tutor if a React front end is a marking requirement.
-
----
-
-## Content added in this update
-
-- **Recent rescue stories** — three demo rescue stories (`public/js/stories.js`) shown on the homepage and the
-  About page, each with a photo, outcome tag, excerpt, tags and the full story in a dialog. Reuse them anywhere with
-  `<div class="stories-grid" data-stories="3"></div>`.
-- **Ending animal cruelty** (`public/ending-animal-cruelty.html`) — help numbers for urgent, non-urgent and
-  life-threatening situations; what to include in a report; a written report form; what counts as cruelty; what
-  happens after a report; warning signs; prevention and school sessions; demo news updates; and a donation portal
-  for cruelty-prevention work.
-- **About PawPal** — new "How it started" section with a timeline, "Who we are" (shelter team, volunteers, project
-  team), "How we help" (six ways), the rescue stories, and a contact panel with the shelter numbers.
-- **Contact us** (`public/contact.html`) — enquiry form posting to the existing `/api/contact`, contact details,
-  opening hours, a "who to contact for what" router, and a "coming to the shelter" section. The inline form that used
-  to sit on the About page now lives here.
-- **Supporting pieces** — `public/css/sections.css` (additive styles for the new sections only, using the existing
-  PawPal palette), 42 extra SVG icons in `public/js/ui.js` with a `data-icon` helper, and local pet illustrations in
-  `public/images/pets/` used as `onerror` fallbacks so no photo can render broken.
-
-Nothing else in the site was restyled, and the backend is unchanged — `npm test` still passes all 56 checks.
+## Security & data safety
+- bcrypt password hashes; signed JWT in an httpOnly, SameSite cookie (Secure in production); changing/resetting a
+  password or changing access signs out other sessions.
+- Verification/reset tokens are random, stored only as SHA-256 hashes, single-use and expiring; phone codes are
+  hashed, expire in 10 minutes, allow 5 attempts and are rate-limited.
+- Role checks on every API route; staff are scoped to their own shelter's pets, applications and enquiries;
+  adopters only ever see their own applications (never scores or staff notes).
+- Internal pet fields (medical, rescue, behaviour notes) are stripped from every public response and never sent
+  to AI. AI prompts contain only public pet data and, when asked, the user's own application statuses. Any pet a
+  model mentions is validated against the database.
+- Strict Content-Security-Policy (no inline scripts), rate limits on auth, AI, contact, SMS and events, input
+  length caps and output escaping everywhere. The dev mailbox is disabled in production.

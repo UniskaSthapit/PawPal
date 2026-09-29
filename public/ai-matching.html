@@ -1,100 +1,79 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>PawPal — AI pet matching</title>
-  
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="css/global.css"/>
-  <link rel="stylesheet" href="css/shared-nav.css"/>
-  <link rel="stylesheet" href="css/shared-footer.css"/>
-  <link rel="stylesheet" href="css/ai-matching.css"/>
-  <link rel="stylesheet" href="css/app.css"/>
-  <link rel="stylesheet" href="css/pages.css"/>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-<link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png"><link rel="icon" type="image/png" sizes="192x192" href="images/favicon-192.png"><link rel="apple-touch-icon" href="images/apple-touch-icon.png"><link rel="canonical" href="YOUR_CANONICAL_URL">
-<meta property="og:title" content="PawPal — AI pet matching"><meta property="og:type" content="website"><meta property="og:image" content="YOUR_OG_IMAGE_URL"><link rel="stylesheet" href="css/pp-system.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Find My PawPal — AI pet matching</title>
+  <meta name="description" content="Describe your home and lifestyle in your own words. PawPal compares it with shelter information to suggest compatible rescue pets and explains why.">
+  <meta name="theme-color" content="#221610">
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
+  <link rel="preload" href="fonts/fraunces-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/plus-jakarta-sans-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/pawpal.css">
+  <script src="js/api.js" defer></script>
+  <script src="js/ui.js" defer></script>
+  <script src="js/chat.js" defer></script>
+  <script src="js/pages/ai-matching.js" defer></script>
 </head>
-<body class="page-ai">
+<body data-layout="public" data-page="match">
+<main id="main" tabindex="-1">
+  <section class="page-hero">
+    <div class="container">
+      <span class="eyebrow"><span data-icon="sparkle"></span>Find My PawPal</span>
+      <h1 class="h1">Tell us about your life.<br><em>We'll find who fits.</em></h1>
+      <p class="lead">Write it the way you'd explain it to a friend. PawPal reads your home, routine, experience and household, then compares it with what shelters know about every available pet.</p>
+    </div>
+  </section>
 
-<nav class="pawpal-nav" data-nav="public"></nav>
+  <section class="section-sm">
+    <div class="container match-layout">
+      <div class="match-input">
+        <form class="card card-pad" id="matchForm" novalidate>
+          <div class="field">
+            <label for="about">About you and your home</label>
+            <textarea class="textarea match-textarea" id="about" maxlength="2000" placeholder="e.g. I work 9 to 5 and live in an apartment. I've never owned a dog before and I'd love a friendly dog that doesn't need loads of exercise."></textarea>
+            <span class="hint">Mention your home, work schedule, activity level, experience, children, other pets and what you're hoping for.</span>
+          </div>
+          <div class="row" style="margin-top:12px;gap:6px" aria-label="Examples">
+            <button type="button" class="chip" data-example="We're a family with two young kids and a big backyard in Melbourne. We're fairly active and would love a playful dog.">Family with a yard</button>
+            <button type="button" class="chip" data-example="I'm retired, live in a quiet unit and would love a calm, affectionate cat to keep me company.">Retired, quiet home</button>
+            <button type="button" class="chip" data-example="I work full time in an office and live in a small apartment in Sydney. Looking for an independent pet.">Full-time worker</button>
+          </div>
 
-<div class="wizard-body" id="main">
+          <details style="margin-top:18px" id="moreDetails">
+            <summary class="label" style="cursor:pointer">Add details (optional)</summary>
+            <div class="form-grid" style="margin-top:14px">
+              <div class="field"><label for="homeType">Home</label><select class="select" id="homeType"><option value="">—</option><option value="apartment">Apartment / unit</option><option value="house">House with yard</option><option value="farm">Rural property</option></select></div>
+              <div class="field"><label for="activity">Activity level</label><select class="select" id="activity"><option value="">—</option><option value="1">Relaxed</option><option value="2">Moderately active</option><option value="3">Very active</option></select></div>
+              <div class="field"><label for="hoursAlone">Hours pet alone per day</label><select class="select" id="hoursAlone"><option value="">—</option><option value="2">0–3 hours</option><option value="5">4–6 hours</option><option value="8">7+ hours</option></select></div>
+              <div class="field"><label for="experience">Experience</label><select class="select" id="experience"><option value="">—</option><option value="first">First-time owner</option><option value="some">Some experience</option><option value="experienced">Experienced</option></select></div>
+              <div class="field"><label for="preferredType">Looking for</label><select class="select" id="preferredType"><option value="">—</option><option value="dog">A dog</option><option value="cat">A cat</option><option value="other">A small pet</option><option value="any">Open to any</option></select></div>
+              <div class="field"><label>Household</label>
+                <label class="check"><input type="checkbox" id="hasChildren"> Children at home</label>
+                <label class="check"><input type="checkbox" id="hasOtherPets"> Other pets at home</label></div>
+            </div>
+          </details>
+          <div id="formError" style="margin-top:14px"></div>
+          <button class="btn btn-primary btn-lg btn-block" type="submit" id="matchBtn" style="margin-top:18px"><span data-icon="sparkle"></span>Find my matches</button>
+          <p class="tiny muted" style="margin-top:12px" id="saveNote">Your description is only used to suggest pets. <a href="login.html?mode=signup">Create an account</a> to save it and get notified about new matches.</p>
+        </form>
+        <button class="btn btn-block" style="margin-top:12px" data-ask="Hi! Can you help me find a pet that suits my lifestyle?"><span data-icon="message"></span>Prefer to chat? Ask the PawPal assistant</button>
+      </div>
 
-  <!-- LEFT: QUIZ + CHAT -->
-  <div class="quiz-panel">
-    <div class="paw-decor paw-decor--1" aria-hidden="true">🐾</div>
-    <div class="paw-decor paw-decor--2" aria-hidden="true">🐾</div>
-
-    <div class="quiz-header">
-      <div class="quiz-ai-label"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z"/>
-          <path d="M5 18l.75 2.25L8 21l-2.25.75L5 24l-.75-2.25L2 21l2.25-.75L5 18z"/>
-        </svg>PawPal AI</div>
-      <div class="ai-tabs" role="tablist">
-        <button class="ai-tab active" role="tab" aria-selected="true" data-tab="quiz">Quick quiz</button>
-        <button class="ai-tab" role="tab" aria-selected="false" data-tab="chat">Chat with AI</button>
+      <div id="results" aria-live="polite">
+        <div class="card card-pad">
+          <span class="src-label src-ai"><span data-icon="sparkle"></span>How PawPal matching works</span>
+          <h2 class="h3" style="margin-top:10px">Honest matches, clearly explained</h2>
+          <ul class="plain feature-list">
+            <li><span class="f-icon"><span data-icon="message"></span></span><div><b>1. You describe your life</b><p>PawPal picks out the things that matter: space, time, energy, experience and who else lives with you.</p></div></li>
+            <li><span class="f-icon"><span data-icon="building"></span></span><div><b>2. We check shelter facts</b><p>Every available pet has been assessed by shelter staff — energy, size, whether they need a yard, how they are with kids and other animals.</p></div></li>
+            <li><span class="f-icon"><span data-icon="checkCircle"></span></span><div><b>3. You see why — and what to consider</b><p>Each match shows a compatibility percentage, the reasons it fits and anything worth thinking about.</p></div></li>
+          </ul>
+          <p class="disclaimer" style="margin-top:22px"><span data-icon="info"></span>A match percentage is guidance to help you explore. It can't predict exactly how an animal will behave — the shelter team always makes the final decision with you.</p>
+        </div>
       </div>
     </div>
-
-    <!-- QUIZ -->
-    <section id="quizView">
-      <div class="quiz-step-row"><span class="quiz-step" id="stepLabel">Step 1 of 6</span></div>
-      <div class="quiz-progress-wrap"><div class="quiz-progress-fill" id="progressFill" style="width:16.6%"></div></div>
-      <div id="questionHost" aria-live="polite"></div>
-      <div class="quiz-nav">
-        <button class="pp-btn pp-btn-ghost" id="backBtn" disabled>Back</button>
-        <button class="pp-btn pp-btn-primary" id="nextBtn">Next</button>
-      </div>
-    </section>
-
-    <!-- CHAT (FR-10) -->
-    <section id="chatView" hidden>
-      <div class="chat-log" id="chatLog" aria-live="polite"></div>
-      <div class="chat-suggest" id="chatSuggest">
-        <button data-say="I live in a small apartment and work full time">Small apartment, work full time</button>
-        <button data-say="We have a house with a yard and two young kids">House, yard and kids</button>
-        <button data-say="I love hiking and want an active dog">Active, loves hiking</button>
-        <button data-say="I'd like a calm cat that is fine alone">Calm cat</button>
-      </div>
-      <form class="chat-form" id="chatForm">
-        <input class="pp-input" id="chatInput" placeholder="Tell PawPal AI about your home and lifestyle…" autocomplete="off" aria-label="Message PawPal AI" maxlength="600"/>
-        <button class="pp-btn pp-btn-primary" type="submit" id="chatSend">Send</button>
-      </form>
-    </section>
-  </div>
-
-  <!-- RIGHT: LIVE RESULTS -->
-  <div class="results-panel">
-    <div class="results-hero" aria-hidden="true">
-      <img src="https://images.unsplash.com/photo-1587300003388-59208cc962cb?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&q=70&w=600&h=180" alt="" onerror="this.remove()"/>
-      <div class="results-hero-overlay"></div>
-      <div class="results-hero-text">
-        <span class="results-live-pill">🐾 Live Matching</span>
-        <h3>Your Top 3 Matches</h3>
-        <p id="resultsSub">Updated in real time as you answer</p>
-      </div>
-    </div>
-
-    <div class="ai-rec-box">
-      <div class="ai-rec-icon" aria-hidden="true"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z"/>
-        </svg></div>
-      <p id="aiRec">Answer a few questions and we'll suggest pets that suit your home.</p>
-    </div>
-
-    <div class="match-cards" id="matchCards"></div>
-
-    <a class="btn-view-matches" id="viewAll" href="home.html#pets">Browse all pets</a>
-  </div>
-</div>
-
-<footer data-footer></footer>
-
-<script src="js/api.js"></script>
-<script src="js/ui.js"></script>
-<script src="js/pages/ai-matching.js"></script>
-<script src="config.js"></script><script src="js/pp-enhance.js" defer></script></body>
+  </section>
+</main>
+</body>
 </html>

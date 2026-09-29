@@ -290,7 +290,7 @@ router.get('/vets', asyncHandler(async (req, res) => {
 }));
 
 // ================= EVENTS (anonymous visit counter for analytics) =================
-const eventLimiter = rateLimit({ windowMs: 60 * 1000, limit: 20 });
+const eventLimiter = rateLimit({ windowMs: 60 * 1000, limit: 60, standardHeaders: true, legacyHeaders: false });
 router.post('/events', eventLimiter, asyncHandler(async (req, res) => {
   if (req.body?.type === 'visit') await db.insert('events', { id: newId('evt'), type: 'visit', at: now() });
   res.status(204).end();

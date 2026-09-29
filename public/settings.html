@@ -1,78 +1,35 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>PawPal Admin — Settings</title>
-  
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="css/global.css"/>
-  <link rel="stylesheet" href="css/shared-nav.css"/>
-  <link rel="stylesheet" href="css/shared-footer.css"/>
-  <link rel="stylesheet" href="css/nav.css"/>
-  <link rel="stylesheet" href="css/sidebar.css"/>
-  <link rel="stylesheet" href="css/cards.css"/>
-  <link rel="stylesheet" href="css/table.css"/>
-  <link rel="stylesheet" href="css/app.css"/>
-  <link rel="stylesheet" href="css/pages.css"/>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-<link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png"><link rel="icon" type="image/png" sizes="192x192" href="images/favicon-192.png"><link rel="apple-touch-icon" href="images/apple-touch-icon.png"><link rel="canonical" href="YOUR_CANONICAL_URL">
-<meta property="og:title" content="PawPal Admin — Settings"><meta property="og:type" content="website"><meta property="og:image" content="YOUR_OG_IMAGE_URL"><link rel="stylesheet" href="css/pp-system.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Settings — PawPal shelter portal</title>
+  <meta name="description" content="Account, team and system settings.">
+  <meta name="theme-color" content="#221610">
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
+  <link rel="preload" href="fonts/fraunces-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/plus-jakarta-sans-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/pawpal.css">
+  <script src="js/api.js" defer></script>
+  <script src="js/ui.js" defer></script>
+  <script src="js/pages/settings.js" defer></script>
 </head>
-<body class="page-admin">
-
-<nav class="pawpal-nav" data-nav="admin"></nav>
-<div class="layout">
-  <aside data-sidebar="admin" aria-label="Admin navigation"></aside>
-  <main id="main">
-    <div class="main-inner">
-      <div class="top-bar"><h1>Settings</h1><span class="date" id="today"></span></div>
-
-      <div class="pp-grid-2 settings-grid">
-        <form class="pp-card" id="accountForm" novalidate>
-          <h3>My account</h3>
-          <div class="pp-field"><label for="sName">Full name</label><input class="pp-input" id="sName" autocomplete="name"/></div>
-          <div class="pp-field"><label for="sEmail">Email</label><input class="pp-input" id="sEmail" disabled/></div>
-          <button class="pp-btn pp-btn-primary" type="submit" id="saveAccount">Save changes</button>
-        </form>
-        <form class="pp-card" id="pwForm" novalidate>
-          <h3>Change password</h3>
-          <div class="pp-field"><label for="curPw">Current password</label><input class="pp-input" id="curPw" type="password" autocomplete="current-password"/></div>
-          <div class="pp-field"><label for="newPw">New password</label><input class="pp-input" id="newPw" type="password" autocomplete="new-password"/><span class="pp-hint">At least 8 characters, including a letter and a number.</span></div>
-          <button class="pp-btn pp-btn-primary" type="submit" id="savePw">Update password</button>
-        </form>
-      </div>
-
-      <div class="table-card settings-block">
-        <div class="card-head-row"><h3>Staff team</h3><button class="pp-btn pp-btn-primary pp-btn-sm" id="addStaffBtn">Add staff member</button></div>
-        <p class="pp-muted settings-sub" id="adopterCount"></p>
-        <div class="table-scroll">
-          <table>
-            <thead><tr><th>Name</th><th>Email</th><th>Last login</th><th>Status</th><th><span class="sr-only">Action</span></th></tr></thead>
-            <tbody id="staffBody"><tr><td colspan="5"><div class="skeleton skeleton-line"></div></td></tr></tbody>
-          </table>
-        </div>
-      </div>
-
-      <div class="pp-grid-2 settings-grid">
-        <div class="pp-card">
-          <h3>System status</h3>
-          <dl class="pp-kv" id="systemList"><dt>Loading…</dt><dd></dd></dl>
-          <p class="pp-hint settings-hint">Connect MongoDB Atlas, a real email account, OpenAI and Google Maps by adding keys to the <code>.env</code> file. See README.md.</p>
-        </div>
-        <div class="pp-card danger-card" id="demoCard">
-          <h3>Demo data</h3>
-          <p class="pp-muted">Reset every pet, application, account and email back to the original sample data. Useful before a presentation. This cannot be undone.</p>
-          <button class="pp-btn pp-btn-danger" id="resetBtn">Reset to sample data</button>
-        </div>
-      </div>
-    </div>
-  </main>
+<body data-layout="staff" data-page="staff-settings">
+<main id="main" tabindex="-1">
+<div class="app-head"><div><h1>Settings</h1><p>Your account, your team and system status.</p></div></div>
+<div class="grid grid-2" style="align-items:start">
+  <form class="card" id="acctForm"><div class="card-head"><h2>Your account</h2><span id="roleBadge"></span></div><div class="card-body stack">
+    <div class="field"><label for="sName">Name</label><input class="input" id="sName" maxlength="80"></div>
+    <div class="field"><label for="sEmail">Email</label><input class="input" id="sEmail" disabled></div>
+    <button class="btn btn-primary" id="acctBtn">Save</button><div id="acctMsg"></div></div></form>
+  <form class="card" id="pwForm"><div class="card-head"><h2>Change password</h2></div><div class="card-body stack">
+    <div class="field"><label for="curPw">Current password</label><input class="input" type="password" id="curPw" autocomplete="current-password"></div>
+    <div class="field"><label for="newPw">New password</label><input class="input" type="password" id="newPw" autocomplete="new-password"><span class="hint">At least 8 characters with a letter and a number.</span></div>
+    <button class="btn" id="pwBtn">Update password</button><div id="pwMsg"></div></div></form>
+  <section class="card"><div class="card-head"><h2>Your shelter</h2></div><div class="card-body" id="shelterInfo"><div class="skeleton" style="height:80px"></div></div></section>
+  <section class="card"><div class="card-head"><h2>Team</h2><a class="small" id="manageUsers" href="admin.html" hidden>Manage users</a></div><div id="team"></div></section>
+  <section class="card" id="systemCard" hidden style="grid-column:1/-1"><div class="card-head"><h2>System status</h2></div><div class="card-body" id="system"></div></section>
 </div>
-<footer data-footer></footer>
-<script src="js/api.js"></script>
-<script src="js/ui.js"></script>
-<script src="js/pages/settings.js"></script>
-<script src="config.js"></script><script src="js/pp-enhance.js" defer></script></body>
+</main>
+</body>
 </html>

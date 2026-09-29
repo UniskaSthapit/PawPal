@@ -27,8 +27,25 @@ const { smsMode } = require('./src/services/sms');
 const app = express();
 app.set('trust proxy', 1); // correct client IPs behind Render/Railway proxies (rate limiting)
 
-// Security headers. CSP is off because the pages use inline event handlers.
-app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false }));
+// Security headers, including a Content-Security-Policy: scripts only from this site (no inline scripts),
+// images from this site/Unsplash/uploads, maps embedded from Google, fonts self-hosted.
+app.use(helmet({
+  crossOriginEmbedderPolicy: false,
+  contentSecurityPolicy: {
+    useDefaults: true,
+    directives: {
+      'default-src': ["'self'"],
+      'script-src': ["'self'"],
+      'style-src': ["'self'", "'unsafe-inline'"],
+      'img-src': ["'self'", 'data:', 'blob:', 'https:'],
+      'font-src': ["'self'"],
+      'connect-src': ["'self'"],
+      'frame-src': ["'self'", 'https://www.google.com', 'https://maps.google.com'],
+      'form-action': ["'self'"],
+      'upgrade-insecure-requests': config.isProd ? [] : null,
+    },
+  },
+}));
 app.use((req, res, next) => (config.isProd && req.headers['x-forwarded-proto'] === 'http' ? res.redirect(301, `https://${req.headers.host}${req.originalUrl}`) : next())); // HTTPS in production only
 app.use(compression());
 app.use(express.json({ limit: '15mb' })); // pet photos are sent as compressed images

@@ -1,39 +1,29 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>PawPal — Dev mailbox</title>
-  
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="css/global.css"/>
-  <link rel="stylesheet" href="css/shared-nav.css"/>
-  <link rel="stylesheet" href="css/shared-footer.css"/>
-  <link rel="stylesheet" href="css/app.css"/>
-  <link rel="stylesheet" href="css/pages.css"/>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-<link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png"><link rel="icon" type="image/png" sizes="192x192" href="images/favicon-192.png"><link rel="apple-touch-icon" href="images/apple-touch-icon.png"><link rel="canonical" href="YOUR_CANONICAL_URL">
-<meta property="og:title" content="PawPal — Dev mailbox"><meta property="og:type" content="website"><meta property="og:image" content="YOUR_OG_IMAGE_URL"><link rel="stylesheet" href="css/pp-system.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Development mailbox — PawPal</title>
+  <meta name="description" content="Development-only view of emails and text messages.">
+  <meta name="theme-color" content="#221610">
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
+  <link rel="preload" href="fonts/fraunces-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/plus-jakarta-sans-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/pawpal.css">
+  <script src="js/api.js" defer></script>
+  <script src="js/ui.js" defer></script>
+  <script src="js/pages/dev-mailbox.js" defer></script>
 </head>
-<body>
-<nav class="pawpal-nav" data-nav="public"></nav>
-<main class="mailbox-main">
-  <div class="mailbox-head">
-    <div>
-      <h1>Dev mailbox</h1>
-      <p>PawPal is running without an email server, so every email it sends appears here instead. Add SMTP settings in <code>.env</code> to send real emails.</p>
-    </div>
-    <div class="pp-toolbar"><input class="pp-input" id="mailFilter" type="email" placeholder="Filter by recipient email" aria-label="Filter by recipient"/><button class="pp-btn pp-btn-ghost" id="mailRefresh">Refresh</button></div>
-  </div>
-  <div class="mailbox" id="mailbox">
-    <div class="mailbox-list" id="mailList"><p class="pp-muted pp-pad">Loading…</p></div>
-    <div class="mailbox-view" id="mailView"><div class="pp-empty"><div class="pp-empty-emoji">✉️</div><h3>Select an email</h3><p>Choose an email on the left to read it and use its links.</p></div></div>
-  </div>
+<body data-layout="public" data-page="devmail">
+<main id="main" tabindex="-1">
+<section class="page-hero"><div class="container"><span class="badge badge-honey">Development only</span><h1 class="h1" style="margin-top:10px">Dev mailbox</h1>
+<p class="lead">No email or SMS provider is configured, so messages PawPal would send are shown here. This page is disabled in production and whenever real providers are configured.</p></div></section>
+<section class="section-sm"><div class="container" style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:24px" id="mbGrid">
+  <div><div class="row" style="margin-bottom:12px"><input class="input" id="mbFilter" placeholder="Filter by recipient email"><button class="btn" id="mbRefresh">Refresh</button></div><div id="mbList" class="stack" style="--stack:8px"></div>
+  <h2 class="h3" style="margin:28px 0 12px">Text messages</h2><div id="smsList" class="stack" style="--stack:8px"></div></div>
+  <div class="card" style="overflow:hidden"><iframe id="mbView" title="Email preview" style="width:100%;min-height:640px;border:0;background:#fff" sandbox="allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation"></iframe></div>
+</div></section>
+<style>@media (max-width:900px){#mbGrid{grid-template-columns:minmax(0,1fr)!important}}</style>
 </main>
-<footer data-footer></footer>
-<script src="js/api.js"></script>
-<script src="js/ui.js"></script>
-<script src="js/pages/dev-mailbox.js"></script>
-<script src="config.js"></script><script src="js/pp-enhance.js" defer></script></body>
+</body>
 </html>

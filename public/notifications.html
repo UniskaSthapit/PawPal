@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Notifications — PawPal</title>
+  <meta name="description" content="Your PawPal notifications.">
+  <meta name="theme-color" content="#221610">
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
+  <link rel="preload" href="fonts/fraunces-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/plus-jakarta-sans-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/pawpal.css">
+  <script src="js/api.js" defer></script>
+  <script src="js/ui.js" defer></script>
+  <script src="js/chat.js" defer></script>
+  <script src="js/pages/notifications.js" defer></script>
+</head>
+<body data-layout="account" data-page="notifications">
+<main id="main" tabindex="-1">
+<div class="app-head"><div><h1>Notifications</h1><p>Updates about your applications, favourites, matches and messages.</p></div>
+  <button class="btn" id="markAll"><span data-icon="check"></span>Mark all as read</button></div>
+<div class="tabs" role="tablist"><button class="tab" role="tab" aria-selected="true" data-filter="all">All <span class="n" id="nAll">0</span></button><button class="tab" role="tab" aria-selected="false" data-filter="unread">Unread <span class="n" id="nUnread">0</span></button></div>
+<div class="card" id="noteList" style="overflow:hidden"><div class="card-body"><div class="skeleton" style="height:64px"></div></div></div>
+</main>
+</body>
+</html>
