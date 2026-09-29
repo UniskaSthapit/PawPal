@@ -14,6 +14,8 @@ const transporter = smtpEnabled
     port: config.smtp.port,
     secure: config.smtp.secure,
     auth: config.smtp.user ? { user: config.smtp.user, pass: config.smtp.pass } : undefined,
+    family: 4,
+    connectionTimeout: 15000,
   })
   : null;
 
