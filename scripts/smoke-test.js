@@ -98,6 +98,14 @@ const mailFor = async (anon, email, type) => (await anon('GET', `/api/dev/emails
   check('Chat suggests cats when asked for a cat', r.body.picks.length > 0 && r.body.picks.every((p) => p.pet.type === 'Cat'));
   r = await anon('POST', '/api/ai/chat', { message: 'what about dogs?', profile: catProfile, lastPetIds: catIds });
   check('Chat switches to dogs when the request changes', r.body.picks.length > 0 && r.body.picks.every((p) => p.pet.type === 'Dog') && r.body.profile.homeType === 'apartment');
+  r = await anon('POST', '/api/ai/chat', { message: 'hi', profile: catProfile });
+  check('Chat greets without listing pets', r.body.picks.length === 0 && /looking for homes/.test(r.body.reply));
+  r = await anon('POST', '/api/ai/chat', { message: 'do you have an elephant?', profile: catProfile });
+  check('Chat says when an animal is not available', r.body.picks.length === 0 && /don.t have any elephants/i.test(r.body.reply) && /\d+ dogs/.test(r.body.reply));
+  r = await anon('POST', '/api/ai/chat', { message: 'any birds?' });
+  check('Chat says when a kind of pet has none listed', r.body.picks.length === 0 && /don.t have any birds/i.test(r.body.reply));
+  r = await anon('POST', '/api/ai/chat', { message: 'do you have hamsters?', profile: catProfile });
+  check('Chat shows only the kind of animal asked for', r.body.picks.length > 0 && r.body.picks.every((p) => /hamster/i.test(p.pet.breed)));
   r = await anon('POST', '/api/ai/explain-question', { key: 'hoursAlone' });
   check('Application assistant explains a question', r.status === 200 && /alone/i.test(r.body.explanation));
 
