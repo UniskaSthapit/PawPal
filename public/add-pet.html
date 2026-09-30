@@ -5,9 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Add a pet — PawPal shelter portal</title>
   <meta name="description" content="Create or edit a pet listing.">
-  <meta name="theme-color" content="#FFFFFF">
+  <meta name="theme-color" content="#221610">
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
-  <link rel="preload" href="fonts/figtree-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/fraunces-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/plus-jakarta-sans-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/pawpal.css">
   <script src="js/api.js" defer></script>
   <script src="js/ui.js" defer></script>
@@ -46,7 +47,7 @@
     </div></section>
 
     <section class="card"><div class="card-head"><div><span class="src-label src-shelter"><span data-icon="eye"></span>Public</span><h2>Description</h2></div>
-      <button type="button" class="btn btn-sm btn-dark" id="aiBtn"><span data-icon="paw"></span>Generate with AI</button></div>
+      <button type="button" class="btn btn-sm btn-dark" id="aiBtn"><span data-icon="sparkle"></span>Generate with AI</button></div>
       <div class="card-body"><label class="sr-only" for="description">Public description</label><textarea class="textarea" id="description" maxlength="2500" style="min-height:180px" placeholder="What makes this pet special? Or fill in the fields above and press Generate with AI."></textarea>
       <p class="disclaimer" style="margin-top:10px"><span data-icon="info"></span>AI drafts use only the public fields above &mdash; never the internal notes. Always read and edit before publishing.</p><div id="aiNote"></div></div></section>
 

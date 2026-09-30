@@ -69,7 +69,7 @@
         ${adopted ? '' : `<div class="profile-actions">${applyBtn}
           ${staff ? '' : `<button class="btn btn-lg btn-icon" data-fav="${esc(pet.id)}" data-name="${esc(pet.name)}" aria-pressed="${PawPal.favs.has(pet.id)}" aria-label="Save to favourites" style="width:56px">${icons.heart}</button>`}</div>
         ${staff ? '' : `<div class="row" style="margin-top:10px">
-          <button class="btn btn-block" data-ask="Tell me about ${esc(pet.name)}. Would ${esc(pronoun)} suit my lifestyle?" style="flex:1">${icons.help}Quick questions</button>
+          <button class="btn btn-block" data-ask="Tell me about ${esc(pet.name)}. Would ${esc(pronoun)} suit my lifestyle?" style="flex:1">${icons.sparkle}Ask AI about ${esc(pet.name)}</button>
           <button class="btn btn-block" id="askShelter" style="flex:1">${icons.message}Ask the shelter</button></div>`}`}
         <div id="compat" style="margin-top:18px"></div>
       </div>
@@ -114,7 +114,7 @@
             <li>${icons.handshake}<span><b>Meet &amp; greet</b> — spend time with ${esc(pet.name)} at the shelter.</span></li>
             <li>${icons.home}<span><b>Go home day</b> — ${pet.adoptionFee ? `adoption fee ${esc(money(pet.adoptionFee))}` : 'fee confirmed by the shelter'}.</span></li>
           </ol>
-          <a class="small" href="faq.html" style="display:inline-block;margin-top:12px">Adoption FAQ</a>
+          <a class="small" href="home.html#faq" style="display:inline-block;margin-top:12px">Adoption FAQ</a>
         </div>
       </div>
     </div>
@@ -150,14 +150,14 @@
       try {
         const c = await PawPalAPI.get(`/ai/compatibility/${encodeURIComponent(pet.id)}`);
         compat.innerHTML = c.hasProfile ? `<div class="ai-panel">
-          <div class="row-between"><span class="src-label src-ai">${icons.paw}PawPal's interpretation</span><div class="match-ring ${c.score < 75 ? 'mid' : ''}" style="--p:${c.score};width:56px;height:56px"><span style="width:44px;height:44px;font-size:14px">${c.score}%</span></div></div>
+          <div class="row-between"><span class="src-label src-ai">${icons.sparkle}PawPal's interpretation</span><div class="match-ring ${c.score < 75 ? 'mid' : ''}" style="--p:${c.score};width:56px;height:56px"><span style="width:44px;height:44px;font-size:14px">${c.score}%</span></div></div>
           ${c.reasons.length ? `<ul class="plain reason-list pos" style="margin-top:8px">${c.reasons.map((r) => `<li>${icons.check}<span>${esc(r)}</span></li>`).join('')}</ul>` : ''}
           ${c.considerations.length ? `<ul class="plain reason-list con" style="margin-top:8px">${c.considerations.map((r) => `<li>${icons.info}<span>${esc(r)}</span></li>`).join('')}</ul>` : ''}
           <p class="tiny muted" style="margin-top:10px">Based on your saved lifestyle (<a href="profile.html#preferences">edit</a>). Guidance only — not a guarantee of behaviour.</p></div>`
-          : `<div class="ai-panel small"><span class="src-label src-ai">${icons.paw}Is ${esc(pet.name)} right for you?</span><p style="margin-top:6px"><a href="ai-matching.html">Tell PawPal about your lifestyle</a> to see how well ${esc(pet.name)} fits.</p></div>`;
+          : `<div class="ai-panel small"><span class="src-label src-ai">${icons.sparkle}Is ${esc(pet.name)} right for you?</span><p style="margin-top:6px"><a href="ai-matching.html">Tell PawPal about your lifestyle</a> to see how well ${esc(pet.name)} fits.</p></div>`;
       } catch { compat.innerHTML = ''; }
     } else {
-      compat.innerHTML = `<div class="ai-panel small"><span class="src-label src-ai">${icons.paw}Is ${esc(pet.name)} right for you?</span><p style="margin-top:6px"><a href="ai-matching.html">Describe your lifestyle</a> and PawPal will explain how well ${esc(pet.name)} might fit.</p></div>`;
+      compat.innerHTML = `<div class="ai-panel small"><span class="src-label src-ai">${icons.sparkle}Is ${esc(pet.name)} right for you?</span><p style="margin-top:6px"><a href="ai-matching.html">Describe your lifestyle</a> and PawPal will explain how well ${esc(pet.name)} might fit.</p></div>`;
     }
   }
 

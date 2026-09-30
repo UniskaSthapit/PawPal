@@ -16,7 +16,7 @@
     const pet = petsByName[slides[current].dataset.pet];
     const cap = $('#heroCaption');
     cap.hidden = !pet;
-    if (pet) { cap.href = `pet-profile.html?id=${encodeURIComponent(pet.id)}`; $('#heroCaptionText').textContent = `Meet ${pet.name}`; $('#heroCaptionSub').textContent = `${pet.breed} · ${pet.location}`; }
+    if (pet) { cap.href = `pet-profile.html?id=${encodeURIComponent(pet.id)}`; $('#heroCaptionText').textContent = `Meet ${pet.name} · ${pet.location}`; }
     // Load the next image early so transitions are smooth
     const next = slides[(current + 1) % slides.length].querySelector('img');
     if (next.loading === 'lazy') next.loading = 'eager';
@@ -28,7 +28,7 @@
   const pauseBtn = $('#heroPause');
   const setPauseUi = () => { pauseBtn.innerHTML = paused ? icons.play : icons.pause; pauseBtn.setAttribute('aria-label', paused ? 'Play slideshow' : 'Pause slideshow'); };
   pauseBtn.addEventListener('click', () => { paused = !paused; setPauseUi(); play(); });
-  const hero = $('.hero-media');
+  const hero = $('.hero');
   hero.addEventListener('mouseenter', () => clearInterval(timer));
   hero.addEventListener('mouseleave', play);
   hero.addEventListener('focusin', () => clearInterval(timer));
@@ -69,7 +69,7 @@
 
   if (statsRes.status === 'fulfilled') {
     const s = statsRes.value;
-    $('#stats').innerHTML = [[s.availablePets, 'Pets looking for a home'], [s.adoptedPets, 'Adopted through PawPal'], [s.shelters, 'Partner shelters'], [s.species, 'Types of animals in care']]
+    $('#stats').innerHTML = [[s.availablePets, 'Pets available now'], [s.adoptedPets, 'Found their home with PawPal'], [s.shelters, 'Partner shelters'], [s.species, 'Kinds of pets waiting']]
       .map(([n, l]) => `<div><b>${Number(n).toLocaleString('en-AU')}</b><span>${l}</span></div>`).join('');
     $('#heroCount').textContent = `${s.availablePets} rescue pets waiting for a home`;
   } else $('#stats').hidden = true;

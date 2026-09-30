@@ -4,15 +4,16 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>PawPal — Adopt a pet that fits your life</title>
-  <meta name="description" content="Adopt a rescue dog, cat or small pet from shelters across Australia. Browse pets in care, see who suits your home, and apply online.">
-  <meta name="theme-color" content="#FFFFFF">
+  <meta name="description" content="Adopt a rescue pet with PawPal. Tell us about your lifestyle and PawPal's matching suggests compatible dogs, cats and small pets from partner shelters across Australia.">
+  <meta name="theme-color" content="#221610">
   <meta property="og:title" content="PawPal — Adopt a pet that fits your life">
-  <meta property="og:description" content="Rescue dogs, cats and small pets from shelters across Australia. See who suits your home and apply online.">
+  <meta property="og:description" content="AI-assisted pet adoption. Tell PawPal about your lifestyle and meet compatible rescue pets.">
   <meta property="og:type" content="website">
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
   <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
   <link rel="preconnect" href="https://images.unsplash.com">
-  <link rel="preload" href="fonts/figtree-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/fraunces-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/plus-jakarta-sans-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/pawpal.css">
   <script src="js/api.js" defer></script>
   <script src="js/ui.js" defer></script>
@@ -24,41 +25,39 @@
 <main id="main" tabindex="-1">
 
   <!-- Hero -->
-  <section class="home-hero" aria-label="Pets looking for homes">
-    <div class="container home-hero-inner">
-      <div>
+  <section class="hero" aria-roledescription="carousel" aria-label="Pets looking for homes">
+    <div class="hero-slides" id="heroSlides">
+      <div class="hero-slide is-active" data-pet="Biscuit" role="group" aria-roledescription="slide" aria-label="1 of 4">
+        <img src="https://images.unsplash.com/photo-1591160690555-5debfba289f0?w=1800&h=1100&fit=crop&auto=format&q=75" alt="Biscuit, a golden retriever, smiling outdoors" fetchpriority="high" data-fallback="images/pets/dog-a.svg">
+      </div>
+      <div class="hero-slide" data-pet="Tilly" role="group" aria-roledescription="slide" aria-label="2 of 4">
+        <img src="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=1800&h=1100&fit=crop&auto=format&q=75" alt="Tilly, a tabby cat, looking into the camera" loading="lazy" data-fallback="images/pets/cat-a.svg">
+      </div>
+      <div class="hero-slide" data-pet="Pepper" role="group" aria-roledescription="slide" aria-label="3 of 4">
+        <img src="https://images.unsplash.com/photo-1561037404-61cd46aa615b?w=1800&h=1100&fit=crop&auto=format&q=75" alt="Pepper, a kelpie cross, running happily" loading="lazy" data-fallback="images/pets/dog-b.svg">
+      </div>
+      <div class="hero-slide" data-pet="Coco" role="group" aria-roledescription="slide" aria-label="4 of 4">
+        <img src="https://images.unsplash.com/photo-1452857297128-d9c29adba80b?w=1800&h=1100&fit=crop&auto=format&q=75" alt="Coco, a holland lop rabbit, sitting in the grass" loading="lazy" data-fallback="images/pets/rabbit-a.svg">
+      </div>
+    </div>
+    <div class="container hero-inner">
+      <div class="hero-copy">
         <span class="eyebrow"><span data-icon="paw"></span><span id="heroCount">Rescue pets waiting across Australia</span></span>
         <h1 class="display">Find the pet who <em>fits your life.</em></h1>
-        <p class="lead">Every dog, cat and small animal here is cared for by a partner shelter. Tell us about your home and routine, and we'll point you to the ones most likely to settle in with you.</p>
+        <p class="lead">Tell PawPal about your home, your routine and what you're hoping for. We'll suggest compatible rescue pets — and explain why.</p>
         <div class="hero-ctas">
-          <a class="btn btn-primary btn-lg btn-arrow" href="ai-matching.html">Find my match</a>
-          <a class="btn btn-outline btn-lg" href="adopt.html">Browse all pets</a>
-        </div>
-      </div>
-      <div class="hero-media" aria-roledescription="carousel" aria-label="Photos of pets available for adoption">
-        <div class="blob hero-frame" id="heroSlides">
-          <div class="hero-slide is-active" data-pet="Biscuit" role="group" aria-roledescription="slide" aria-label="1 of 4">
-            <img src="https://images.unsplash.com/photo-1591160690555-5debfba289f0?w=1400&h=1200&fit=crop&auto=format&q=75" alt="Biscuit, a golden retriever, smiling outdoors" fetchpriority="high" data-fallback="images/pets/dog-a.svg">
-          </div>
-          <div class="hero-slide" data-pet="Tilly" role="group" aria-roledescription="slide" aria-label="2 of 4">
-            <img src="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=1400&h=1200&fit=crop&auto=format&q=75" alt="Tilly, a tabby cat, looking into the camera" loading="lazy" data-fallback="images/pets/cat-a.svg">
-          </div>
-          <div class="hero-slide" data-pet="Pepper" role="group" aria-roledescription="slide" aria-label="3 of 4">
-            <img src="https://images.unsplash.com/photo-1561037404-61cd46aa615b?w=1400&h=1200&fit=crop&auto=format&q=75" alt="Pepper, a kelpie cross, running happily" loading="lazy" data-fallback="images/pets/dog-b.svg">
-          </div>
-          <div class="hero-slide" data-pet="Coco" role="group" aria-roledescription="slide" aria-label="4 of 4">
-            <img src="https://images.unsplash.com/photo-1452857297128-d9c29adba80b?w=1400&h=1200&fit=crop&auto=format&q=75" alt="Coco, a holland lop rabbit, sitting in the grass" loading="lazy" data-fallback="images/pets/rabbit-a.svg">
-          </div>
-        </div>
-        <a class="hero-caption" id="heroCaption" href="adopt.html" hidden><span class="dot"><span data-icon="heart"></span></span><span><span id="heroCaptionText">Meet Biscuit</span><small id="heroCaptionSub"></small></span></a>
-        <div class="hero-controls">
-          <button class="hero-arrow" id="heroPrev" aria-label="Previous photo"><span data-icon="chevronLeft"></span></button>
-          <div class="row" id="heroDots" style="gap:2px" role="tablist" aria-label="Choose photo"></div>
-          <button class="hero-arrow" id="heroNext" aria-label="Next photo"><span data-icon="chevronRight"></span></button>
-          <button class="hero-arrow" id="heroPause" aria-label="Pause slideshow"><span data-icon="pause"></span></button>
+          <a class="btn btn-primary btn-lg" href="ai-matching.html"><span data-icon="sparkle"></span>Find My PawPal</a>
+          <a class="btn btn-light btn-lg" href="adopt.html">Explore pets</a>
         </div>
       </div>
     </div>
+    <a class="hero-caption" id="heroCaption" href="adopt.html" hidden><span class="dot"><span data-icon="heart"></span></span><span id="heroCaptionText">Meet Biscuit</span></a>
+    <div class="hero-controls"><div class="container">
+      <button class="hero-arrow" id="heroPrev" aria-label="Previous slide"><span data-icon="chevronLeft"></span></button>
+      <div class="row" id="heroDots" style="gap:4px" role="tablist" aria-label="Choose slide"></div>
+      <button class="hero-arrow" id="heroNext" aria-label="Next slide"><span data-icon="chevronRight"></span></button>
+      <button class="hero-arrow" id="heroPause" aria-label="Pause slideshow"><span data-icon="pause"></span></button>
+    </div></div>
   </section>
 
   <!-- Quick search -->
@@ -67,7 +66,7 @@
       <div class="quick-search-card">
         <div class="qs-tabs" role="tablist">
           <button class="qs-tab" role="tab" aria-selected="true" aria-controls="qsFilters" id="tabFilters"><span data-icon="search"></span>Search pets</button>
-          <button class="qs-tab" role="tab" aria-selected="false" aria-controls="qsAI" id="tabAI"><span data-icon="message"></span>Describe what you're looking for</button>
+          <button class="qs-tab" role="tab" aria-selected="false" aria-controls="qsAI" id="tabAI"><span data-icon="sparkle"></span>Describe your ideal pet</button>
         </div>
         <form id="qsFilters" class="qs-row" role="tabpanel" aria-labelledby="tabFilters">
           <label class="sr-only" for="qsType">Species</label>
@@ -81,7 +80,7 @@
         <form id="qsAI" class="qs-ai" role="tabpanel" aria-labelledby="tabAI" hidden>
           <label class="sr-only" for="qsText">Describe what you're looking for</label>
           <input class="input" id="qsText" maxlength="300" placeholder="e.g. A calm dog for my apartment — I'm a first-time owner">
-          <button class="btn btn-primary" type="submit"><span data-icon="search"></span>Search</button>
+          <button class="btn btn-primary" type="submit"><span data-icon="sparkle"></span>Search with AI</button>
           <div class="qs-examples" style="grid-column:1/-1"><span class="small muted">Try:</span>
             <button type="button" class="chip" data-example>Small friendly dog for a first-time owner</button>
             <button type="button" class="chip" data-example>Independent cat, I work full time</button>
@@ -95,7 +94,7 @@
   <!-- Live numbers -->
   <section class="section-sm">
     <div class="container">
-      <div class="stat-strip" id="stats" aria-live="polite" aria-label="PawPal at a glance">
+      <div class="stat-strip" id="stats" aria-live="polite">
         <div><b class="skeleton" style="width:60px;height:40px"></b><span>Pets available now</span></div>
         <div><b>&nbsp;</b><span>Found their home</span></div>
         <div><b>&nbsp;</b><span>Partner shelters</span></div>
@@ -112,7 +111,7 @@
           <span class="eyebrow">Ready for a home</span>
           <h2 class="h2" style="margin-top:10px">Pets looking for someone like you</h2>
         </div>
-        <a class="btn btn-outline btn-arrow" href="adopt.html">See all pets</a>
+        <a class="btn btn-outline" href="adopt.html">See all pets <span data-icon="arrowRight"></span></a>
       </div>
       <div class="pet-grid" id="featured">
         <div class="skeleton skel-card"></div><div class="skeleton skel-card"></div><div class="skeleton skel-card"></div><div class="skeleton skel-card"></div>
@@ -120,26 +119,26 @@
     </div>
   </section>
 
-  <!-- Matching -->
-  <section class="section section-band">
+  <!-- AI matching showcase -->
+  <section class="section section-tint">
     <div class="container ai-showcase">
       <div data-reveal>
-        <span class="eyebrow">Not sure where to start?</span>
-        <h2 class="h2" style="margin-top:12px">Tell us about your week. We'll suggest who fits.</h2>
-        <p class="lead" style="margin-top:16px">Write a few sentences the way you'd explain it to a friend — your home, your hours, who you live with. PawPal compares that with what shelter staff know about each animal.</p>
+        <span class="eyebrow"><span data-icon="sparkle"></span>PawPal matching</span>
+        <h2 class="h2" style="margin-top:12px">Describe your life. <em>We'll do the searching.</em></h2>
+        <p class="lead" style="margin-top:16px">No endless scrolling. Write a few sentences the way you'd tell a friend, and PawPal compares your lifestyle with what each shelter knows about their animals.</p>
         <ul class="plain feature-list">
-          <li><span class="f-icon"><span data-icon="home"></span></span><div><b>Based on your real routine</b><p>Space, time at home, activity, experience, children and other pets.</p></div></li>
-          <li><span class="f-icon"><span data-icon="checkCircle"></span></span><div><b>Every suggestion explained</b><p>See why a pet could suit you, and anything worth thinking about first.</p></div></li>
-          <li><span class="f-icon"><span data-icon="shield"></span></span><div><b>Shelter staff have the final say</b><p>A match is a starting point for a conversation, not a promise about behaviour.</p></div></li>
+          <li><span class="f-icon"><span data-icon="home"></span></span><div><b>Reads your real life</b><p>Home, schedule, experience, children and other pets — understood from plain English.</p></div></li>
+          <li><span class="f-icon"><span data-icon="checkCircle"></span></span><div><b>Explains every match</b><p>See why each pet could suit you, and what's worth thinking about before you apply.</p></div></li>
+          <li><span class="f-icon"><span data-icon="shield"></span></span><div><b>Honest by design</b><p>Shelter facts are always shown separately from PawPal's interpretation. A match is guidance — never a guarantee.</p></div></li>
         </ul>
-        <a class="btn btn-primary btn-lg btn-arrow" href="ai-matching.html" style="margin-top:28px">Find my match</a>
+        <a class="btn btn-dark btn-lg" href="ai-matching.html" style="margin-top:28px"><span data-icon="sparkle"></span>Try PawPal matching</a>
       </div>
-      <div class="ai-demo" data-reveal aria-label="Example of PawPal matching">
-        <span class="src-label src-ai">Example</span>
+      <div class="ai-demo" data-reveal aria-label="Live example of PawPal matching">
+        <span class="src-label src-ai"><span data-icon="sparkle"></span>Live example</span>
         <div class="ai-demo-input" style="margin-top:10px" id="demoText">“I work 9 to 5 in an apartment, I've never owned a dog, and I'd love a friendly dog that doesn't need loads of exercise.”</div>
         <div class="ai-demo-tags" id="demoTags"></div>
         <div id="demoResults"><div class="skeleton" style="height:88px;margin-top:10px"></div><div class="skeleton" style="height:88px;margin-top:10px"></div></div>
-        <p class="tiny muted" style="margin-top:12px">Worked out from pets available today.</p>
+        <p class="tiny muted" style="margin-top:12px">Results above are calculated live from pets available right now.</p>
       </div>
     </div>
   </section>
@@ -162,28 +161,54 @@
   </section>
 
   <!-- Stories -->
-  <section class="section section-warm" id="stories">
+  <section class="section section-tint" id="stories">
     <div class="container">
       <div class="row-between section-head" style="max-width:none;align-items:flex-end">
         <div>
           <span class="eyebrow">Happy tails</span>
           <h2 class="h2" style="margin-top:10px">Where our animals come from — and where they go</h2>
         </div>
-        <a class="btn btn-outline btn-arrow" href="about.html#stories">More stories</a>
+        <a class="btn btn-outline" href="about.html#stories">More stories</a>
       </div>
       <div class="grid grid-3" id="storyGrid"></div>
     </div>
   </section>
 
-  <!-- FAQ -->
-  <section class="section" id="faq">
-    <div class="container container-narrow">
-      <div class="section-head center"><span class="eyebrow">Questions</span><h2 class="h2" style="margin-top:10px">Adoption, answered</h2></div>
-      <div class="faq" id="faqList"></div>
-      <p class="center" style="margin-top:28px"><a class="btn btn-outline btn-arrow" href="faq.html">All adoption questions</a></p>
+  <!-- Testimonials -->
+  <section class="section">
+    <div class="container">
+      <div class="section-head center"><span class="eyebrow">From adopters</span><h2 class="h2" style="margin-top:10px">What people say about adopting with PawPal</h2></div>
+      <div class="grid grid-3">
+        <figure class="quote-card" data-reveal><blockquote>“We'd never had a dog and were nervous we'd pick the wrong one. PawPal pointed out that a high-energy pup wouldn't suit our apartment — we met a calm older girl instead and she's perfect.”</blockquote>
+          <figcaption><span class="avatar">HN</span><div><b>Hannah &amp; Tom</b>Adopted Daisy, Brunswick</div></figcaption></figure>
+        <figure class="quote-card" data-reveal><blockquote>“I loved being able to see where my application was up to. When the shelter asked for my landlord's approval I replied from my phone and it was back in review the same afternoon.”</blockquote>
+          <figcaption><span class="avatar">RK</span><div><b>Rahul K.</b>Adopted Miso, Parramatta</div></figcaption></figure>
+        <figure class="quote-card" data-reveal><blockquote>“As shelter staff, having every application in one pipeline with the adopter's answers summarised has cut our admin time right down. We spend it with the animals instead.”</blockquote>
+          <figcaption><span class="avatar">SL</span><div><b>Sam L.</b>Adoptions coordinator</div></figcaption></figure>
+      </div>
+      <p class="tiny muted center" style="margin-top:18px">Testimonials are illustrative examples for this demo.</p>
     </div>
   </section>
 
+  <!-- FAQ -->
+  <section class="section section-tint" id="faq">
+    <div class="container container-narrow">
+      <div class="section-head center"><span class="eyebrow">Questions</span><h2 class="h2" style="margin-top:10px">Adoption, answered</h2></div>
+      <div class="faq" id="faqList"></div>
+      <p class="center" style="margin-top:28px"><button class="btn" data-ask="How does adopting through PawPal work?"><span data-icon="message"></span>Ask the PawPal assistant</button></p>
+    </div>
+  </section>
+
+  <!-- Final CTA -->
+  <section class="section">
+    <div class="container">
+      <div class="cta-band" data-reveal>
+        <div><h2 class="h2">Your new best friend could be one conversation away.</h2>
+          <p>It takes two minutes to tell PawPal about your life. There's no obligation — just pets who might be perfect for you.</p></div>
+        <div class="actions"><a class="btn btn-dark btn-lg" href="ai-matching.html"><span data-icon="sparkle"></span>Find My PawPal</a><a class="btn btn-light btn-lg" href="adopt.html">Browse pets</a></div>
+      </div>
+    </div>
+  </section>
 </main>
 </body>
 </html>
