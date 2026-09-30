@@ -25,16 +25,21 @@ If you later buy a domain, verify it in Brevo (or Resend) and switch `MAIL_FROM`
    verified numbers.
 Without these, phone verification is switched off in production (the UI says so) — nothing is faked.
 
-## 4. AI — Claude (recommended)
-1. https://console.anthropic.com → **Settings → API keys → Create key**, and add a small amount of credit under Billing.
-2. Put it in `ANTHROPIC_API_KEY` (model: `ANTHROPIC_MODEL=claude-sonnet-5-5`, already set in `render.yaml`).
-The startup log should then say `AI: Claude (claude-sonnet-5-5)`. Without a key the rules engine still answers
-from live data. AI endpoints are rate-limited, and the home page's live example never calls the model.
+## 4. AI (optional)
+Pick **one**:
+- **Free — Google Gemini:** https://aistudio.google.com/apikey → **Create API key** (no card) → `GEMINI_API_KEY`.
+  Free-tier limits are modest, and Google may use free-tier prompts to improve its products (PawPal only sends public
+  pet data and what people type into the assistant). If the free limit is hit, PawPal falls back to its rules engine.
+- **Paid — Claude (best quality):** https://console.anthropic.com → add credit (min US$5) → **API keys** → `ANTHROPIC_API_KEY`.
+- **Paid — OpenAI:** `OPENAI_API_KEY`.
+
+If several keys are set, the order is Claude → OpenAI → Gemini. The startup log shows which one is active
+(e.g. `AI: Google Gemini (gemini-flash-latest)`). With no key, the rules engine answers from live data.
 
 ## 5. Deploy on Render
 1. Push this repo to GitHub (`.env` is git-ignored).
 2. Render → **New + → Blueprint** → choose the repo. `render.yaml` creates the service and generates `JWT_SECRET`.
-3. Fill in `APP_URL` (your Render URL), `MONGODB_URI`, `ADMIN_EMAIL`, `BREVO_API_KEY`, `ANTHROPIC_API_KEY`, and any optional keys.
+3. Fill in `APP_URL` (your Render URL), `MONGODB_URI`, `ADMIN_EMAIL`, `BREVO_API_KEY`, your AI key (`GEMINI_API_KEY` or `ANTHROPIC_API_KEY`), and any optional keys.
 4. After the first deploy, fix `APP_URL` if the real URL differs, then redeploy.
 
 ## 6. After going live

@@ -48,6 +48,8 @@ services:
         value: claude-sonnet-5-5
       - key: OPENAI_API_KEY
         sync: false
+      - key: GEMINI_API_KEY
+        sync: false   # free option: https://aistudio.google.com/apikey
       - key: GOOGLE_MAPS_API_KEY
         sync: false
       - key: ALLOW_DEMO_RESET
