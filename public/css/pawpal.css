@@ -329,71 +329,102 @@ main { flex: 1; }
 @media (max-width: 900px) { .footer-main { grid-template-columns: 1fr 1fr; } .footer-brand { grid-column: 1 / -1; } }
 @media (max-width: 520px) { .footer-main { grid-template-columns: 1fr; } }
 
-/* ---------- Home hero: "Find Your Perfect Companion" with floating pet bubbles ---------- */
-.bubble-hero { position: relative; overflow: hidden; isolation: isolate; text-align: center;
-  background:
-    radial-gradient(60% 55% at 12% 20%, rgba(251, 228, 217, .9), transparent 70%),
-    radial-gradient(55% 50% at 88% 30%, rgba(252, 239, 213, .9), transparent 70%),
-    radial-gradient(40% 40% at 50% 100%, rgba(226, 239, 231, .7), transparent 70%),
-    var(--paper); }
-.bubble-hero-inner { position: relative; z-index: 2; max-width: 760px; padding-block: clamp(56px, 9vw, 104px) clamp(72px, 10vw, 120px); }
-.hero-pill { display: inline-flex; align-items: center; gap: 8px; padding: 7px 14px 7px 10px; border-radius: 999px; background: #fff; border: 1px solid var(--line);
-  box-shadow: var(--sh-1); font-size: 13.5px; font-weight: 700; color: var(--brand-ink); }
-.hero-pill svg { width: 16px; height: 16px; color: var(--brand); }
-.bubble-hero .display { margin-top: 20px; font-size: clamp(42px, 6.6vw, 82px); }
-.bubble-hero .display em { display: inline-block; }
-.bubble-hero .lead { margin: 18px auto 0; }
-.hero-motto { display: inline-flex; align-items: center; gap: 12px; margin-top: 16px; font-size: 13px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--sage); }
-.hero-motto span { width: 28px; height: 2px; border-radius: 2px; background: currentColor; opacity: .45; }
-.hero-search { position: relative; display: flex; align-items: center; gap: 8px; max-width: 640px; margin: 30px auto 0; padding: 7px 7px 7px 50px;
-  background: #fff; border: 1.5px solid var(--line); border-radius: 18px; box-shadow: var(--sh-2); transition: border-color .15s, box-shadow .15s; }
-.hero-search:focus-within { border-color: var(--brand); box-shadow: 0 0 0 5px rgba(196, 69, 42, .12), var(--sh-2); }
-.hero-search-icon { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: var(--muted); display: grid; }
-.hero-search-icon svg { width: 20px; height: 20px; }
-.hero-search input { flex: 1; min-width: 0; border: 0; outline: none; background: none; font-size: 16px; padding: 10px 4px; }
-.hero-search .btn { min-height: 48px; border-radius: 12px; padding: 0 24px; }
-.hero-filters { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 18px; }
-.hero-filter { display: inline-flex; align-items: center; gap: 7px; min-height: 38px; padding: 0 14px; border-radius: 999px; background: rgba(255,255,255,.85);
-  border: 1.5px solid var(--line); font-size: 14px; font-weight: 600; color: var(--ink-2); text-decoration: none; transition: border-color .15s, color .15s, transform .15s, background .15s; }
-.hero-filter:hover { border-color: var(--brand); color: var(--brand-ink); background: #fff; transform: translateY(-1px); }
-.hero-filter svg { width: 17px; height: 17px; color: var(--brand); }
-.hero-match { margin-top: 22px; font-size: 15px; color: var(--muted); }
-.hero-match a { font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; }
-.hero-match a:hover { text-decoration: underline; }
-.hero-match svg { width: 15px; height: 15px; transition: transform .2s var(--ease); }
-.hero-match a:hover svg { transform: translateX(3px); }
-.hero-wave { position: absolute; left: 0; right: 0; bottom: -1px; width: 100%; height: 56px; z-index: 1; }
-.hero-wave path { fill: var(--paper); }
+/* ---------- Home hero: "Find Your Perfect Companion" with floating pet photos ---------- */
+.companion-hero { --orange: #E8703A; --orange-ink: #C85A3E; --peach: #FCEEE4; --cream: #FDF8F2; --sand: #EDD9C8; --brown: #6B5B4E;
+  position: relative; overflow: hidden; isolation: isolate; text-align: center; background: var(--cream); padding: clamp(56px, 8vw, 96px) var(--gutter) clamp(56px, 7vw, 84px); }
+.companion-hero-inner { position: relative; z-index: 3; max-width: 780px; margin: 0 auto; }
 
-/* The bubbles */
-.bubbles { position: absolute; top: 0; bottom: 0; width: min(25vw, 340px); z-index: 1; }
-.bubbles-left { left: max(8px, calc(50% - 720px)); }
-.bubbles-right { right: max(8px, calc(50% - 720px)); }
-.bubble { position: absolute; left: var(--x); top: var(--y); width: var(--s); height: var(--s); border-radius: 50%; padding: 5px; background: #fff;
-  box-shadow: 0 14px 30px -12px rgba(58, 36, 20, .35), 0 0 0 1px rgba(58, 36, 20, .05); text-decoration: none;
-  animation: bubble-bob var(--dur, 7s) ease-in-out var(--d, 0s) infinite, bubble-in .8s var(--ease) both; transition: transform .25s var(--ease); }
-.bubble img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; background: var(--paper-2); }
-.bubble:hover { z-index: 3; }
-.bubble:hover img { transform: scale(1.05); }
-.bubble img { transition: transform .3s var(--ease); }
-.bubble-name { position: absolute; left: 50%; bottom: -8px; transform: translate(-50%, 6px); opacity: 0; white-space: nowrap; padding: 4px 10px; border-radius: 999px;
-  background: var(--ink); color: #fff; font-size: 12.5px; font-weight: 700; pointer-events: none; transition: opacity .2s, transform .2s var(--ease); }
+.hero-hearts span { position: absolute; width: var(--hs); height: var(--hs); opacity: var(--ho); rotate: var(--hr); background: var(--orange); pointer-events: none;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z'/%3E%3C/svg%3E") center / contain no-repeat; }
+
+.hero-eyebrow { display: inline-flex; align-items: center; gap: 8px; padding: 7px 16px; border-radius: 999px; background: var(--peach); color: var(--orange-ink); font-size: 14px; font-weight: 600; margin-bottom: 24px; }
+.hero-eyebrow svg { width: 15px; height: 15px; fill: currentColor; stroke: none; }
+.hero-h1 { font-family: var(--font-display); font-size: clamp(40px, 5.4vw, 64px); font-weight: 700; color: #2A2118; line-height: 1.08; letter-spacing: -0.02em; margin: 0 0 20px; }
+.hero-h1 em { font-style: italic; color: var(--orange); }
+.hero-sub { font-size: 18px; color: var(--brown); line-height: 1.7; max-width: 500px; margin: 0 auto 14px; }
+.hero-motto { display: inline-flex; align-items: center; gap: 12px; margin: 0 0 30px; font-size: 13px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--orange-ink); }
+.hero-motto::before, .hero-motto::after { content: ''; width: 28px; height: 2px; border-radius: 2px; background: currentColor; opacity: .4; }
+
+.hero-searchbar { display: flex; align-items: center; max-width: 660px; margin: 0 auto 26px; background: #fff; border: 1.5px solid var(--sand); border-radius: 999px;
+  box-shadow: 0 4px 24px rgba(232, 112, 58, .10); transition: border-color .15s, box-shadow .15s; }
+.hero-searchbar:focus-within { border-color: var(--orange); box-shadow: 0 0 0 4px rgba(232, 112, 58, .14), 0 4px 24px rgba(232, 112, 58, .10); }
+.hero-searchbar-icon { padding: 0 10px 0 22px; color: #C4A896; display: grid; }
+.hero-searchbar-icon svg { width: 20px; height: 20px; fill: currentColor; stroke: none; }
+.hero-searchbar input { flex: 1; min-width: 0; padding: 16px 6px; font-size: 15.5px; background: transparent; border: 0; outline: none; color: #2A2118; }
+.hero-searchbar input::placeholder { color: #B89C88; }
+.hero-search-clear { width: 34px; height: 34px; border-radius: 50%; border: 0; background: none; color: var(--brown); display: grid; place-items: center; cursor: pointer; margin-right: 2px; }
+.hero-search-clear[hidden] { display: none; }
+.hero-search-clear:hover { background: #f3eee9; }
+.hero-search-clear svg { width: 16px; height: 16px; }
+.hero-search-btn { margin: 6px; padding: 12px 26px; display: inline-flex; align-items: center; gap: 8px; border: 0; border-radius: 999px; background: var(--orange); color: #fff;
+  font-size: 14.5px; font-weight: 700; white-space: nowrap; cursor: pointer; transition: background .15s; }
+.hero-search-btn:hover { background: #d4612f; }
+.hero-search-btn svg { width: 16px; height: 16px; }
+
+.hero-pills { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; }
+.hero-pills-label { font-size: 14px; font-weight: 600; color: var(--brown); }
+.hero-pill-link { padding: 7px 16px; font-size: 14px; font-weight: 600; border-radius: 999px; border: 1.5px solid var(--sand); background: rgba(255,255,255,.6); color: var(--brown);
+  text-decoration: none; transition: all .15s; }
+.hero-pill-link:hover { border-color: var(--orange); background: var(--orange); color: #fff; }
+
+/* Floating pet photos beside the heading */
+.hero-pets { position: absolute; top: 50%; transform: translateY(-50%); z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 20px; }
+.hero-pets-left { left: max(2%, calc(50% - 640px)); }
+.hero-pets-right { right: max(2%, calc(50% - 640px)); }
+.pet-bubble { position: relative; display: block; border-radius: 50%; border: 4px solid #fff; box-shadow: 0 8px 26px rgba(232, 112, 58, .22); background: #F5EDE4;
+  animation: floatBob 3.2s ease-in-out infinite, bubbleIn .7s var(--ease) both; }
+.pet-bubble img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block; transition: transform .3s var(--ease); }
+.pet-bubble:hover img { transform: scale(1.06); }
+.pet-bubble:hover { z-index: 3; }
+.hero-pets-right .pet-bubble:nth-child(1) { width: 104px; height: 104px; animation-delay: 0s; margin-right: 40px; }
+.hero-pets-right .pet-bubble:nth-child(2) { width: 78px; height: 78px; animation-delay: .7s; margin-left: 28px; }
+.hero-pets-right .pet-bubble:nth-child(3) { width: 92px; height: 92px; animation-delay: 1.4s; margin-right: 18px; }
+.hero-pets-right .pet-bubble:nth-child(4) { width: 70px; height: 70px; animation-delay: 2s; margin-left: 36px; }
+.hero-pets-left .pet-bubble:nth-child(1) { width: 84px; height: 84px; animation-delay: .3s; margin-left: 32px; }
+.hero-pets-left .pet-bubble:nth-child(2) { width: 100px; height: 100px; animation-delay: 1s; margin-right: 22px; }
+.hero-pets-left .pet-bubble:nth-child(3) { width: 72px; height: 72px; animation-delay: 1.7s; margin-left: 40px; }
+.hero-pets-left .pet-bubble:nth-child(4) { width: 86px; height: 86px; animation-delay: 2.3s; margin-right: 14px; }
+.bubble-name { position: absolute; left: 50%; bottom: -12px; transform: translate(-50%, 6px); opacity: 0; white-space: nowrap; padding: 3px 10px; border-radius: 999px;
+  background: #2A2118; color: #fff; font-size: 12px; font-weight: 700; transition: opacity .2s, transform .2s; pointer-events: none; }
 .bubble-name:empty { display: none; }
-.bubble:hover .bubble-name, .bubble:focus-visible .bubble-name { opacity: 1; transform: translate(-50%, 0); }
-.bubble:nth-child(odd)::after { content: ''; position: absolute; width: 16px; height: 16px; border-radius: 50%; background: var(--honey); right: 6%; top: 6%; box-shadow: 0 0 0 4px #fff; }
-.bubbles-right .bubble:nth-child(odd)::after { background: var(--brand); left: 6%; right: auto; }
-@keyframes bubble-bob { 0%, 100% { translate: 0 0; } 50% { translate: 0 -12px; } }
-@keyframes bubble-in { from { opacity: 0; scale: .6; } }
+.pet-bubble:hover .bubble-name, .pet-bubble:focus-visible .bubble-name { opacity: 1; transform: translate(-50%, 0); }
+@keyframes floatBob { 0%, 100% { translate: 0 0; } 50% { translate: 0 -10px; } }
+@keyframes bubbleIn { from { opacity: 0; scale: .7; } }
 
-/* Mobile: an overlapping row of pet photos replaces the side bubbles */
+/* Wave into the "Not sure where to start?" banner */
+.hero-wave-divider { line-height: 0; background: #FDF8F2; }
+.hero-wave-divider svg { display: block; width: 100%; height: 40px; }
+.hero-wave-divider path { fill: #FCEEE4; }
+.match-banner { background: #FCEEE4; }
+.match-banner-inner { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-block: 16px 20px; }
+.match-banner-left { display: flex; align-items: center; gap: 12px; text-align: left; }
+.match-banner-left p { margin: 0; font-size: 14.5px; color: #6B5B4E; }
+.match-banner-left b { color: #2A2118; font-size: 15px; margin-right: 4px; }
+.match-banner-icon { width: 38px; height: 38px; flex-shrink: 0; border-radius: 50%; background: #E8703A; color: #fff; display: grid; place-items: center; }
+.match-banner-icon svg { width: 17px; height: 17px; }
+.match-banner-btn { display: inline-flex; align-items: center; gap: 8px; padding: 11px 24px; border-radius: 999px; background: #F5C24C; color: #2A2118; font-size: 14.5px; font-weight: 700;
+  text-decoration: none; white-space: nowrap; transition: background .15s; }
+.match-banner-btn:hover { background: #edb53e; }
+.match-banner-btn svg { width: 16px; height: 16px; }
+
+/* Smaller screens: an overlapping row of pet photos replaces the side columns */
 .avatar-stack { display: none; justify-content: center; margin-bottom: 18px; }
 .avatar-stack a { width: 58px; height: 58px; border-radius: 50%; border: 3px solid #fff; overflow: hidden; margin-left: -12px; box-shadow: var(--sh-2); background: var(--paper-2); }
 .avatar-stack a:first-child { margin-left: 0; }
 .avatar-stack img { width: 100%; height: 100%; object-fit: cover; }
-@media (max-width: 1180px) { .bubbles { width: min(20vw, 240px); } .bubble { width: calc(var(--s) * .78); height: calc(var(--s) * .78); } }
-@media (max-width: 940px) { .bubbles { display: none; } .avatar-stack { display: flex; } }
-@media (max-width: 560px) { .hero-search { padding-left: 44px; border-radius: 14px; } .hero-search .btn { padding: 0 16px; } .hero-search input { font-size: 15px; } .hero-filters { gap: 6px; } .hero-filter { font-size: 13.5px; } }
-@media (prefers-reduced-motion: reduce) { .bubble { animation: none; } }
+@media (max-width: 1180px) { .hero-pets { gap: 14px; } .hero-pets .pet-bubble { scale: .8; } }
+@media (max-width: 980px) { .hero-pets { display: none; } .avatar-stack { display: flex; } }
+@media (max-width: 640px) {
+  .match-banner-inner { flex-direction: column; align-items: stretch; text-align: left; }
+  .match-banner-btn { justify-content: center; }
+  .hero-searchbar-icon { padding-left: 16px; }
+  .hero-search-btn { padding: 12px 16px; }
+  .hero-search-btn svg { display: none; }
+  .hero-pills { gap: 8px; }
+  .hero-pill-link { padding: 6px 13px; font-size: 13.5px; }
+}
+@media (prefers-reduced-motion: reduce) { .pet-bubble { animation: none; } }
 
 /* ---------- Home sections ---------- */
 .stat-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--line); border-radius: var(--r-lg); overflow: hidden; border: 1px solid var(--line); }
