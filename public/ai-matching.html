@@ -3,11 +3,12 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Find my match — PawPal</title>
+  <title>Find My PawPal — PawPal</title>
   <meta name="description" content="Describe your home and lifestyle in your own words. PawPal compares it with shelter information to suggest compatible rescue pets and explains why.">
-  <meta name="theme-color" content="#FFFFFF">
+  <meta name="theme-color" content="#221610">
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
-  <link rel="preload" href="fonts/figtree-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/fraunces-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/plus-jakarta-sans-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/pawpal.css">
   <script src="js/api.js" defer></script>
   <script src="js/ui.js" defer></script>
@@ -17,14 +18,12 @@
 <body data-layout="public" data-page="match">
 <main id="main" tabindex="-1">
   <section class="page-hero">
-  <div class="container page-hero-grid"><div>
-      <span class="eyebrow"><span data-icon="paw"></span>Find my match</span>
+    <div class="container">
+      <span class="eyebrow"><span data-icon="sparkle"></span>Find My PawPal</span>
       <h1 class="h1">Tell us about your life.<br><em>We'll find who fits.</em></h1>
       <p class="lead">Write it the way you'd explain it to a friend. PawPal reads your home, routine, experience and household, then compares it with what shelters know about every available pet.</p>
     </div>
-  <div class="blob page-hero-media"><img src="https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=1000&h=800&fit=crop&auto=format&q=75" alt="A happy dog outdoors" data-fallback="images/pets/dog-b.svg"></div>
-  </div>
-</section>
+  </section>
 
   <section class="section-sm">
     <div class="container match-layout">
@@ -55,7 +54,7 @@
             </div>
           </details>
           <div id="formError" style="margin-top:14px"></div>
-          <button class="btn btn-primary btn-lg btn-block" type="submit" id="matchBtn" style="margin-top:18px"><span data-icon="paw"></span>Find my matches</button>
+          <button class="btn btn-primary btn-lg btn-block" type="submit" id="matchBtn" style="margin-top:18px"><span data-icon="sparkle"></span>Find my matches</button>
           <p class="tiny muted" style="margin-top:12px" id="saveNote">Your description is only used to suggest pets. <a href="login.html?mode=signup">Create an account</a> to save it and get notified about new matches.</p>
         </form>
         <button class="btn btn-block" style="margin-top:12px" data-ask="Hi! Can you help me find a pet that suits my lifestyle?"><span data-icon="message"></span>Prefer to chat? Ask the PawPal assistant</button>
@@ -63,7 +62,7 @@
 
       <div id="results" aria-live="polite">
         <div class="card card-pad">
-          <span class="src-label src-ai"><span data-icon="paw"></span>How PawPal matching works</span>
+          <span class="src-label src-ai"><span data-icon="sparkle"></span>How PawPal matching works</span>
           <h2 class="h3" style="margin-top:10px">Honest matches, clearly explained</h2>
           <ul class="plain feature-list">
             <li><span class="f-icon"><span data-icon="message"></span></span><div><b>1. You describe your life</b><p>PawPal picks out the things that matter: space, time, energy, experience and who else lives with you.</p></div></li>

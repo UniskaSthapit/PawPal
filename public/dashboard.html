@@ -5,9 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>My dashboard — PawPal</title>
   <meta name="description" content="Your PawPal matches, applications, favourites and messages.">
-  <meta name="theme-color" content="#FFFFFF">
+  <meta name="theme-color" content="#221610">
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
-  <link rel="preload" href="fonts/figtree-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/fraunces-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/plus-jakarta-sans-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/pawpal.css">
   <script src="js/api.js" defer></script>
   <script src="js/ui.js" defer></script>
@@ -18,7 +19,7 @@
 <main id="main" tabindex="-1">
 <div class="app-head">
   <div><h1 id="hello">Welcome back</h1><p id="helloSub">Here's everything happening with your adoption journey.</p></div>
-  <div class="row"><a class="btn" href="adopt.html"><span data-icon="search"></span>Browse pets</a><a class="btn btn-primary" href="ai-matching.html"><span data-icon="paw"></span>Update my matches</a></div>
+  <div class="row"><a class="btn" href="adopt.html"><span data-icon="search"></span>Browse pets</a><a class="btn btn-primary" href="ai-matching.html"><span data-icon="sparkle"></span>Update my matches</a></div>
 </div>
 <div id="nudges" class="stack" style="--stack:10px;margin-bottom:20px"></div>
 <div class="kpis" id="kpis">
@@ -37,7 +38,7 @@
 </div>
 
 <section style="margin-top:32px" aria-labelledby="recoTitle">
-  <div class="row-between" style="margin-bottom:14px"><div><span class="src-label src-ai"><span data-icon="paw"></span>PawPal's interpretation</span><h2 class="h3" id="recoTitle" style="margin-top:4px">Recommended for you</h2></div><a class="small" href="profile.html#preferences">Edit my lifestyle</a></div>
+  <div class="row-between" style="margin-bottom:14px"><div><span class="src-label src-ai"><span data-icon="sparkle"></span>PawPal's interpretation</span><h2 class="h3" id="recoTitle" style="margin-top:4px">Recommended for you</h2></div><a class="small" href="profile.html#preferences">Edit my lifestyle</a></div>
   <div id="recoUnderstood" class="understood" style="margin-bottom:14px"></div>
   <div class="pet-grid" id="reco"></div>
 </section>
