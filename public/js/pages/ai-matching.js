@@ -1,4 +1,4 @@
-// Find My PawPal: free-text lifestyle → /api/ai/match → ranked, explained matches from real pets.
+// Find my match: free-text lifestyle → /api/ai/match → ranked, explained matches from real pets.
 (async () => {
   const { $, $$, esc, icons, photo, sized, setBusy, errorHTML, emptyHTML, ageText } = PawPal;
   const u = await PawPal.booted;
@@ -25,7 +25,7 @@
             <div class="small muted">${esc(p.breed)} · ${esc(ageText(p.age))} · ${esc(p.size)} · ${esc(p.location || '')}</div></div>
           <div class="match-ring ${ringClass(m.score)}" style="--p:${m.score}" role="img" aria-label="${m.score}% compatibility"><span>${m.score}%</span></div>
         </div>
-        ${m.summary ? `<div><span class="src-label src-ai">${icons.sparkle}Why ${esc(p.name)} could suit you</span><p style="margin-top:4px">${esc(m.summary)}</p></div>` : ''}
+        ${m.summary ? `<div><span class="src-label src-ai">${icons.paw}Why ${esc(p.name)} could suit you</span><p style="margin-top:4px">${esc(m.summary)}</p></div>` : ''}
         ${m.reasons.length ? `<ul class="plain reason-list pos">${m.reasons.map((r) => `<li>${icons.check}<span>${esc(r)}</span></li>`).join('')}</ul>` : ''}
         ${m.considerations.length ? `<div><span class="src-label" style="color:var(--honey-ink)">${icons.info}Worth considering</span><ul class="plain reason-list con" style="margin-top:6px">${m.considerations.map((r) => `<li>${icons.info}<span>${esc(r)}</span></li>`).join('')}</ul></div>` : ''}
         <div class="fact-panel" style="padding:10px 12px"><span class="src-label src-shelter">${icons.building}Shelter facts</span>
@@ -49,14 +49,14 @@
     }
     const btn = $('#matchBtn');
     setBusy(btn, true, 'Finding your matches…');
-    $('#results').innerHTML = `<div class="ai-panel"><span class="src-label src-ai">${icons.sparkle}Reading your lifestyle…</span><div class="skeleton" style="height:28px;margin-top:10px;width:70%"></div></div>
+    $('#results').innerHTML = `<div class="ai-panel"><span class="src-label src-ai">${icons.paw}Reading your lifestyle…</span><div class="skeleton" style="height:28px;margin-top:10px;width:70%"></div></div>
       ${[0, 1, 2].map(() => '<div class="skeleton" style="height:240px;margin-top:16px;border-radius:20px"></div>').join('')}`;
     try {
       const res = await PawPalAPI.post('/ai/match', body);
       const engine = PawPal.aiLabel(res.source);
       $('#results').innerHTML = `
         <div class="ai-panel">
-          <div class="row-between"><span class="src-label src-ai">${icons.sparkle}What PawPal understood</span><span class="tiny muted">${esc(engine)}</span></div>
+          <div class="row-between"><span class="src-label src-ai">${icons.paw}What PawPal understood</span><span class="tiny muted">${esc(engine)}</span></div>
           <div class="understood" style="margin-top:10px">${res.understood.length ? res.understood.map((x) => `<span class="badge badge-honey">${esc(x)}</span>`).join('') : '<span class="small muted">Not much yet — add a few details for sharper matches.</span>'}</div>
           ${res.saved ? `<p class="small" style="margin-top:10px">${icons.checkCircle} Saved to your profile. We'll notify you when a new pet is a strong match.</p>` : ''}
         </div>

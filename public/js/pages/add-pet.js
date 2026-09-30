@@ -94,7 +94,7 @@
     try {
       const r = await PawPalAPI.post('/ai/describe', body);
       $('#description').value = r.description; dirty = true;
-      $('#aiNote').innerHTML = `<p class="tiny muted" style="margin-top:6px">${icons.sparkle} Drafted by ${esc(PawPal.aiLabel(r.source, 'PawPal\'s template writer'))} — please review before publishing.</p>`;
+      $('#aiNote').innerHTML = `<p class="tiny muted" style="margin-top:6px">${icons.paw} Drafted by ${esc(PawPal.aiLabel(r.source, 'PawPal\'s template writer'))} — please review before publishing.</p>`;
     } catch (err) { toast(err.message, 'error'); }
     setBusy(btn, false);
   });
