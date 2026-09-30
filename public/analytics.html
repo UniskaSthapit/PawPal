@@ -5,10 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Analytics — PawPal shelter portal</title>
   <meta name="description" content="Shelter analytics and AI insights.">
-  <meta name="theme-color" content="#221610">
+  <meta name="theme-color" content="#FFFFFF">
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
-  <link rel="preload" href="fonts/fraunces-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="fonts/plus-jakarta-sans-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/figtree-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/pawpal.css">
   <script src="js/api.js" defer></script>
   <script src="js/ui.js" defer></script>
@@ -21,7 +20,7 @@
   <form class="row" id="rangeForm"><label class="small muted" for="from">From</label><input class="input" type="date" id="from" style="width:auto;min-height:42px"><label class="small muted" for="to">to</label><input class="input" type="date" id="to" style="width:auto;min-height:42px"><button class="btn btn-sm" type="submit">Apply</button>
   <a class="btn btn-sm" id="csvApps"><span data-icon="download"></span>Applications CSV</a><a class="btn btn-sm" id="csvSearch"><span data-icon="download"></span>Searches CSV</a></form></div>
 <div class="kpis" id="kpis"></div>
-<section class="card" style="margin-top:20px"><div class="card-head"><div><span class="src-label src-ai"><span data-icon="sparkle"></span>Generated from the numbers on this page</span><h2>Insights</h2></div></div><div class="card-body" id="insights"><div class="skeleton" style="height:80px"></div></div></section>
+<section class="card" style="margin-top:20px"><div class="card-head"><div><span class="src-label src-ai"><span data-icon="paw"></span>Generated from the numbers on this page</span><h2>Insights</h2></div></div><div class="card-body" id="insights"><div class="skeleton" style="height:80px"></div></div></section>
 <div class="dash-grid">
   <section class="card"><div class="card-head"><h2>Weekly activity</h2></div><div class="card-body"><div style="height:280px"><canvas id="trendChart" aria-label="Weekly applications, enquiries and adoptions" role="img"></canvas></div></div></section>
   <section class="card"><div class="card-head"><h2>Adoption funnel</h2></div><div class="card-body"><div class="funnel" id="funnel"></div><p class="tiny muted" style="margin-top:12px">Applications that reached Approved or later, and those adopted, within the period.</p></div></section>

@@ -5,10 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Contact PawPal</title>
   <meta name="description" content="Contact the PawPal team about a pet, an application, fostering or volunteering.">
-  <meta name="theme-color" content="#221610">
+  <meta name="theme-color" content="#FFFFFF">
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
-  <link rel="preload" href="fonts/fraunces-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="fonts/plus-jakarta-sans-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/figtree-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/pawpal.css">
   <script src="js/api.js" defer></script>
   <script src="js/ui.js" defer></script>
@@ -17,11 +16,15 @@
 </head>
 <body data-layout="public" data-page="contact">
 <main id="main" tabindex="-1">
-<section class="page-hero"><div class="container">
+<section class="page-hero">
+  <div class="container page-hero-grid"><div>
   <span class="eyebrow">We answer every message</span>
   <h1 class="h1">Talk to the PawPal team</h1>
   <p class="lead">Questions about an application, fostering, volunteering or PawPal itself — send a message and we'll reply, usually within one business day. For a specific pet, use “Ask the shelter” on their profile so it goes straight to their carers.</p>
-</div></section>
+</div>
+  <div class="blob page-hero-media"><img src="https://images.unsplash.com/photo-1574158622682-e40e69881006?w=1000&h=800&fit=crop&auto=format&q=75" alt="An orange cat looking into the camera" data-fallback="images/pets/cat-b.svg"></div>
+  </div>
+</section>
 <section class="section-sm"><div class="container" style="display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:32px;align-items:start" id="contactGrid">
   <form class="card" id="contactForm" novalidate>
     <div class="card-head"><h2>Send a message</h2></div>

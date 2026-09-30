@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Adoption FAQ — PawPal</title>
+  <meta name="description" content="Answers to common questions about adopting a rescue pet through PawPal: the process, fees, renting, meet and greets and more.">
+  <meta name="theme-color" content="#FFFFFF">
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
+  <link rel="preload" href="fonts/figtree-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/pawpal.css">
+  <script src="js/api.js" defer></script>
+  <script src="js/ui.js" defer></script>
+  <script src="js/chat.js" defer></script>
+  <script src="js/pages/faq.js" defer></script>
+</head>
+<body data-layout="public" data-page="faq">
+<main id="main" tabindex="-1">
+<section class="page-hero">
+  <div class="container page-hero-grid"><div>
+    <nav class="breadcrumbs" aria-label="Breadcrumb"><a href="home.html">Home</a><span aria-hidden="true">/</span><span>FAQ</span></nav>
+    <h1 class="h1" style="margin-top:10px">Adoption questions, answered</h1>
+    <p class="lead">What to expect when you adopt through PawPal — from your first enquiry to bringing your pet home.</p>
+    <div class="input-group" style="margin-top:22px;max-width:520px"><span data-icon="search"></span><label class="sr-only" for="faqQ">Search questions</label><input class="input" id="faqQ" placeholder="Search questions, e.g. renting, fees, meet &amp; greet"></div>
+  </div>
+  <div class="blob page-hero-media"><img src="https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=1000&h=800&fit=crop&auto=format&q=75" alt="A dog sitting patiently" data-fallback="images/pets/dog-d.svg"></div>
+  </div>
+</section>
+<section class="section-sm">
+  <div class="container" style="display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:40px;align-items:start" id="faqGrid">
+    <div>
+      <div class="faq" id="faqList"><div class="skeleton" style="height:64px;margin-top:10px"></div><div class="skeleton" style="height:64px;margin-top:10px"></div></div>
+      <p class="muted" id="faqEmpty" hidden style="margin-top:20px">No questions match that search. Try another word, or <a href="contact.html">ask us directly</a>.</p>
+    </div>
+    <aside class="stack" style="--stack:16px;position:sticky;top:calc(var(--nav-h) + 20px)" id="faqAside">
+      <div class="card card-pad"><h2 class="h3" style="font-size:20px">Still have a question?</h2>
+        <p class="muted small" style="margin-top:6px">Ask about a specific pet from their profile page, or send us a message and we'll reply within one business day.</p>
+        <div class="stack" style="--stack:8px;margin-top:14px"><a class="btn btn-primary btn-block btn-arrow" href="contact.html">Contact us</a>
+          <button class="btn btn-outline btn-block" data-ask="I have a question about adopting.">Chat with us now</button></div></div>
+      <div class="card card-pad" style="background:var(--band-2);border-color:#CFE0EE"><h2 class="h3" style="font-size:20px">Ready to look?</h2>
+        <p class="muted small" style="margin-top:6px">Browse every pet in care, or tell us about your home and we'll suggest who might suit.</p>
+        <a class="btn btn-outline btn-block btn-arrow" style="margin-top:14px" href="adopt.html">Browse pets</a></div>
+    </aside>
+  </div>
+</section>
+<style>@media (max-width:900px){#faqGrid{grid-template-columns:minmax(0,1fr)!important}#faqAside{position:static!important}}</style>
+</main>
+</body>
+</html>
