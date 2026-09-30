@@ -22,8 +22,8 @@
       ['message', s.enquiries, 'Enquiries', delta(s.enquiriesChange)], ['eye', s.views, 'Profile views', delta(s.viewsChange)], ['heart', s.favourites, 'Favourites saved', ''],
       ['home', s.adoptions, 'Adoptions', delta(s.adoptionsChange)], ['clock', s.avgDaysToFirstAction ?? '—', 'Avg days to first review', ''], ['checkCircle', s.completionRate === null ? '—' : `${s.completionRate}%`, 'Complete applications', '']]
       .map(([ic, n, l, d]) => `<div class="kpi"><div class="k-top"><span class="k-ic">${icons[ic]}</span>${d}</div><b>${n}</b><span>${l}</span></div>`).join('');
-    const fmax = Math.max(1, a.funnel[0].count);
-    $('#funnel').innerHTML = a.funnel.map((f) => `<div class="funnel-row"><span class="small">${esc(f.stage)}</span><div><div class="f-bar" style="width:${Math.max(2, (f.count / fmax) * 100)}%"></div></div><b>${f.count}</b></div>`).join('');
+    const fmax = Math.max(1, ...a.funnel.map((f) => f.count));
+    $('#funnel').innerHTML = a.funnel.map((f) => `<div class="funnel-row"><span class="small">${esc(f.stage)}</span><div><div class="f-bar" style="width:${Math.min(100, Math.max(2, (f.count / fmax) * 100))}%"></div></div><b>${f.count}</b></div>`).join('');
     bars($('#byAge'), a.byAge); bars($('#byType'), a.byType); bars($('#bySize'), a.bySize);
     bars($('#keywords'), a.topKeywords, (r) => r.keyword, (r) => r.count);
     $('#zero').innerHTML = a.zeroResultKeywords.length ? `<ul class="plain stack" style="--stack:8px">${a.zeroResultKeywords.map((k) => `<li class="row-between"><span>“${esc(k.keyword)}”</span><span class="badge badge-honey">${k.count}×</span></li>`).join('')}</ul><p class="tiny muted" style="margin-top:12px">What adopters want but couldn't find — useful when accepting transfers.</p>` : '<p class="muted small">Every search found something. 🎉</p>';
