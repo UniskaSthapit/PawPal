@@ -51,7 +51,7 @@ async function describePet(pet) {
     });
     return { text: text || templateDescription(pet), source: llm.provider };
   } catch (err) {
-    console.warn('AI description fallback:', err.message);
+    if (!err.quiet) console.warn('AI description fallback:', err.message.split('\n')[0].slice(0, 160));
     return { text: templateDescription(pet), source: 'rules' };
   }
 }
@@ -73,7 +73,7 @@ async function understandLifestyle(text, prev = {}, locations = []) {
     if (ruled.preferredType !== (prev.preferredType ?? null)) { profile.preferredType = ruled.preferredType; profile.size = ruled.size; profile.age = ruled.age; }
     return { profile, source: llm.provider };
   } catch (err) {
-    console.warn('AI profile fallback:', err.message);
+    if (!err.quiet) console.warn('AI profile fallback:', err.message.split('\n')[0].slice(0, 160));
     return { profile: ruled, source: 'rules' };
   }
 }
@@ -96,7 +96,7 @@ async function explainMatches(profile, ranked) {
     const byId = new Map((raw.explanations || []).map((e) => [e.petId, String(e.summary || '').slice(0, 300)]));
     return { matches: base.map((m) => (byId.get(m.pet.id) ? { ...m, summary: byId.get(m.pet.id) } : m)), source: llm.provider };
   } catch (err) {
-    console.warn('AI explanation fallback:', err.message);
+    if (!err.quiet) console.warn('AI explanation fallback:', err.message.split('\n')[0].slice(0, 160));
     return { matches: base, source: 'rules' };
   }
 }
@@ -297,7 +297,8 @@ function rulesChat({ message, profile, pets, applications, user, lastPetIds = []
 async function chat(ctx) {
   const { message, history = [], prevProfile = {}, pets, applications = [], user, lastPetIds = [], shelters = {} } = ctx;
   const locations = [...new Set(pets.map((p) => p.location).filter(Boolean))];
-  const { profile } = await understandLifestyle(message, prevProfile, locations);
+  // The profile comes from PawPal's own parser so each chat message needs only one model call
+  const profile = parseProfile(message, prevProfile, locations);
   const rules = rulesChat({ message, profile, pets, applications, user, lastPetIds, shelters });
   if (!llm.llmEnabled) return { ...rules, profile, source: 'rules' };
   // Greetings, small talk and animals we don't have are answered straight from the catalogue — no pet list
@@ -333,7 +334,7 @@ Adoption FAQ: ${JSON.stringify(FAQ.map((f) => ({ q: f.q, a: f.a })))}`,
     if (ids.length && !picks.length) return { ...rules, profile, source: 'rules' };
     return { reply: String(raw.reply || rules.reply).slice(0, 1500), picks, actions: rules.actions, profile, source: llm.provider };
   } catch (err) {
-    console.warn('AI chat fallback:', err.message);
+    if (!err.quiet) console.warn('AI chat fallback:', err.message.split('\n')[0].slice(0, 160));
     return { ...rules, profile, source: 'rules' };
   }
 }
@@ -402,7 +403,7 @@ async function shelterAssistant(question, snap) {
         upcoming: snap.upcoming.map((a) => ({ applicant: a.name, pet: a.petName, status: a.status, at: a.appointmentAt })) })}\n\nQuestion: ${question}` }] });
     return { reply: text || rules.reply, items: rules.items, source: llm.provider };
   } catch (err) {
-    console.warn('Shelter assistant fallback:', err.message);
+    if (!err.quiet) console.warn('Shelter assistant fallback:', err.message.split('\n')[0].slice(0, 160));
     return { ...rules, source: 'rules' };
   }
 }
