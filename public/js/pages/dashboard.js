@@ -49,7 +49,7 @@
   // Recommendations
   const reco = val(recoR, { hasProfile: false, matches: [] });
   if (!reco.hasProfile) {
-    $('#reco').innerHTML = `<div style="grid-column:1/-1">${emptyHTML({ icon: 'sparkle', title: 'Tell PawPal about your lifestyle', text: 'Describe your home and routine and we\'ll recommend pets here — and notify you when a new strong match arrives.', action: '<a class="btn btn-primary" href="ai-matching.html">Find my PawPal</a>' })}</div>`;
+    $('#reco').innerHTML = `<div style="grid-column:1/-1">${emptyHTML({ icon: 'heart', title: 'Tell PawPal about your lifestyle', text: 'Describe your home and routine and we\'ll recommend pets here — and notify you when a new strong match arrives.', action: '<a class="btn btn-primary" href="ai-matching.html">Find my match</a>' })}</div>`;
   } else {
     $('#recoUnderstood').innerHTML = reco.understood.map((x) => `<span class="badge badge-honey">${esc(x)}</span>`).join('');
     $('#reco').innerHTML = reco.matches.length ? reco.matches.map((m) => petCardHTML(m.pet, { match: m.score, reason: m.reasons[0] })).join('')
@@ -80,7 +80,7 @@
 
   const convs = val(convR, { conversations: [] }).conversations;
   $('#convs').innerHTML = convs.length ? convs.slice(0, 6).map((c) => `<button class="list-row" data-conv="${esc(c.id)}" style="width:100%;border:0;background:none;text-align:left">
-      <span class="thumb" style="display:grid;place-items:center;color:var(--honey-ink);background:var(--honey-soft)">${icons.sparkle}</span>
+      <span class="thumb" style="display:grid;place-items:center;color:var(--honey-ink);background:var(--honey-soft)">${icons.paw}</span>
       <div class="grow"><b>${esc(c.title)}</b><span class="sub">${c.count} messages · ${esc(timeAgo(c.updatedAt))}</span></div>${icons.chevronRight}</button>`).join('')
     : '<div class="card-body muted small">Chats with the PawPal assistant are saved here so you can pick up where you left off.</div>';
   $('#convs').addEventListener('click', (e) => { const b = e.target.closest('[data-conv]'); if (b) PawPalChat.openConversation(b.dataset.conv); });
