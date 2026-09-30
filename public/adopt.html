@@ -5,10 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Adopt a pet — PawPal</title>
   <meta name="description" content="Browse rescue dogs, cats, rabbits and small pets available for adoption. Filter by species, age, size, location and lifestyle, or describe what you're looking for.">
-  <meta name="theme-color" content="#221610">
+  <meta name="theme-color" content="#FFFFFF">
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
-  <link rel="preload" href="fonts/fraunces-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="fonts/plus-jakarta-sans-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/figtree-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/pawpal.css">
   <script src="js/api.js" defer></script>
   <script src="js/ui.js" defer></script>
@@ -18,19 +17,21 @@
 <body data-layout="public" data-page="adopt">
 <main id="main" tabindex="-1">
   <section class="page-hero">
-    <div class="container">
+  <div class="container page-hero-grid"><div>
       <nav class="breadcrumbs" aria-label="Breadcrumb"><a href="home.html">Home</a><span aria-hidden="true">/</span><span>Adopt a pet</span></nav>
       <h1 class="h1">Adopt a pet</h1>
       <p class="lead">Every animal here is waiting in a partner shelter or foster home. Filter the list, or simply describe what you're looking for.</p>
       <form class="nl-search" id="nlForm" role="search" style="margin-top:24px;max-width:820px">
-        <div class="input-group"><span data-icon="sparkle"></span>
+        <div class="input-group"><span data-icon="search"></span>
           <label class="sr-only" for="nlInput">Describe your ideal pet or search by name or breed</label>
           <input class="input" id="nlInput" maxlength="300" placeholder="Try “calm dog for an apartment” or a breed like “beagle”" autocomplete="off">
         </div>
         <button class="btn btn-primary" type="submit"><span data-icon="search"></span>Search</button>
       </form>
     </div>
-  </section>
+  <div class="blob page-hero-media"><img src="https://images.unsplash.com/photo-1552053831-71594a27632d?w=1000&h=800&fit=crop&auto=format&q=75" alt="A puppy looking up, waiting for a home" data-fallback="images/pets/dog-c.svg"></div>
+  </div>
+</section>
 
   <section class="section-sm">
     <div class="container discover">

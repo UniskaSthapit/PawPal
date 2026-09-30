@@ -32,8 +32,8 @@ const PawPal = (() => {
   const statusClass = (s) => `st st-${String(s).replace(/[^A-Za-z]/g, '')}`;
   const statusBadge = (s) => `<span class="${statusClass(s)}">${esc(s)}</span>`;
   const scoreBadge = (n) => `<span class="score ${n >= 80 ? 'score-high' : n >= 60 ? 'score-mid' : 'score-low'}" title="Suitability score">${n}</span>`;
-  // Which engine produced an AI answer (shown so people always know)
-  const aiLabel = (source, fallback = 'PawPal matching engine') => ({ anthropic: 'Claude', openai: 'OpenAI', gemini: 'Google Gemini' }[source] || fallback);
+  // Neutral label for generated answers: says it's PawPal's suggestion without advertising a vendor
+  const aiLabel = (source, fallback = 'PawPal matching') => (source && source !== 'rules' ? 'PawPal assistant' : fallback);
   const money = (n) => (n ? `$${Number(n).toLocaleString('en-AU')}` : 'Contact shelter');
 
   // ---------- images ----------
@@ -68,7 +68,6 @@ const PawPal = (() => {
     user: svg('<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>'),
     users: svg('<circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M16 5.2a3.2 3.2 0 0 1 0 6.1M18 20a6 6 0 0 0-2.4-4.8"/>'),
     logout: svg('<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5M21 12H9"/>'),
-    sparkle: svg('<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 3v4M17 5h4M5 17v4M3 19h4"/>'),
     home: svg('<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>'),
     menu: svg('<path d="M3 6h18M3 12h18M3 18h18"/>'),
     close: svg('<path d="M18 6 6 18M6 6l12 12"/>'),
@@ -276,7 +275,7 @@ const PawPal = (() => {
       <div class="pet-card-media">
         <img src="${esc(sized(img, 800))}" ${srcset(img) ? `srcset="${srcset(img)}" sizes="(max-width: 680px) 100vw, 320px"` : ''} alt="${esc(pet.name)}, a ${esc(pet.breed)}" loading="lazy" decoding="async" data-fallback="${FALLBACK[pet.type] || PLACEHOLDER}"/>
         <div class="pet-card-flags">
-          ${match !== undefined ? `<span class="badge badge-match">${icons.sparkle}${match}% match</span>` : ''}
+          ${match !== undefined ? `<span class="badge badge-match">${icons.paw}${match}% match</span>` : ''}
           ${pet.status === 'On Hold' ? '<span class="badge">On hold</span>' : isNew(pet) && match === undefined ? '<span class="badge badge-brand">New</span>' : ''}
         </div>
         ${staff ? '' : `<button class="fav-btn" data-fav="${esc(pet.id)}" data-name="${esc(pet.name)}" aria-pressed="${fav}" aria-label="Save ${esc(pet.name)} to favourites">${icons.heart}</button>`}
@@ -294,9 +293,10 @@ const PawPal = (() => {
   // ---------- navigation ----------
   const PUBLIC_LINKS = [
     ['Adopt a pet', 'adopt.html'],
-    ['Find my PawPal', 'ai-matching.html', true],
+    ['Find my match', 'ai-matching.html'],
     ['How it works', 'home.html#how'],
-    ['About', 'about.html'],
+    ['About us', 'about.html'],
+    ['FAQ', 'faq.html'],
     ['Contact', 'contact.html'],
   ];
 
@@ -344,7 +344,7 @@ const PawPal = (() => {
         ${hasShell ? `<button class="icon-btn mobile-side-btn" id="sideBtn" aria-label="Open menu">${icons.menu}</button>` : ''}
         <a class="brand" href="${layout === 'staff' ? 'index.html' : 'home.html'}" aria-label="PawPal home"><img src="images/logo.png" alt="" width="40" height="40"/><span class="brand-name">Paw<span>Pal</span></span></a>
         ${layout === 'staff' ? '<span class="badge badge-sage">Shelter portal</span>' : `<div class="nav-links" id="navLinks">
-          ${PUBLIC_LINKS.map(([label, href, ai]) => `<a class="nav-link" href="${href}" ${currentLink(href) ? 'aria-current="page"' : ''}>${ai ? '<span class="ai-dot" aria-hidden="true"></span>' : ''}${label}</a>`).join('')}
+          ${PUBLIC_LINKS.map(([label, href]) => `<a class="nav-link" href="${href}" ${currentLink(href) ? 'aria-current="page"' : ''}>${label}</a>`).join('')}
         </div>`}
         <div class="nav-actions" id="authSlot">${authHTML(u)}</div>
         ${!hasShell ? `<button class="icon-btn nav-burger" id="burger" aria-label="Open menu" aria-expanded="false" aria-controls="navLinks">${icons.menu}</button>` : ''}
@@ -365,21 +365,21 @@ const PawPal = (() => {
     f.innerHTML = `
       ${layout === 'public' ? `<div class="footer-cta"><div class="container">
         <h2>Somewhere out there is a pet who fits your life.</h2>
-        <div class="row"><a class="btn btn-primary btn-lg" href="ai-matching.html">${icons.sparkle}Find my PawPal</a><a class="btn btn-light btn-lg" href="adopt.html">Browse all pets</a></div>
+        <div class="row"><a class="btn btn-primary btn-lg" href="ai-matching.html">${icons.paw}Find my match</a><a class="btn btn-light btn-lg" href="adopt.html">Browse all pets</a></div>
       </div></div>` : ''}
       <div class="container">
         <div class="footer-main">
           <div class="footer-brand">
             <a class="brand" href="home.html"><img src="images/logo.png" alt="" width="40" height="40"/><span class="brand-name">Paw<span>Pal</span></span></a>
-            <p>AI-assisted pet adoption that puts the right match first. Every paw matters.</p>
+            <p>Helping rescue animals across Australia find homes that suit them — and helping families find the right companion.</p>
             <div class="footer-social">
               <a href="https://www.instagram.com" target="_blank" rel="noopener" aria-label="PawPal on Instagram">${icons.instagram}</a>
               <a href="https://www.facebook.com" target="_blank" rel="noopener" aria-label="PawPal on Facebook">${icons.facebook}</a>
               <a href="https://www.linkedin.com" target="_blank" rel="noopener" aria-label="PawPal on LinkedIn">${icons.linkedin}</a>
             </div>
           </div>
-          <div><h3>Adopt</h3><a href="adopt.html">All pets</a><a href="adopt.html?type=dog">Dogs</a><a href="adopt.html?type=cat">Cats</a><a href="adopt.html?type=other">Rabbits & small pets</a><a href="ai-matching.html">Find my PawPal</a></div>
-          <div><h3>Help & advice</h3><a href="home.html#how">How adoption works</a><a href="home.html#faq">Adoption FAQ</a><a href="vet-finder.html">Find a vet</a><a href="ending-animal-cruelty.html">Report animal cruelty</a></div>
+          <div><h3>Adopt</h3><a href="adopt.html">All pets</a><a href="adopt.html?type=dog">Dogs</a><a href="adopt.html?type=cat">Cats</a><a href="adopt.html?type=other">Rabbits & small pets</a><a href="ai-matching.html">Find my match</a></div>
+          <div><h3>Help & advice</h3><a href="home.html#how">How adoption works</a><a href="faq.html">Adoption FAQ</a><a href="vet-finder.html">Find a vet</a><a href="ending-animal-cruelty.html">Report animal cruelty</a></div>
           <div><h3>PawPal</h3><a href="about.html">About us</a><a href="about.html#stories">Rescue stories</a><a href="contact.html">Contact</a><a href="login.html?role=staff">Shelter staff login</a></div>
         </div>
         <p class="ack">PawPal acknowledges the Traditional Custodians of the lands on which we work and pay our respects to Elders past and present. Pet profiles, stories and people shown in this demo are illustrative.</p>
@@ -390,9 +390,9 @@ const PawPal = (() => {
 
   // Dashboard sidebars
   const ADOPTER_SIDE = [['dashboard.html', 'grid', 'Overview'], ['my-applications.html', 'file', 'My applications'], ['dashboard.html#favourites', 'heart', 'Favourites'],
-    ['ai-matching.html', 'sparkle', 'Find my PawPal'], ['notifications.html', 'bell', 'Notifications'], ['profile.html', 'user', 'Profile & preferences']];
+    ['ai-matching.html', 'heart', 'Find my match'], ['notifications.html', 'bell', 'Notifications'], ['profile.html', 'user', 'Profile & preferences']];
   const STAFF_SIDE = [['index.html', 'grid', 'Overview'], ['pets.html', 'paw', 'Pets'], ['applications.html', 'file', 'Applications', 'apps'], ['enquiries.html', 'message', 'Enquiries', 'enq'],
-    ['analytics.html', 'chart', 'Analytics'], ['assistant.html', 'sparkle', 'AI assistant'], ['notifications.html', 'bell', 'Notifications'], ['settings.html', 'gear', 'Settings']];
+    ['analytics.html', 'chart', 'Analytics'], ['assistant.html', 'message', 'Shelter assistant'], ['notifications.html', 'bell', 'Notifications'], ['settings.html', 'gear', 'Settings']];
 
   function renderShell(u) {
     const main = $('#main');
@@ -427,7 +427,7 @@ const PawPal = (() => {
 
   // ---------- notifications ----------
   const NOTE_ICON = { application: 'file', status: 'refresh', info: 'help', appointment: 'calendar', approved: 'checkCircle', declined: 'info', adopted: 'home',
-    enquiry: 'message', pet: 'paw', match: 'sparkle', account: 'user', staff: 'inbox' };
+    enquiry: 'message', pet: 'paw', match: 'heart', account: 'user', staff: 'inbox' };
   const noteHTML = (n) => `<a class="notif-item ${n.read ? '' : 'unread'}" href="${esc(n.link || '#')}" data-note="${esc(n.id)}">
       <span class="n-icon">${icons[NOTE_ICON[n.type] || 'bell']}</span><div><b>${esc(n.title)}</b><span>${esc(n.message)}</span><small>${timeAgo(n.at)}</small></div></a>`;
   async function loadBell(render = false) {
