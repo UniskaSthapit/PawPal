@@ -1,14 +1,17 @@
-// Home page: bubble hero with search, live stats, featured pets, live matching example, stories and FAQ.
+// Home page: companion hero with search, live stats, featured pets, live matching example, stories and FAQ.
 (async () => {
   const { $, $$, esc, icons, petCardHTML, emptyHTML, reveal } = PawPal;
   await PawPal.booted;
 
   // ---------- hero search ----------
-  $('#heroSearch').addEventListener('submit', (e) => {
+  const heroQ = $('#heroQ'), heroClear = $('#heroClear');
+  $('#heroSearch')?.addEventListener('submit', (e) => {
     e.preventDefault();
-    const q = $('#heroQ').value.trim();
+    const q = heroQ.value.trim();
     location.href = q ? `adopt.html?ask=${encodeURIComponent(q)}` : 'adopt.html';
   });
+  heroQ?.addEventListener('input', () => { heroClear.hidden = !heroQ.value; });
+  heroClear?.addEventListener('click', () => { heroQ.value = ''; heroClear.hidden = true; heroQ.focus(); });
 
   // ---------- data ----------
   const [petsRes, statsRes, faqRes] = await Promise.allSettled([
@@ -24,13 +27,14 @@
   if (petsRes.status === 'fulfilled') {
     const pets = petsRes.value.pets;
     // Each bubble links to the real pet in the photo (when they're still available) and shows their name on hover
-    $$('.bubble').forEach((b) => {
+    $$('.pet-bubble').forEach((b) => {
       const pet = pets.find((p) => (p.photos || []).some((u) => u.includes(b.dataset.photo)));
       if (!pet) return;
       b.href = `pet-profile.html?id=${encodeURIComponent(pet.id)}`;
       b.removeAttribute('aria-hidden'); b.removeAttribute('tabindex');
       b.setAttribute('aria-label', `Meet ${pet.name}, ${pet.breed}`);
       b.querySelector('.bubble-name').textContent = pet.name;
+      b.querySelector('img').alt = `${pet.name}, ${pet.breed}`;
     });
     // Phones: a row of overlapping pet photos instead of the side bubbles
     $('#avatarStack').innerHTML = pets.slice(0, 5).map((p) => `<a href="pet-profile.html?id=${encodeURIComponent(p.id)}" tabindex="-1">
