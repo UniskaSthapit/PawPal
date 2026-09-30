@@ -14,7 +14,7 @@
   let pet;
   try { pet = (await PawPalAPI.get(`/pets/${encodeURIComponent(petId)}`)).pet; }
   catch (err) { $('#applyLayout').innerHTML = PawPal.emptyHTML({ title: 'This pet is not available', text: err.message, action: '<a class="btn btn-primary" href="adopt.html">Browse pets</a>' }); return; }
-  if (!['Available', 'On Hold'].includes(pet.status)) { $('#applyLayout').innerHTML = PawPal.emptyHTML({ title: `${pet.name} is no longer available`, text: 'They have found a home. PawPal can suggest similar pets.', action: '<a class="btn btn-primary" href="ai-matching.html">Find my match</a>' }); return; }
+  if (!['Available', 'On Hold'].includes(pet.status)) { $('#applyLayout').innerHTML = PawPal.emptyHTML({ title: `${pet.name} is no longer available`, text: 'They have found a home. PawPal can suggest similar pets.', action: '<a class="btn btn-primary" href="ai-matching.html">Find my PawPal</a>' }); return; }
   document.title = `Apply to adopt ${pet.name} — PawPal`;
   $('#applyTitle').textContent = `Apply to adopt ${pet.name}`;
   $('#petCrumb').textContent = pet.name; $('#petCrumb').href = `pet-profile.html?id=${encodeURIComponent(pet.id)}`;
@@ -112,7 +112,7 @@
     b.setAttribute('aria-expanded', 'true');
     slot.innerHTML = '<div class="skeleton" style="height:60px"></div>';
     const render = (r) => {
-      slot.innerHTML = `<div class="ai-panel small"><span class="src-label src-ai">${icons.paw}PawPal explains</span><p style="margin-top:6px">${esc(r.explanation)}</p>
+      slot.innerHTML = `<div class="ai-panel small"><span class="src-label src-ai">${icons.sparkle}PawPal explains</span><p style="margin-top:6px">${esc(r.explanation)}</p>
         <div class="row" data-helpask="${esc(key)}" style="margin-top:10px;flex-wrap:nowrap"><label class="sr-only" for="ha-${esc(key)}">Ask about this question</label>
           <input class="input" id="ha-${esc(key)}" maxlength="300" placeholder="Still unsure? Ask about this question…" style="min-height:40px"><button class="btn btn-sm" type="button" data-helpgo>Ask</button></div>
         <p class="tiny muted" style="margin-top:8px">PawPal explains questions but never answers them for you.</p></div>`;

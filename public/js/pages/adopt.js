@@ -52,7 +52,7 @@
     const grid = $('#grid');
     if (!pets.length) {
       grid.innerHTML = emptyHTML({ icon: 'search', title: 'No pets match those filters', text: 'Try removing a filter or two — or tell PawPal about your lifestyle and we\'ll suggest pets that could still suit you.',
-        action: `<div class="row" style="justify-content:center"><button class="btn" id="resetAll">Clear filters</button><a class="btn btn-primary" href="ai-matching.html">${icons.paw}Find my match</a></div>` });
+        action: `<div class="row" style="justify-content:center"><button class="btn" id="resetAll">Clear filters</button><a class="btn btn-primary" href="ai-matching.html">${icons.sparkle}Find my PawPal</a></div>` });
       $('#loadMore').hidden = true;
       return;
     }
@@ -87,7 +87,7 @@
       const relaxedNames = { age: 'age', size: 'size', location: 'location', firstTime: 'first-time owner', breed: 'breed', energy: 'energy level' };
       $('#nlResult').hidden = false;
       $('#nlResult').innerHTML = `<div class="ai-panel">
-        <div class="row-between"><span class="src-label src-ai">${icons.paw}PawPal's interpretation</span><button class="link-btn small" id="clearAsk">Clear search</button></div>
+        <div class="row-between"><span class="src-label src-ai">${icons.sparkle}PawPal's interpretation</span><button class="link-btn small" id="clearAsk">Clear search</button></div>
         <p style="margin-top:8px;font-weight:700">${esc(res.interpretation)}</p>
         ${res.understood.length ? `<div class="understood" style="margin-top:10px">${res.understood.map((u) => `<span class="badge badge-honey">${esc(u)}</span>`).join('')}</div>` : ''}
         ${res.relaxed.length ? `<p class="small" style="margin-top:10px">Nothing matched everything, so we relaxed: ${res.relaxed.map((r) => esc(relaxedNames[r] || r)).join(', ')}.</p>` : ''}

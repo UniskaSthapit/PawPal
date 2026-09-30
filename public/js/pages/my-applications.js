@@ -16,7 +16,7 @@
       apps = res.applications; flow = res.flow; info = res.info;
     } catch (err) { $('#appList').innerHTML = errorHTML(err.message); return; }
     if (!apps.length) {
-      $('#appsLayout').innerHTML = `<div style="grid-column:1/-1">${emptyHTML({ icon: 'file', title: 'No applications yet', text: 'Find a pet you love and press "Apply to adopt" on their profile. You\'ll be able to follow every step here.', action: '<div class="row" style="justify-content:center"><a class="btn btn-primary" href="ai-matching.html">Find my match</a><a class="btn" href="adopt.html">Browse pets</a></div>' })}</div>`;
+      $('#appsLayout').innerHTML = `<div style="grid-column:1/-1">${emptyHTML({ icon: 'file', title: 'No applications yet', text: 'Find a pet you love and press "Apply to adopt" on their profile. You\'ll be able to follow every step here.', action: '<div class="row" style="justify-content:center"><a class="btn btn-primary" href="ai-matching.html">Find my PawPal</a><a class="btn" href="adopt.html">Browse pets</a></div>' })}</div>`;
       return;
     }
     if (!selected || !apps.some((a) => a.id === selected)) selected = apps[0].id;
@@ -70,7 +70,7 @@
         <div><div class="row">${statusBadge(a.status)}<span class="tiny muted">Submitted ${esc(fmtDate(a.submittedAt))}</span></div>
           <h2 class="h2" style="margin-top:8px">${esc(a.petName)}</h2><p class="muted">${esc(a.petBreed || '')}</p>
           <div class="row" style="margin-top:10px"><a class="btn btn-sm" href="pet-profile.html?id=${encodeURIComponent(a.petId)}">View profile</a>
-            <button class="btn btn-sm" data-ask="What's the status of my application for ${esc(a.petName)}?">${icons.paw}Ask PawPal</button></div></div></div></div>
+            <button class="btn btn-sm" data-ask="What's the status of my application for ${esc(a.petName)}?">${icons.sparkle}Ask PawPal</button></div></div></div></div>
 
       ${a.status === 'Info Requested' ? `<div class="card card-pad" style="border-color:#E8C58F;background:#FFFBF3">
         <span class="src-label" style="color:var(--honey-ink)">${icons.alert}Action needed</span>

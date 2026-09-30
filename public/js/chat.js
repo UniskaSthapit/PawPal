@@ -28,7 +28,7 @@ const PawPalChat = (() => {
     if (m.role === 'user') return `<div class="msg msg-user">${esc(m.content)}</div>`;
     return `<div class="msg msg-bot">${esc(m.content)}</div>${petsHTML(m.picks)}
       ${m.actions?.length ? `<div class="chat-actions">${m.actions.map((a) => `<a class="btn btn-sm" href="${esc(a.href)}">${esc(a.label)}</a>`).join('')}</div>` : ''}
-      ${m.source ? `<div class="msg-meta">${icons.paw}${esc(sourceLabel(m.source))}${m.picks?.length ? ' · match % is guidance, not a guarantee' : ''}</div>` : ''}`;
+      ${m.source ? `<div class="msg-meta">${icons.sparkle}${esc(sourceLabel(m.source))}${m.picks?.length ? ' · match % is guidance, not a guarantee' : ''}</div>` : ''}`;
   }
 
   function render() {
@@ -117,8 +117,8 @@ const PawPalChat = (() => {
     panel.setAttribute('role', 'dialog');
     panel.setAttribute('aria-label', 'PawPal adoption assistant');
     panel.innerHTML = `
-      <div class="chat-head"><span class="ai-orb" style="width:36px;height:36px;border-radius:9px;background:var(--brand);display:grid;place-items:center">${icons.paw}</span>
-        <div><b>PawPal assistant</b><small>Pets, adoption and your applications</small></div>
+      <div class="chat-head"><span class="ai-orb" style="width:36px;height:36px;border-radius:50%;background:radial-gradient(circle at 30% 30%,#FFD48A,#E49B2F 45%,#C4452A);display:grid;place-items:center">${icons.sparkle}</span>
+        <div><b>PawPal assistant</b><small>Answers from live PawPal data</small></div>
         <button class="icon-btn" data-chat-new aria-label="Start a new conversation" title="New conversation">${icons.refresh}</button>
         <button class="icon-btn" data-chat-close aria-label="Close assistant">${icons.close}</button></div>
       <div class="chat-body" aria-live="polite"></div>
@@ -147,7 +147,7 @@ const PawPalChat = (() => {
     launcher = document.createElement('button');
     launcher.className = 'chat-launcher';
     launcher.setAttribute('aria-label', 'Ask PawPal');
-    launcher.innerHTML = `<span class="ai-orb">${icons.message}</span><span class="lbl">Questions? Ask us</span>`;
+    launcher.innerHTML = `<span class="ai-orb">${icons.sparkle}</span><span class="lbl">Ask PawPal</span>`;
     launcher.addEventListener('click', () => open());
     document.body.appendChild(launcher);
   }
