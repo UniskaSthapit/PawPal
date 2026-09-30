@@ -69,7 +69,7 @@
         ${adopted ? '' : `<div class="profile-actions">${applyBtn}
           ${staff ? '' : `<button class="btn btn-lg btn-icon" data-fav="${esc(pet.id)}" data-name="${esc(pet.name)}" aria-pressed="${PawPal.favs.has(pet.id)}" aria-label="Save to favourites" style="width:56px">${icons.heart}</button>`}</div>
         ${staff ? '' : `<div class="row" style="margin-top:10px">
-          <button class="btn btn-block" data-ask="Tell me about ${esc(pet.name)}. Would ${esc(pronoun)} suit my lifestyle?" style="flex:1">${icons.sparkle}Ask AI about ${esc(pet.name)}</button>
+          <button class="btn btn-block" data-ask="Tell me about ${esc(pet.name)}. Would ${esc(pronoun)} suit my lifestyle?" style="flex:1">${icons.sparkle}Ask about ${esc(pet.name)}</button>
           <button class="btn btn-block" id="askShelter" style="flex:1">${icons.message}Ask the shelter</button></div>`}`}
         <div id="compat" style="margin-top:18px"></div>
       </div>

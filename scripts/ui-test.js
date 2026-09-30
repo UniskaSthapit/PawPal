@@ -34,8 +34,8 @@ const ok = (name, cond) => { if (cond) { pass++; console.log('  ✅ ' + name); }
   ok('Home shows featured pets from the database', (await p.$$('#featured .pet-card')).length >= 4);
   ok('Live stats rendered', /\d/.test(await p.textContent('#stats')));
   ok('Live matching example rendered', (await p.$$('#demoResults .ai-demo-result')).length === 2);
-  await p.click('#heroNext'); ok('Hero slideshow advances', await p.getAttribute('.hero-slide:nth-child(2)', 'class').then((c) => c.includes('is-active')));
-  await p.click('#tabAI'); await p.fill('#qsText', 'calm dog for my apartment'); await p.press('#qsText', 'Enter');
+  ok('Hero bubbles link to real pets', (await p.$$eval('.bubble[href^="pet-profile.html"]', (b) => b.length)) >= 4);
+  await p.fill('#heroQ', 'calm dog for my apartment'); await p.press('#heroQ', 'Enter');
   await p.waitForSelector('#nlResult:not([hidden])'); await p.waitForSelector('#grid .pet-card');
   ok('Natural-language search shows interpretation + results', /calm/i.test(await p.textContent('#nlResult')));
   await p.goto(BASE + 'adopt.html'); await p.waitForSelector('#grid .pet-card');
