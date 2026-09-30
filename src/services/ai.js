@@ -158,10 +158,77 @@ function petFacts(pet, shelterName) {
   return facts.join(' ');
 }
 
+
+// ---------------- What animals do we actually have? ----------------
+// Animals people might ask for. `kind` is the catalogue group used for matching; wild and farm animals are never rehomed here.
+const ANIMALS = [
+  ['dog', /\b(dogs?|pupp(y|ies)|pups?|pooch(es)?|doggos?)\b/, 'dogs', (p) => p.type === 'Dog'],
+  ['cat', /\b(cats?|kittens?|kitty|kitties)\b/, 'cats', (p) => p.type === 'Cat'],
+  ['rabbit', /\b(rabbits?|bunn(y|ies))\b/, 'rabbits', (p) => p.type === 'Rabbit' || /rabbit|lop|dwarf/i.test(p.breed)],
+  ['guinea pig', /\bguinea ?pigs?\b/, 'guinea pigs', (p) => p.type === 'Guinea Pig' || /guinea/i.test(p.breed)],
+  ['hamster', /\bhamsters?\b/, 'hamsters', (p) => /hamster/i.test(p.breed)],
+  ['bird', /\b(birds?|budgies?|budgerigars?|parrots?|cockatiels?|cockatoos?|canar(y|ies)|finch(es)?|lorikeets?|galahs?)\b/, 'birds', (p) => p.type === 'Bird' || /budgie|parrot|cockat|canary|finch|lorikeet|galah/i.test(p.breed)],
+  ['mouse or rat', /\b(mice|mouse|rats?)\b/, 'mice and rats', (p) => /\b(mouse|mice|rat)\b/i.test(p.breed)],
+  ['ferret', /\bferrets?\b/, 'ferrets', (p) => /ferret/i.test(p.breed)],
+  ['chinchilla', /\bchinchillas?\b/, 'chinchillas', (p) => /chinchilla/i.test(p.breed)],
+  ['fish', /\b(fish|fishes|goldfish|betta)\b/, 'fish', (p) => /fish|betta/i.test(p.breed)],
+  ['reptile', /\b(reptiles?|lizards?|snakes?|pythons?|geckos?|bearded dragons?|turtles?|tortoises?|skinks?)\b/, 'reptiles', (p) => /lizard|snake|python|gecko|dragon|turtle|tortoise|skink/i.test(p.breed)],
+  ['horse', /\b(horses?|ponies|pony|donkeys?)\b/, 'horses', (p) => /horse|pony|donkey/i.test(p.breed)],
+  ['farm animal', /\b(cows?|pigs?|piglets?|goats?|sheep|lambs?|chickens?|hens?|roosters?|ducks?|geese|goose|alpacas?|llamas?)\b/, 'farm animals', (p) => /\b(cow|pig|goat|sheep|chicken|hen|duck|goose|alpaca|llama)\b/i.test(p.breed)],
+];
+const WILD = /\b(elephants?|lions?|tigers?|bears?|wolf|wolves|fox(es)?|monkeys?|apes?|gorillas?|chimps?|giraffes?|zebras?|hippos?|rhinos?|kangaroos?|koalas?|wombats?|possums?|echidnas?|platypus|crocodiles?|alligators?|sharks?|dolphins?|whales?|penguins?|owls?|eagles?|deer|camels?|cheetahs?|leopards?|jaguars?|pandas?|sloths?|squirrels?|bats?|dinosaurs?|dragons?|unicorns?)\b/;
+
+function speciesSummary(pets) {
+  const counts = {};
+  pets.forEach((p) => {
+    const kind = ANIMALS.find(([, , , test]) => test(p));
+    const label = kind ? kind[0] : p.type === 'Other' ? 'other pet' : p.type.toLowerCase();
+    counts[label] = (counts[label] || 0) + 1;
+  });
+  const plural = (w, n) => (n === 1 || w === 'fish' ? w : /(sh|ch|s|x)$/.test(w) ? `${w}es` : `${w}s`);
+  const parts = Object.entries(counts).sort((a, b) => b[1] - a[1]).map(([w, n]) => `${n} ${plural(w, n)}`);
+  return parts.length > 1 ? `${parts.slice(0, -1).join(', ')} and ${parts[parts.length - 1]}` : parts[0] || 'no pets';
+}
+
+// Works out which kinds of animal a message asks for and whether any are in the catalogue right now.
+function animalRequest(message, pets) {
+  const t = ` ${String(message).toLowerCase().replace(/[’']/g, '')} `.replace(/\b(my|our|have (a |an |two |2 )?|another|resident|not (a |an )?|no )(dog|puppy|cat|kitten)s?\b/g, ' ');
+  const asked = ANIMALS.filter(([, re]) => re.test(t.replace(/\bguinea ?pigs?\b/g, (m) => (re.source.includes('guinea') ? m : ' '))))
+    .map(([kind, , label, test]) => ({ kind, label, pets: pets.filter(test) }));
+  const wild = (t.match(WILD) || [])[0] || null;
+  return { asked, wild, missing: asked.filter((a) => !a.pets.length), found: asked.filter((a) => a.pets.length) };
+}
+
+// Replies for requests we can answer straight from the catalogue: animals we never rehome, or kinds we have none of.
+function unavailableReply(req, pets) {
+  const have = `Right now our partner shelters have ${speciesSummary(pets)} looking for homes.`;
+  const cta = [{ label: 'See all pets', href: 'adopt.html' }];
+  if (req.wild && !req.asked.length) {
+    return { reply: `We don't have any ${req.wild.replace(/s$/, '')}s — PawPal only rehomes companion animals from Australian shelters, and wild animals aren't kept as pets. ${have} Would you like me to suggest one that suits your home?`, picks: [], actions: cta };
+  }
+  if (req.asked.length && !req.found.length) {
+    const names = req.missing.map((a) => a.label);
+    return { reply: `We don't have any ${names.join(' or ')} available for adoption at the moment. ${have} New animals arrive every week, so it's worth checking back — or tell me about your home and I'll suggest who could suit you.`, picks: [], actions: cta };
+  }
+  return null;
+}
+
+const GREETING = /^(hi+|hello+|hey+|hiya|howdy|gday|g day|good (morning|afternoon|evening|day)|yo|greetings|hey there|hi there|hello there)( pawpal| there| team| everyone)?[\s!.,:)]*$/;
+const THANKS = /^(thanks?|thank you|thankyou|ty|cheers|ta|great|awesome|perfect|cool|nice|ok(ay)?|got it|sounds good)( so much| heaps| a lot| mate)?[\s!.,:)]*$/;
+const BYE = /^(bye|goodbye|see ya|see you|cya|later)[\s!.,:)]*$/;
+
 function rulesChat({ message, profile, pets, applications, user, lastPetIds = [], shelters = {} }) {
   const t = message.toLowerCase().replace(/[’']/g, '');
   const mentioned = nameMention(message, pets);
   const pick = (m) => ({ pet: m.pet, score: m.score, reasons: m.reasons, considerations: m.considerations });
+  const plain = t.trim();
+
+  // 0. Greetings and small talk never trigger pet suggestions
+  if (GREETING.test(plain)) {
+    return { reply: `Hi${user ? ` ${user.name.split(' ')[0]}` : ''}! I'm PawPal's adoption assistant. We have ${speciesSummary(pets)} looking for homes right now. Tell me a little about your home and routine and I'll suggest who could suit you — or ask me about a pet, the adoption process, or your application.`, picks: [] };
+  }
+  if (THANKS.test(plain)) return { reply: 'You\'re welcome! Let me know if you\'d like more suggestions or help with an application.', picks: [] };
+  if (BYE.test(plain)) return { reply: 'Bye for now — good luck finding your new best friend!', picks: [] };
 
   // 1. Application status
   if (/\b(status|my application|my applications|applied|progress|where (is|are) my|update on)\b/.test(t) && !/what happens/.test(t)) {
@@ -189,6 +256,10 @@ function rulesChat({ message, profile, pets, applications, user, lastPetIds = []
     return { reply: `${petFacts(mentioned, shelters[mentioned.shelterId]?.name)}\n\n${mentioned.description ? `From the shelter: "${String(mentioned.description).slice(0, 260)}${mentioned.description.length > 260 ? '…' : ''}"` : ''}`.trim(), picks: [pick({ pet: mentioned, ...m })] };
   }
 
+  // 3b. Kinds of animal we don't have (elephants, birds when none are listed…)
+  const unavailable = unavailableReply(animalRequest(message, pets), pets);
+  if (unavailable) return unavailable;
+
   // 4. Adoption process and FAQs
   const faq = findFaq(t);
   const lifestyle = !profileIsEmpty(parseProfile(message));
@@ -201,23 +272,25 @@ function rulesChat({ message, profile, pets, applications, user, lastPetIds = []
 
   // 6. Recommendations from lifestyle
   const hasProfile = !profileIsEmpty(profile);
-  if (hasProfile || /\b(recommend|suggest|suit|match|best|which (dogs?|cats?|pets?)|show me|looking for|want a|find me)\b/.test(t)) {
-    let pool = pets;
+  const req = animalRequest(message, pets);
+  const aboutFinding = lifestyle || req.found.length || /^(yes|yeah|yep|no|nope|nah|sure|maybe|both|either|any|none|[0-9]+( hours?| hrs?)?)\b/.test(plain)
+    || /\b(pets?|animals?|companion|adopt|available|have|options|more)\b/.test(t);
+  if ((hasProfile && aboutFinding) || /\b(recommend|suggest|suit|match|best|which (dogs?|cats?|pets?)|show me|looking for|want a|find me)\b/.test(t)) {
+    let pool = req.found.length ? [...new Set(req.found.flatMap((a) => a.pets))] : pets;
     if (profile.location) {
-      const local = pets.filter((p) => p.location.toLowerCase().includes(profile.location.toLowerCase()));
+      const local = pool.filter((p) => p.location.toLowerCase().includes(profile.location.toLowerCase()));
       if (local.length) pool = local;
     }
-    const top = rankPets(pool, profile, 3);
+    const top = rankPets(pool, req.found.length ? { ...profile, preferredType: null } : profile, 3);
     if (!top.length) return { reply: 'There aren\'t any pets that fit right now, but new animals arrive every week. Try widening what you\'re looking for.', picks: [] };
     const understood = describeProfile(profile);
     const intro = understood.length ? `Here's what I understood: ${understood.slice(0, 5).join(', ').toLowerCase()}.` : 'Here are some lovely pets available right now.';
     const list = top.map((m) => `• ${m.pet.name} (${m.pet.breed}) — ${m.score}% match${m.reasons[0] ? `: ${m.reasons[0].charAt(0).toLowerCase()}${m.reasons[0].slice(1)}` : ''}`).join('\n');
-    return { reply: `${intro}\n\n${list}\n\n${nextQuestion(profile)}`, picks: top.map(pick) };
+    const notHere = [...req.missing.map((a) => a.label), ...(req.wild ? [`${req.wild.replace(/s$/, '')}s`] : [])];
+    const note = notHere.length ? `We don't have any ${notHere.join(' or ')} at the moment, but here's who is available.\n\n` : '';
+    return { reply: `${note}${intro}\n\n${list}\n\n${nextQuestion(profile)}`, picks: top.map(pick) };
   }
 
-  if (/^(hi|hello|hey|gday|good (morning|afternoon|evening)|yo)\b/.test(t.trim())) {
-    return { reply: `Hi${user ? ` ${user.name.split(' ')[0]}` : ''}! I'm PawPal's adoption assistant. Tell me a little about your home and routine and I'll suggest pets that could suit you — or ask me about a pet, the adoption process, or your application.`, picks: [] };
-  }
   return { reply: 'I can help you find a compatible pet, tell you about a specific pet, explain the adoption process, or check your application status. Try something like "I live in an apartment and want a calm dog".', picks: [] };
 }
 
@@ -227,26 +300,32 @@ async function chat(ctx) {
   const { profile } = await understandLifestyle(message, prevProfile, locations);
   const rules = rulesChat({ message, profile, pets, applications, user, lastPetIds, shelters });
   if (!llm.llmEnabled) return { ...rules, profile, source: 'rules' };
+  // Greetings, small talk and animals we don't have are answered straight from the catalogue — no pet list
+  const plain = message.toLowerCase().replace(/[’']/g, '').trim();
+  const req = animalRequest(message, pets);
+  if (GREETING.test(plain) || THANKS.test(plain) || BYE.test(plain) || unavailableReply(req, pets)) return { ...rules, profile, source: 'rules' };
 
   try {
-    const candidates = rankPets(pets, profile, 8).map((m) => ({ ...promptPet(m.pet), matchScore: m.score, reasons: m.reasons, considerations: m.considerations }));
+    const candidates = rankPets(req.found.length ? [...new Set(req.found.flatMap((a) => a.pets))] : pets, req.found.length ? { ...profile, preferredType: null } : profile, 8).map((m) => ({ ...promptPet(m.pet), matchScore: m.score, reasons: m.reasons, considerations: m.considerations }));
     const myApps = applications.map((a) => ({ pet: a.petName, status: a.status, meaning: APP_STATUS_INFO[a.status], appointment: a.appointmentAt, updated: a.updatedAt }));
     const raw = await llm.complete({ json: true, maxTokens: 700,
       system: `You are PawPal's adoption assistant for Australian animal shelters. Help people find compatible pets, answer questions about specific pets and the adoption process, and explain application status. ${GUARDRAILS}
 Keep replies under 120 words; plain text with simple "•" bullets when listing. Recommend at most 3 pets and include their ids in petIds. When recommending, prefer the ranked candidates and quote their matchScore as the match percentage.
 Always answer the latest message. rankedCandidates already reflect the adopter's current wishes: if they change what they want (for example cats to dogs, or a different size or age), recommend pets that fit the new request and do not repeat earlier suggestions unless they ask about them. Only recommend pets whose type matches the kind of animal they asked for. If the user asks about their application and "myApplications" is empty or the user is not logged in, say so.
+"availableNow" lists every kind of animal currently in the catalogue. If they ask for a kind of animal that isn't there, say plainly that PawPal doesn't have any right now and mention what is available; never suggest a different kind of animal as if it were what they asked for. Only suggest pets (petIds) when the message is about finding or learning about a pet — for greetings, thanks or general questions return an empty petIds list.
 Return {"reply": string, "petIds": string[]}.
 Adoption FAQ: ${JSON.stringify(FAQ.map((f) => ({ q: f.q, a: f.a })))}`,
       messages: [
         { role: 'user', content: `DATA (from the PawPal database):\n${JSON.stringify({ loggedIn: Boolean(user), firstName: user?.name?.split(' ')[0],
-          understoodLifestyle: describeProfile(profile), rankedCandidates: candidates, catalogue: pets.slice(0, 60).map(promptPet), myApplications: user ? myApps : undefined })}` },
+          understoodLifestyle: describeProfile(profile), availableNow: speciesSummary(pets), rankedCandidates: candidates, catalogue: pets.slice(0, 60).map(promptPet), myApplications: user ? myApps : undefined })}` },
         { role: 'assistant', content: '{"reply":"Understood — I will only use this data.","petIds":[]}' },
         ...history.slice(-8).map((m) => ({ role: m.role === 'user' ? 'user' : 'assistant', content: String(m.content).slice(0, 800) })),
         { role: 'user', content: message },
       ] });
     const ids = Array.isArray(raw.petIds) ? raw.petIds : [];
     const wantedType = ['dog', 'cat', 'other'].includes(profile.preferredType) ? profile.preferredType : null;
-    const typeOk = (pet) => !wantedType || (wantedType === 'other' ? !['dog', 'cat'].includes(String(pet.type).toLowerCase()) : String(pet.type).toLowerCase() === wantedType);
+    const foundSet = req.found.length ? new Set(req.found.flatMap((a) => a.pets)) : null;
+    const typeOk = (pet) => (foundSet ? foundSet.has(pet) : !wantedType || (wantedType === 'other' ? !['dog', 'cat'].includes(String(pet.type).toLowerCase()) : String(pet.type).toLowerCase() === wantedType));
     // Never show pets of a different kind than the adopter asked for (a pet they name explicitly is still allowed)
     const named = nameMention(message, pets);
     const picks = ids.map((id) => pets.find((p) => p.id === id)).filter(Boolean).filter((pet) => typeOk(pet) || pet === named).slice(0, 3)
