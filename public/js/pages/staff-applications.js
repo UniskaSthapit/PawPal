@@ -55,7 +55,7 @@
         ${a.appointmentAt && !closed ? `<div class="alert alert-info" style="margin-top:14px">${icons.calendar}<div><b>${esc(a.status)}:</b> ${esc(fmtDateTime(a.appointmentAt))}</div></div>` : ''}
         ${a.missing?.length ? `<div class="alert alert-warn" style="margin-top:10px">${icons.info}<div>Missing: ${esc(a.missing.join(', '))}</div></div>` : ''}</div>
 
-      <div class="card"><div class="card-head"><div><span class="src-label src-ai">${icons.paw}AI summary</span><h3>Summary for review</h3></div><button class="btn btn-sm" id="sumBtn">${icons.paw}Summarise</button></div>
+      <div class="card"><div class="card-head"><div><span class="src-label src-ai">${icons.sparkle}AI summary</span><h3>Summary for review</h3></div><button class="btn btn-sm" id="sumBtn">${icons.sparkle}Summarise</button></div>
         <div class="card-body" id="sumBody"><p class="small muted">Get a concise summary of this application and what to check at interview. The applicant's own answers are used — never your private notes.</p></div></div>
 
       ${closed ? '' : `<form class="card" id="statusForm"><div class="card-head"><h3>Update status</h3></div><div class="card-body stack" style="--stack:12px">
