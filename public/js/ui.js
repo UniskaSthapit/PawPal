@@ -33,7 +33,7 @@ const PawPal = (() => {
   const statusBadge = (s) => `<span class="${statusClass(s)}">${esc(s)}</span>`;
   const scoreBadge = (n) => `<span class="score ${n >= 80 ? 'score-high' : n >= 60 ? 'score-mid' : 'score-low'}" title="Suitability score">${n}</span>`;
   // Which engine produced an AI answer (shown so people always know)
-  const aiLabel = (source, fallback = 'PawPal matching engine') => ({ anthropic: 'Claude', openai: 'OpenAI', gemini: 'Google Gemini' }[source] || fallback);
+  const aiLabel = (source, fallback = 'PawPal matching engine') => (source && source !== 'rules' ? 'PawPal assistant' : fallback);
   const money = (n) => (n ? `$${Number(n).toLocaleString('en-AU')}` : 'Contact shelter');
 
   // ---------- images ----------
@@ -371,7 +371,7 @@ const PawPal = (() => {
         <div class="footer-main">
           <div class="footer-brand">
             <a class="brand" href="home.html"><img src="images/logo.png" alt="" width="40" height="40"/><span class="brand-name">Paw<span>Pal</span></span></a>
-            <p>AI-assisted pet adoption that puts the right match first. Every paw matters.</p>
+            <p>Helping rescue animals across Australia find homes that suit them. Because every paw matters.</p>
             <div class="footer-social">
               <a href="https://www.instagram.com" target="_blank" rel="noopener" aria-label="PawPal on Instagram">${icons.instagram}</a>
               <a href="https://www.facebook.com" target="_blank" rel="noopener" aria-label="PawPal on Facebook">${icons.facebook}</a>

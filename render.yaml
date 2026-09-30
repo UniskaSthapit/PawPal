@@ -43,9 +43,7 @@ services:
       - key: TWILIO_FROM_NUMBER
         sync: false
       - key: ANTHROPIC_API_KEY
-        sync: false   # Claude — PawPal's AI provider
-      - key: ANTHROPIC_MODEL
-        value: claude-sonnet-5-5
+        sync: false   # optional, paid
       - key: OPENAI_API_KEY
         sync: false
       - key: GEMINI_API_KEY

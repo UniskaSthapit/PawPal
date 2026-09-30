@@ -1,4 +1,4 @@
-// Language model provider, in order of preference: Anthropic (Claude), OpenAI, Google Gemini (free tier).
+// Language model provider, in order of preference: Anthropic, OpenAI, Google Gemini (free tier).
 // With no key, llmEnabled is false and callers use PawPal's rules engine.
 // Only public, filtered data is ever sent here (see ai.js) — never passwords, tokens, emails or staff notes.
 const config = require('../config');
@@ -6,7 +6,7 @@ const config = require('../config');
 const provider = config.anthropicKey ? 'anthropic' : config.openaiKey ? 'openai' : config.geminiKey ? 'gemini' : null;
 const llmEnabled = Boolean(provider);
 const modelName = { anthropic: config.anthropicModel, openai: config.openaiModel, gemini: config.geminiModel }[provider] || null;
-const providerLabel = { anthropic: `Claude (${modelName})`, openai: `OpenAI (${modelName})`, gemini: `Google Gemini (${modelName})` }[provider] || 'PawPal rules engine';
+const providerLabel = { anthropic: `Anthropic (${modelName})`, openai: `OpenAI (${modelName})`, gemini: `Google Gemini (${modelName})` }[provider] || 'PawPal rules engine';
 
 // Anthropic requires alternating roles that start with "user"
 function normaliseTurns(messages) {

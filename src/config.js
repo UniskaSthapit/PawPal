@@ -35,7 +35,7 @@ module.exports = {
   adminEmail: (env.ADMIN_EMAIL || '').trim().toLowerCase(),
   mailFrom: env.MAIL_FROM || (env.ADMIN_EMAIL ? `PawPal <${env.ADMIN_EMAIL.trim()}>` : 'PawPal <no-reply@pawpal.app>'),
 
-  // AI — Anthropic (Claude) is used when its key is set, otherwise OpenAI, otherwise
+  // AI — Anthropic is used when its key is set, otherwise OpenAI, then Google Gemini, otherwise
   // PawPal's built-in rules engine (which still works on the real database).
   anthropicKey: env.ANTHROPIC_API_KEY || '',
   anthropicModel: env.ANTHROPIC_MODEL || 'claude-sonnet-5-5',
