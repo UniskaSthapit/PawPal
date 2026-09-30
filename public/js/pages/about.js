@@ -1,9 +1,2 @@
-// About page — the inline contact form moved to contact.html, so this file
-// only needs to hydrate the icons and animate the new sections in.
-(() => {
-  const { hydrateIcons, reveal } = PawPal;
-  document.addEventListener('DOMContentLoaded', () => {
-    hydrateIcons();
-    reveal();
-  });
-})();
+// About page: renders all rescue stories.
+(async () => { await PawPal.booted; PawPalStories.render(PawPal.$('#storyGrid'), 6); if (location.hash) document.querySelector(location.hash)?.scrollIntoView(); })();

@@ -1,77 +1,51 @@
-// Staff analytics (FR-06) — real search, inquiry and adoption data with CSV export.
-(() => {
-  const { $, $$, esc, toast } = PawPal;
+// Analytics: KPIs, insights, weekly trend, funnel, interest by characteristic, status and search data.
+(async () => {
+  const { $, esc, icons, errorHTML } = PawPal;
+  await PawPal.booted;
+  const iso = (d) => d.toISOString().slice(0, 10);
+  $('#to').value = iso(new Date()); $('#from').value = iso(new Date(Date.now() - 29 * 86400000));
   const charts = {};
-  const iso = (d) => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
-  const setRange = (days) => { const to = new Date(); $('#to').value = iso(to); $('#from').value = iso(new Date(to.getTime() - (days - 1) * 86400000)); };
-
-  const change = (el, pct) => {
-    el.textContent = `${pct >= 0 ? '+' : ''}${pct}%`;
-    el.className = `analytics-stat-change ${pct >= 0 ? 'positive' : 'negative'}`;
-    el.title = 'Compared with the previous period of the same length';
+  const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+  const bars = (el, rows, label = (r) => r.key, value = (r) => r.interest) => {
+    const max = Math.max(1, ...rows.map(value));
+    el.innerHTML = rows.length ? rows.map((r) => `<div class="bar-row"><span>${esc(label(r))}</span><div class="bar"><i style="width:${(value(r) / max) * 100}%"></i></div><b>${value(r)}</b></div>`).join('') : '<p class="muted small">No data in this period.</p>';
   };
-
-  function draw(id, config) {
-    if (!window.Chart) return;
-    charts[id]?.destroy();
-    charts[id] = new Chart(document.getElementById(id), config);
-  }
-
+  const delta = (n) => (n ? `<span class="delta ${n > 0 ? 'up' : 'down'}">${n > 0 ? '▲' : '▼'} ${Math.abs(n)}%</span>` : '<span class="delta muted">—</span>');
   async function load() {
-    const from = $('#from').value;
-    const to = $('#to').value;
-    if (from > to) return toast('The start date must be before the end date.', 'error');
-    $('#exportApps').href = `/api/analytics/export${PawPalAPI.qs({ type: 'applications', from, to })}`;
-    $('#exportSearch').href = `/api/analytics/export${PawPalAPI.qs({ type: 'searches', from, to })}`;
-    let d;
-    try { d = await PawPalAPI.get('/analytics', { from, to }); } catch (err) { return toast(err.message, 'error'); }
-    const s = d.stats;
-    $('#vVisitors').textContent = s.visitors.toLocaleString(); change($('#cVisitors'), s.visitorsChange);
-    $('#vSearches').textContent = s.searches.toLocaleString(); change($('#cSearches'), s.searchesChange);
-    $('#vInquiries').textContent = s.inquiries.toLocaleString(); change($('#cInquiries'), s.inquiriesChange);
-    $('#vAdoptions').textContent = s.adoptions.toLocaleString(); change($('#cAdoptions'), s.adoptionsChange);
-
-    const top = d.topKeywords[0];
-    $('#insightText').innerHTML = s.adoptionsChange > 0
-      ? `🐾 Adoptions are up <strong>+${s.adoptionsChange}%</strong> on the previous period${top ? ` · most searched: <strong>${esc(top.keyword)}</strong>` : ''}`
-      : top ? `🐾 Adopters searched <strong>“${esc(top.keyword)}”</strong> most often in this period — ${top.count} times.` : '🐾 No searches recorded in this period yet.';
-
-    if (!window.Chart) { toast('Charts could not load (no internet connection to the chart library).', 'info'); }
-    else {
-      Chart.defaults.font.family = "'DM Sans', sans-serif";
-      Chart.defaults.color = '#6B5B4E';
+    const range = { from: $('#from').value, to: $('#to').value };
+    $('#csvApps').href = `/api/analytics/export${PawPalAPI.qs({ ...range, type: 'applications' })}`;
+    $('#csvSearch').href = `/api/analytics/export${PawPalAPI.qs({ ...range, type: 'searches' })}`;
+    let a;
+    try { a = await PawPalAPI.get('/analytics', range); } catch (err) { $('#kpis').innerHTML = errorHTML(err.message); return; }
+    const s = a.stats;
+    $('#kpis').innerHTML = [['paw', s.activePets, 'Active pets', `<span class="delta muted">${s.adoptedPets} adopted all-time</span>`], ['file', s.applications, 'Applications', delta(s.applicationsChange)],
+      ['message', s.enquiries, 'Enquiries', delta(s.enquiriesChange)], ['eye', s.views, 'Profile views', delta(s.viewsChange)], ['heart', s.favourites, 'Favourites saved', ''],
+      ['home', s.adoptions, 'Adoptions', delta(s.adoptionsChange)], ['clock', s.avgDaysToFirstAction ?? '—', 'Avg days to first review', ''], ['checkCircle', s.completionRate === null ? '—' : `${s.completionRate}%`, 'Complete applications', '']]
+      .map(([ic, n, l, d]) => `<div class="kpi"><div class="k-top"><span class="k-ic">${icons[ic]}</span>${d}</div><b>${n}</b><span>${l}</span></div>`).join('');
+    const fmax = Math.max(1, a.funnel[0].count);
+    $('#funnel').innerHTML = a.funnel.map((f) => `<div class="funnel-row"><span class="small">${esc(f.stage)}</span><div><div class="f-bar" style="width:${Math.max(2, (f.count / fmax) * 100)}%"></div></div><b>${f.count}</b></div>`).join('');
+    bars($('#byAge'), a.byAge); bars($('#byType'), a.byType); bars($('#bySize'), a.bySize);
+    bars($('#keywords'), a.topKeywords, (r) => r.keyword, (r) => r.count);
+    $('#zero').innerHTML = a.zeroResultKeywords.length ? `<ul class="plain stack" style="--stack:8px">${a.zeroResultKeywords.map((k) => `<li class="row-between"><span>“${esc(k.keyword)}”</span><span class="badge badge-honey">${k.count}×</span></li>`).join('')}</ul><p class="tiny muted" style="margin-top:12px">What adopters want but couldn't find — useful when accepting transfers.</p>` : '<p class="muted small">Every search found something. 🎉</p>';
+    if (window.Chart) {
+      Chart.defaults.font.family = css('--font-ui'); Chart.defaults.color = css('--muted');
+      charts.trend?.destroy(); charts.status?.destroy();
+      charts.trend = new Chart($('#trendChart'), { type: 'line', data: { labels: a.trend.map((t) => t.label), datasets: [
+        { label: 'Applications', data: a.trend.map((t) => t.applications), borderColor: css('--brand'), backgroundColor: css('--brand'), tension: 0.35 },
+        { label: 'Enquiries', data: a.trend.map((t) => t.enquiries), borderColor: css('--sky'), backgroundColor: css('--sky'), tension: 0.35 },
+        { label: 'Adoptions', data: a.trend.map((t) => t.adoptions), borderColor: css('--sage'), backgroundColor: css('--sage'), tension: 0.35 },
+        { label: 'AI matching sessions', data: a.trend.map((t) => t.aiMatches), borderColor: css('--honey'), backgroundColor: css('--honey'), borderDash: [5, 4], tension: 0.35 }] },
+        options: { maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12 } } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } }, x: { grid: { display: false } } } } });
+      const st = a.statusCounts.filter((x) => x.count);
+      charts.status = new Chart($('#statusChart'), { type: 'doughnut', data: { labels: st.map((x) => x.status), datasets: [{ data: st.map((x) => x.count),
+        backgroundColor: ['#76614F', '#2D5E86', '#E49B2F', '#4F7CAC', '#7B5BA8', '#2E6A51', '#9A6FC8', '#221610', '#B42318', '#C9B8A6'] }] },
+        options: { maintainAspectRatio: false, cutout: '62%', plugins: { legend: { position: 'right', labels: { boxWidth: 10, font: { size: 11 } } } } } });
     }
-    const grid = '#EDD9C8';
-    const base = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } };
-
-    draw('keywordsChart', { type: 'bar', data: { labels: d.topKeywords.map((k) => k.keyword), datasets: [{ data: d.topKeywords.map((k) => k.count),
-      backgroundColor: d.topKeywords.map((_, i) => `rgba(200,90,62,${1 - i * 0.11})`), borderRadius: 6, borderSkipped: false }] },
-    options: { ...base, indexAxis: 'y', scales: { x: { grid: { color: grid }, border: { display: false }, ticks: { precision: 0 } }, y: { grid: { display: false }, border: { display: false }, ticks: { color: '#2A2419' } } } } });
-
-    draw('weeklyChart', { type: 'bar', data: { labels: d.weekly.map((w) => w.day), datasets: [{ data: d.weekly.map((w) => w.count), backgroundColor: '#7FA882', borderRadius: { topLeft: 6, topRight: 6 }, borderSkipped: false }] },
-      options: { ...base, scales: { x: { grid: { display: false }, border: { display: false } }, y: { grid: { color: grid }, border: { display: false }, ticks: { precision: 0 } } } } });
-
-    const line = (label, key, color) => ({ label, data: d.trend.map((t) => t[key]), borderColor: color, backgroundColor: color + '14', borderWidth: 3, pointBackgroundColor: color, pointRadius: 4, tension: 0.35, fill: true });
-    draw('trendsChart', { type: 'line', data: { labels: d.trend.map((t) => t.label), datasets: [line('AI matches & chats', 'aiMatches', '#C85A3E'), line('Inquiries', 'inquiries', '#D4A853'), line('Adoptions', 'adoptions', '#7FA882')] },
-      options: { ...base, plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } }, scales: { x: { grid: { display: false }, border: { display: false } }, y: { grid: { color: grid }, border: { display: false }, ticks: { precision: 0 }, beginAtZero: true } } } });
-
-    const st = d.statusCounts.filter((x) => x.count);
-    const colors = { Pending: '#E8A33D', Shortlisted: '#F4C542', 'Visit Scheduled': '#64A0D8', Approved: '#5D9B6A', Rejected: '#D06A5E', Adopted: '#C85A3E', Withdrawn: '#B8ADA3' };
-    draw('statusChart', { type: 'doughnut', data: { labels: st.map((x) => x.status), datasets: [{ data: st.map((x) => x.count), backgroundColor: st.map((x) => colors[x.status]), borderWidth: 2, borderColor: '#fff' }] },
-      options: { responsive: true, maintainAspectRatio: false, cutout: '62%', plugins: { legend: { position: 'right', labels: { usePointStyle: true, boxWidth: 8 } } } } });
-
-    $('#gapList').innerHTML = d.zeroResultKeywords.length
-      ? `<ul class="gap-list">${d.zeroResultKeywords.map((k) => `<li><span>“${esc(k.keyword)}”</span><b>${k.count} search${k.count > 1 ? 'es' : ''}</b></li>`).join('')}</ul>`
-      : '<p class="pp-muted">Every search found at least one pet. 🎉</p>';
-    $('#miniStats').innerHTML = `<div><b>${s.aiMatches}</b><span>AI matches &amp; chats</span></div><div><b>${s.averageScore}</b><span>Avg. AI score</span></div><div><b>${s.conversion}%</b><span>Visit → inquiry</span></div>`;
+    try {
+      const ins = await PawPalAPI.get('/analytics/insights', range);
+      $('#insights').innerHTML = ins.insights.length ? ins.insights.map((t) => `<div class="insight">${icons.bulb}<span>${esc(t)}</span></div>`).join('') : '<p class="muted small">Not enough activity in this period for insights.</p>';
+    } catch { $('#insights').innerHTML = '<p class="muted small">Insights unavailable.</p>'; }
   }
-
-  $('#rangeForm').addEventListener('submit', (e) => { e.preventDefault(); $$('.range-quick button').forEach((b) => b.classList.remove('active')); load(); });
-  $$('.range-quick button').forEach((b) => b.addEventListener('click', () => {
-    $$('.range-quick button').forEach((x) => x.classList.toggle('active', x === b));
-    setRange(Number(b.dataset.days)); load();
-  }));
-  setRange(30);
-  $('.range-quick [data-days="30"]').classList.add('active');
+  $('#rangeForm').addEventListener('submit', (e) => { e.preventDefault(); load(); });
   load();
 })();

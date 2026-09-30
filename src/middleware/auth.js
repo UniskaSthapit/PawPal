@@ -1,4 +1,5 @@
 // Authentication middleware — JWT stored in an httpOnly cookie (not readable by page scripts).
+// Roles: "user" (adopter), "staff" (shelter staff, scoped to one shelter), "admin" (everything).
 const jwt = require('jsonwebtoken');
 const config = require('../config');
 const db = require('../db');
@@ -32,19 +33,41 @@ async function loadUser(req, res, next) {
   next();
 }
 
+const isStaffRole = (role) => role === 'staff' || role === 'admin';
+const isStaff = (req) => isStaffRole(req.user?.role);
+const isAdmin = (req) => req.user?.role === 'admin';
+
 function requireAuth(req, res, next) {
   if (!req.user) return res.status(401).json({ error: 'Please log in to continue.' });
   next();
 }
 
-function requireStaff(req, res, next) {
+function requireAdopter(req, res, next) {
   if (!req.user) return res.status(401).json({ error: 'Please log in to continue.' });
-  if (req.user.role !== 'staff') return res.status(403).json({ error: 'Staff access only.' });
+  if (req.user.role !== 'user') return res.status(403).json({ error: 'This is only available to adopter accounts.' });
   next();
 }
 
+function requireStaff(req, res, next) {
+  if (!req.user) return res.status(401).json({ error: 'Please log in to continue.' });
+  if (!isStaffRole(req.user.role)) return res.status(403).json({ error: 'Staff access only.' });
+  next();
+}
+
+function requireAdmin(req, res, next) {
+  if (!req.user) return res.status(401).json({ error: 'Please log in to continue.' });
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Administrator access only.' });
+  next();
+}
+
+// Staff only see their own shelter's pets, applications and enquiries. Admins see everything (null = no limit).
+const shelterScope = (req) => (req.user?.role === 'admin' ? null : req.user?.shelterId || '__none__');
+const inScope = (req, doc) => { const s = shelterScope(req); return s === null || doc?.shelterId === s; };
+
 // Safe version of a user for sending to the browser
 const publicUser = (u) => u && ({ id: u.id, name: u.name, email: u.email, role: u.role, phone: u.phone || '',
-  emailVerified: !!u.emailVerified, createdAt: u.createdAt });
+  phoneVerified: !!u.phoneVerified, emailVerified: !!u.emailVerified, shelterId: u.shelterId || null,
+  preferences: u.preferences || null, createdAt: u.createdAt });
 
-module.exports = { setAuthCookie, clearAuthCookie, loadUser, requireAuth, requireStaff, publicUser };
+module.exports = { setAuthCookie, clearAuthCookie, loadUser, requireAuth, requireAdopter, requireStaff, requireAdmin,
+  isStaff, isAdmin, isStaffRole, shelterScope, inScope, publicUser };

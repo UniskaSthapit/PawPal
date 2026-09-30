@@ -1,52 +1,75 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>PawPal — My profile</title>
-  
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="css/global.css"/>
-  <link rel="stylesheet" href="css/shared-nav.css"/>
-  <link rel="stylesheet" href="css/shared-footer.css"/>
-  <link rel="stylesheet" href="css/my-applications.css"/>
-  <link rel="stylesheet" href="css/home.css"/>
-  <link rel="stylesheet" href="css/app.css"/>
-  <link rel="stylesheet" href="css/pages.css"/>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-<link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png"><link rel="icon" type="image/png" sizes="192x192" href="images/favicon-192.png"><link rel="apple-touch-icon" href="images/apple-touch-icon.png"><link rel="canonical" href="YOUR_CANONICAL_URL">
-<meta property="og:title" content="PawPal — My profile"><meta property="og:type" content="website"><meta property="og:image" content="YOUR_OG_IMAGE_URL"><link rel="stylesheet" href="css/pp-system.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Profile & preferences — PawPal</title>
+  <meta name="description" content="Manage your PawPal profile, phone verification, lifestyle preferences and password.">
+  <meta name="theme-color" content="#221610">
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
+  <link rel="preload" href="fonts/fraunces-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/plus-jakarta-sans-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/pawpal.css">
+  <script src="js/api.js" defer></script>
+  <script src="js/ui.js" defer></script>
+  <script src="js/chat.js" defer></script>
+  <script src="js/pages/profile.js" defer></script>
 </head>
-<body class="page-profile">
-
-<nav class="pawpal-nav" data-nav="public"></nav>
-<div class="app-body">
-  <aside class="app-sidebar" data-sidebar="user" aria-label="Account navigation"></aside>
-  <main class="app-main" id="main">
-    <div class="myapp-top-bar"><div><h1>My Profile</h1><p class="myapp-subtitle">Manage your account details and password.</p></div></div>
-    <div class="pp-grid-2 profile-grid">
-      <form class="pp-card" id="profileForm" novalidate>
-        <h3>Account details</h3>
-        <div class="pp-field"><label for="pName">Full name</label><input class="pp-input" id="pName" autocomplete="name" required/></div>
-        <div class="pp-field"><label for="pEmail">Email</label><input class="pp-input" id="pEmail" disabled/><span class="pp-hint" id="verifiedHint"></span></div>
-        <div class="pp-field"><label for="pPhone">Phone</label><input class="pp-input" id="pPhone" type="tel" autocomplete="tel" placeholder="04xx xxx xxx"/></div>
-        <button class="pp-btn pp-btn-primary" type="submit" id="saveProfile">Save changes</button>
-      </form>
-      <form class="pp-card" id="passwordForm" novalidate>
-        <h3>Change password</h3>
-        <div class="pp-field"><label for="curPw">Current password</label><input class="pp-input" id="curPw" type="password" autocomplete="current-password" required/></div>
-        <div class="pp-field"><label for="newPw">New password</label><input class="pp-input" id="newPw" type="password" autocomplete="new-password" required/><span class="pp-hint">At least 8 characters, including a letter and a number.</span></div>
-        <div class="pp-field"><label for="newPw2">Confirm new password</label><input class="pp-input" id="newPw2" type="password" autocomplete="new-password" required/></div>
-        <button class="pp-btn pp-btn-primary" type="submit" id="savePw">Update password</button>
-      </form>
+<body data-layout="account" data-page="profile">
+<main id="main" tabindex="-1">
+<div class="app-head"><div><h1>Profile &amp; preferences</h1><p>Keep your details up to date so shelters can reach you.</p></div></div>
+<div class="grid" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start" id="profileGrid">
+  <form class="card" id="detailsForm" novalidate>
+    <div class="card-head"><h2>Your details</h2><span id="emailBadge"></span></div>
+    <div class="card-body stack">
+      <div class="field"><label for="pName">Full name</label><input class="input" id="pName" autocomplete="name" maxlength="80" required></div>
+      <div class="field"><label for="pEmail">Email</label><input class="input" id="pEmail" disabled><span class="hint">Contact us if you need to change your email.</span></div>
+      <div class="field"><label for="pAddress">Suburb / address</label><input class="input" id="pAddress" autocomplete="street-address" maxlength="160"></div>
+      <div id="detailsMsg"></div>
+      <button class="btn btn-primary" type="submit" id="detailsBtn">Save details</button>
     </div>
-    <div class="pp-card profile-favs"><h3>Saved pets</h3><div class="pet-grid fav-grid" id="favGrid"><p class="pp-muted">Loading…</p></div></div>
-  </main>
+  </form>
+
+  <section class="card" id="phone" aria-labelledby="phoneTitle">
+    <div class="card-head"><h2 id="phoneTitle">Mobile verification</h2><span id="phoneBadge"></span></div>
+    <div class="card-body stack">
+      <p class="small muted">Verifying your mobile lets shelters call or text you about appointments. We'll send a 6-digit code by SMS.</p>
+      <form id="phoneForm" class="stack" novalidate>
+        <div style="display:grid;grid-template-columns:110px 1fr;gap:10px">
+          <div class="field"><label for="cc">Country</label><select class="select" id="cc"><option value="+61">🇦🇺 +61</option><option value="+64">🇳🇿 +64</option><option value="+44">🇬🇧 +44</option><option value="+1">🇺🇸 +1</option><option value="+91">🇮🇳 +91</option><option value="+977">🇳🇵 +977</option><option value="+65">🇸🇬 +65</option></select></div>
+          <div class="field"><label for="phoneNum">Mobile number</label><input class="input" id="phoneNum" type="tel" autocomplete="tel-national" placeholder="0412 345 678" maxlength="20"></div>
+        </div>
+        <button class="btn" type="submit" id="sendCodeBtn"><span data-icon="smartphone"></span>Send code</button>
+      </form>
+      <form id="codeForm" class="stack" hidden novalidate>
+        <p class="small" id="codeSentTo"></p>
+        <div class="field"><label for="otp">6-digit code</label><input class="input" id="otp" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" style="font-size:22px;letter-spacing:.4em;max-width:220px"></div>
+        <div class="row"><button class="btn btn-primary" type="submit" id="verifyBtn">Verify</button><button class="btn btn-ghost" type="button" id="resendCode" disabled>Resend code</button></div>
+      </form>
+      <div id="phoneMsg"></div>
+    </div>
+  </section>
+
+  <section class="card" id="preferences" aria-labelledby="prefTitle" style="grid-column:1/-1">
+    <div class="card-head"><div><span class="src-label src-ai"><span data-icon="sparkle"></span>Used for your matches</span><h2 id="prefTitle">Your lifestyle</h2></div><a class="btn btn-sm" href="ai-matching.html">Update with Find my PawPal</a></div>
+    <div class="card-body" id="prefBody"><div class="skeleton" style="height:60px"></div></div>
+  </section>
+
+  <form class="card" id="pwForm" novalidate>
+    <div class="card-head"><h2>Change password</h2></div>
+    <div class="card-body stack">
+      <div class="field"><label for="curPw">Current password</label><input class="input" id="curPw" type="password" autocomplete="current-password"></div>
+      <div class="field"><label for="newPw">New password</label><input class="input" id="newPw" type="password" autocomplete="new-password"><span class="hint">At least 8 characters with a letter and a number. Other devices will be signed out.</span></div>
+      <div id="pwMsg"></div>
+      <button class="btn" type="submit" id="pwBtn">Update password</button>
+    </div>
+  </form>
+  <section class="card"><div class="card-head"><h2>Privacy</h2></div><div class="card-body stack small">
+    <p>Your applications are only visible to you and the shelter caring for the pet. Staff notes and suitability scores are kept internal to the shelter.</p>
+    <p>PawPal's assistant only receives public pet information and — when you ask — the status of your own applications. It never sees your password or contact details.</p>
+    <p><a href="privacy.html">Read the privacy policy</a></p></div></section>
 </div>
-<footer data-footer></footer>
-<script src="js/api.js"></script>
-<script src="js/ui.js"></script>
-<script src="js/pages/profile.js"></script>
-<script src="config.js"></script><script src="js/pp-enhance.js" defer></script></body>
+<style>@media (max-width: 900px){ #profileGrid{grid-template-columns:minmax(0,1fr)!important} }</style>
+</main>
+</body>
 </html>

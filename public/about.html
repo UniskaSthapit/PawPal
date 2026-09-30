@@ -1,241 +1,83 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>PawPal — About us</title>
-  
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="css/global.css"/>
-  <link rel="stylesheet" href="css/shared-nav.css"/>
-  <link rel="stylesheet" href="css/shared-footer.css"/>
-  <link rel="stylesheet" href="css/app.css"/>
-  <link rel="stylesheet" href="css/pages.css"/>
-  <link rel="stylesheet" href="css/sections.css"/>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-<link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png"><link rel="icon" type="image/png" sizes="192x192" href="images/favicon-192.png"><link rel="apple-touch-icon" href="images/apple-touch-icon.png"><link rel="canonical" href="YOUR_CANONICAL_URL">
-<meta property="og:title" content="PawPal — About us"><meta property="og:type" content="website"><meta property="og:image" content="YOUR_OG_IMAGE_URL"><link rel="stylesheet" href="css/pp-system.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>About PawPal — Every pet deserves a home that fits</title>
+  <meta name="description" content="PawPal helps Australian shelters match pets with the right families, with honest profiles, explained matching and clear application tracking.">
+  <meta name="theme-color" content="#221610">
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
+  <link rel="preload" href="fonts/fraunces-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/plus-jakarta-sans-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/pawpal.css">
+  <script src="js/api.js" defer></script>
+  <script src="js/ui.js" defer></script>
+  <script src="js/chat.js" defer></script>
+  <script src="js/stories.js" defer></script>
+  <script src="js/pages/about.js" defer></script>
 </head>
-<body class="page-about">
+<body data-layout="public" data-page="about">
+<main id="main" tabindex="-1">
+<section class="page-hero"><div class="container">
+  <span class="eyebrow">About PawPal</span>
+  <h1 class="h1">Every pet deserves a home <em>that fits.</em></h1>
+  <p class="lead">PawPal helps Australian shelters match animals with the right families. Adopters search and apply in minutes, shelter teams review applications with clear, explained information, and everyone knows what happens next.</p>
+  <div class="row" style="margin-top:24px"><a class="btn btn-primary" href="adopt.html">Browse pets</a><a class="btn" href="ai-matching.html"><span data-icon="sparkle"></span>Find my PawPal</a></div>
+</div></section>
 
-<nav class="pawpal-nav" data-nav="public"></nav>
+<section class="section" id="mission"><div class="container grid grid-3">
+  <div class="card card-pad" data-reveal><span class="k-ic" style="width:48px;height:48px;border-radius:14px;display:grid;place-items:center;background:var(--brand-soft);color:var(--brand-ink)"><span data-icon="heart"></span></span>
+    <h2 class="h3" style="margin-top:16px">For adopters</h2><p class="muted" style="margin-top:8px">Search and filter every available pet, describe your lifestyle in your own words to get explained matches, ask the shelter questions, apply online and follow each step on a clear timeline.</p></div>
+  <div class="card card-pad" data-reveal><span class="k-ic" style="width:48px;height:48px;border-radius:14px;display:grid;place-items:center;background:var(--sage-soft);color:var(--sage)"><span data-icon="building"></span></span>
+    <h2 class="h3" style="margin-top:16px">For shelter teams</h2><p class="muted" style="margin-top:8px">Publish profiles with AI-drafted descriptions, keep medical and rescue notes internal, manage a full adoption pipeline, answer enquiries and let PawPal notify adopters at every step.</p></div>
+  <div class="card card-pad" data-reveal><span class="k-ic" style="width:48px;height:48px;border-radius:14px;display:grid;place-items:center;background:var(--honey-soft);color:var(--honey-ink)"><span data-icon="shield"></span></span>
+    <h2 class="h3" style="margin-top:16px">Built on honesty</h2><p class="muted" style="margin-top:8px">Scores are explained line by line and shelter facts are always shown separately from PawPal's interpretation. Technology supports decisions — people make them.</p></div>
+</div></section>
 
-<main class="about-main" id="main">
-  <section class="about-hero" id="mission">
-    <div class="about-inner">
-      <h1>Every pet deserves a home that fits.</h1>
-      <p>PawPal helps Australian shelters match pets with the right families. Adopters search and apply in minutes, shelter teams review applications with AI-assisted suitability scores, and everyone stays informed at each step.</p>
-      <div class="about-actions"><a class="pp-btn pp-btn-primary" href="home.html#pets">Browse pets</a><a class="pp-btn pp-btn-ghost" href="ai-matching.html">Find my match</a></div>
-    </div>
-  </section>
+<section class="section section-tint" id="story"><div class="container" style="display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:clamp(24px,5vw,64px);align-items:start" id="storyGridWrap">
+  <div class="prose">
+    <span class="eyebrow">How it started</span>
+    <h2 class="h2" style="margin-top:10px">PawPal began with a dog who came back twice</h2>
+    <p style="margin-top:18px">In 2024 a shelter volunteer watched the same young kelpie return twice in five months. Both families had loved him. Neither had understood that a working dog in a second-floor apartment, alone for ten hours a day, was never going to settle. Nothing on his listing had told them: it showed a photograph, a breed and an age.</p>
+    <p>That is a common story, and it is rarely anybody's fault. Shelters are stretched, listings get written in a hurry, and adopters make one of the biggest decisions of an animal's life from three lines of text. The information that would have prevented both returns already existed — the care team knew he needed hours of exercise and hated being alone. It simply never reached the people reading the ad.</p>
+    <p>PawPal was built to close that gap. Every observation the care team records becomes a structured field: energy level, whether a yard is needed, how they are with children and other animals. Those same fields drive the filters, the profile page and PawPal's matching — so what staff know is what adopters see.</p>
+    <p>The kelpie was adopted a third time, by a courier who drives with him all day. He has been home two years.</p>
+  </div>
+  <ol class="timeline card card-pad" aria-label="PawPal timeline">
+    <li class="tl-item done"><span class="tl-dot"><span data-icon="alert"></span></span><div class="tl-content"><h4>2024 — the problem</h4><p>Two returns of the same dog make it obvious that listings miss the information that matters most.</p></div></li>
+    <li class="tl-item done"><span class="tl-dot"><span data-icon="clipboard"></span></span><div class="tl-content"><h4>2025 — structured profiles</h4><p>Care observations become recorded fields instead of notes in a folder.</p></div></li>
+    <li class="tl-item current"><span class="tl-dot"><span data-icon="sparkle"></span></span><div class="tl-content"><h4>2026 — matching &amp; tracking</h4><p>Explained matching, online applications and a full adoption timeline go live.</p></div></li>
+  </ol>
+</div></section>
 
-  <section class="about-section">
-    <div class="about-inner about-grid">
-      <div><h2>For adopters</h2><p>Search pets by name, breed or trait, take a six-question quiz or chat with PawPal AI to get ranked matches, then apply online and follow your application from pending to adopted.</p></div>
-      <div><h2>For shelter staff</h2><p>Publish pet profiles with AI-written descriptions, keep medical and rescue notes private, rank applicants by suitability, schedule visits and let PawPal email adopters automatically.</p></div>
-      <div><h2>Built on fairness</h2><p>Suitability scores are explained line by line so staff can see exactly why an applicant scored the way they did. Scores support decisions — people make them.</p></div>
-    </div>
-  </section>
+<section class="section"><div class="container">
+  <div class="section-head"><span class="eyebrow">How we help</span><h2 class="h2" style="margin-top:10px">Six ways PawPal changes an animal's outcome</h2><p class="lead">Rehoming is only part of it. Prevention, education and keeping animals with the owners they already have matter just as much.</p></div>
+  <div class="grid grid-3">
+    <div class="step" data-reveal><h3>Rescue &amp; rehabilitation</h3><p>Animals arrive as strays, surrenders or from cruelty cases. They are health-checked, treated and cared for before they are listed.</p></div>
+    <div class="step" data-reveal><h3>Honest matching</h3><p>Explained compatibility and profiles that say what is unknown rather than guessing. Fewer mismatches means fewer returns.</p></div>
+    <div class="step" data-reveal><h3>Foster care</h3><p>Kittens, puppies, nervous adults and recovering animals do far better in a home than a kennel.</p></div>
+    <div class="step" data-reveal><h3>Cruelty prevention</h3><p>Reporting, community desexing and education. Most concerns end in advice and support rather than prosecution.</p></div>
+    <div class="step" data-reveal><h3>Keeping pets with owners</h3><p>Pet food support, subsidised vet care and temporary fostering help people through hardship without surrendering the animal they love.</p></div>
+    <div class="step" data-reveal><h3>Care after adoption</h3><p>A vet finder, first-year guidance and a team you can still call six months later.</p></div>
+  </div>
+</div></section>
 
+<section class="section section-tint" id="stories"><div class="container">
+  <div class="section-head"><span class="eyebrow">Rescue stories</span><h2 class="h2" style="margin-top:10px">What that work looks like in practice</h2></div>
+  <div class="grid grid-3" id="storyGrid"></div>
+</div></section>
 
-  <!-- ======= HOW IT STARTED ======= -->
-  <section class="pp-section pp-section-white" id="story">
-    <div class="pp-wrap">
-      <div class="pp-section-head">
-        <span class="pp-eyebrow" data-icon="clock">How it started</span>
-        <h2>PawPal began with a dog who came back twice</h2>
-      </div>
-      <div class="pp-split" style="align-items:start">
-        <div class="pp-stack">
-          <p>In 2024 a shelter volunteer watched the same young kelpie return twice in five months. Both families had
-             loved him. Neither had understood that a working dog in a second-floor apartment, alone for ten hours a
-             day, was never going to settle. Nothing on his listing had told them: it showed a photograph, a breed and
-             an age.</p>
-          <p>That is a common story, and it is rarely anybody's fault. Shelters are stretched, listings get written in
-             a hurry, and adopters make one of the biggest decisions of an animal's life from three lines of text. The
-             information that would have prevented both returns already existed — the care team knew he needed hours
-             of exercise and hated being alone. It simply never reached the people reading the ad.</p>
-          <p>PawPal was built to close that gap. Every observation the care team records becomes a structured field:
-             energy level, exercise needs, how long the animal copes alone, whether they have lived with children,
-             dogs or cats. Those same fields drive the search filters, the profile page and the AI matching, so what
-             staff know is what adopters see.</p>
-          <p>The kelpie was adopted a third time, by a courier who drives with him all day. He has been home two
-             years.</p>
-          <p class="pp-small pp-muted">Founding story written for this university prototype.</p>
-        </div>
-        <div class="pp-stack">
-          <div class="pp-media pp-media-hover pp-media-wide" data-reveal>
-            <img src="https://images.unsplash.com/photo-1561037404-61cd46aa615b?w=900&h=560&fit=crop&auto=format&q=80"
-                 alt="A working dog running in a field" loading="lazy"
-                 onerror="this.onerror=null;this.src='images/pets/dog-b.svg'"/>
-            <span class="pp-media-tag" data-icon="paw">Third time was the right home</span>
-          </div>
-          <ol class="pp-steps pp-steps-compact">
-            <li class="pp-step"><h3>2024 — the problem</h3><p>Two returns of the same dog make it obvious that listings
-              are missing the information that matters most.</p></li>
-            <li class="pp-step"><h3>2025 — structured profiles</h3><p>Care observations become recorded fields instead
-              of notes in a folder.</p></li>
-            <li class="pp-step"><h3>2026 — matching and tracking</h3><p>Explained match scores, online applications and
-              status tracking go live in this prototype.</p></li>
-          </ol>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ======= WHO WE ARE ======= -->
-  <section class="pp-section" id="who">
-    <div class="pp-wrap">
-      <div class="pp-section-head">
-        <span class="pp-eyebrow" data-icon="users">Who we are</span>
-        <h2>A small shelter team, a group of volunteers, and four students</h2>
-        <p>PawPal is two things at once: a demonstration shelter, and the software project that runs it.</p>
-      </div>
-      <div class="pp-grid pp-grid-3">
-        <article class="pp-card pp-card-hover pp-feature" data-reveal>
-          <div class="pp-icon-tile" data-icon="briefcase"></div>
-          <h3>The shelter team</h3>
-          <p>Four roles cover an animal's whole journey: intake and assessment, daily care and enrichment, adoptions
-             and visits, and veterinary coordination. Every profile on this site is written from their notes.</p>
-        </article>
-        <article class="pp-card pp-card-hover pp-feature" data-reveal>
-          <div class="pp-icon-tile pp-icon-tile-sage" data-icon="handshake"></div>
-          <h3>Our volunteers</h3>
-          <p>Dog walkers, cat socialisers, foster carers, photographers and event helpers. They give the animals the
-             one thing a staff roster cannot stretch to — unhurried, one-to-one time.</p>
-        </article>
-        <article class="pp-card pp-card-hover pp-feature" data-reveal>
-          <div class="pp-icon-tile pp-icon-tile-gold" data-icon="bulb"></div>
-          <h3>The project team</h3>
-          <p>Four Victoria University students built PawPal for the NIT3003/NIT3004 IT Capstone: Uniska Sthapit,
-             Pratikshya Bhujel, Pemba Sange Sherpa and Sushrit Phuyal.</p>
-        </article>
-      </div>
-    </div>
-  </section>
-
-  <!-- ======= HOW WE HELP ======= -->
-  <section class="pp-section pp-section-sand" id="help">
-    <div class="pp-wrap">
-      <div class="pp-section-head">
-        <span class="pp-eyebrow" data-icon="heart">How we help</span>
-        <h2>Six ways PawPal changes an animal's outcome</h2>
-        <p>Rehoming is only part of it. Prevention, education and keeping animals with the owners they already have
-           matter just as much.</p>
-      </div>
-      <div class="pp-grid pp-grid-3">
-        <article class="pp-card pp-card-hover pp-feature" data-reveal>
-          <div class="pp-icon-tile" data-icon="paw"></div>
-          <h3>Rescue and rehabilitation</h3>
-          <p>Animals arrive as strays, surrenders or from cruelty cases. They are health-checked, treated and given
-             weeks of care before they are listed — sometimes months.</p>
-        </article>
-        <article class="pp-card pp-card-hover pp-feature" data-reveal>
-          <div class="pp-icon-tile pp-icon-tile-gold" data-icon="sparkle"></div>
-          <h3>Honest, structured matching</h3>
-          <p>Explained compatibility scores, and profiles that say what is unknown rather than guessing. Fewer
-             mismatches means fewer animals coming back.</p>
-        </article>
-        <article class="pp-card pp-card-hover pp-feature" data-reveal>
-          <div class="pp-icon-tile pp-icon-tile-sage" data-icon="home"></div>
-          <h3>Foster care</h3>
-          <p>Kittens, puppies, nervous adults and recovering animals do far better in a home than a kennel. Our foster
-             network makes that possible.</p>
-        </article>
-        <article class="pp-card pp-card-hover pp-feature" data-reveal>
-          <div class="pp-icon-tile" data-icon="shield"></div>
-          <h3>Cruelty prevention</h3>
-          <p>Reporting lines, inspections, community desexing and education. Most cases end in advice and support
-             rather than prosecution.</p>
-          <a class="pp-link-btn" href="ending-animal-cruelty.html">Report cruelty</a>
-        </article>
-        <article class="pp-card pp-card-hover pp-feature" data-reveal>
-          <div class="pp-icon-tile pp-icon-tile-gold" data-icon="dollar"></div>
-          <h3>Keeping pets with owners</h3>
-          <p>Pet food support, subsidised veterinary care and temporary fostering help people through hardship without
-             surrendering the animal they love.</p>
-        </article>
-        <article class="pp-card pp-card-hover pp-feature" data-reveal>
-          <div class="pp-icon-tile pp-icon-tile-sage" data-icon="stethoscope"></div>
-          <h3>Care after adoption</h3>
-          <p>A vet finder, guidance on the first year of care, and a team you can still ring six months later when
-             something changes.</p>
-          <a class="pp-link-btn" href="vet-finder.html">Find a vet</a>
-        </article>
-      </div>
-    </div>
-  </section>
-
-  <!-- ======= RESCUE STORIES ======= -->
-  <section class="pp-section pp-section-white" id="stories">
-    <div class="pp-wrap">
-      <div class="pp-section-head">
-        <span class="pp-eyebrow" data-icon="paw">Recent rescue stories</span>
-        <h2>What that work looks like in practice</h2>
-        <p>Demo stories written for this prototype.</p>
-      </div>
-      <div class="stories-grid" data-stories="3"></div>
-    </div>
-  </section>
-
-  <section class="about-section about-team" id="team">
-    <div class="about-inner">
-      <h2>Our team</h2>
-      <p class="about-lead">PawPal was designed and built for the NIT3003/NIT3004 IT Capstone at Victoria University.</p>
-      <div class="team-grid">
-        <div class="team-card"><span class="pp-avatar">US</span><b>Uniska Sthapit</b></div>
-        <div class="team-card"><span class="pp-avatar">PB</span><b>Pratikshya Bhujel</b></div>
-        <div class="team-card"><span class="pp-avatar">PS</span><b>Pemba Sange Sherpa</b></div>
-        <div class="team-card"><span class="pp-avatar">SP</span><b>Sushrit Phuyal</b></div>
-      </div>
-    </div>
-  </section>
-
-  <section class="about-section" id="contact">
-    <div class="about-inner about-contact">
-      <div>
-        <h2>Contact us</h2>
-        <p>Questions about a pet, an application, fostering, volunteering or donating? The shelter team replies to
-           every enquiry, usually within one business day.</p>
-        <div class="pp-page-hero-actions" style="margin-top:18px">
-          <a class="pp-btn pp-btn-primary" href="contact.html">Contact the shelter</a>
-          <a class="pp-btn pp-btn-ghost" href="ending-animal-cruelty.html#report">Report animal cruelty</a>
-        </div>
-      </div>
-      <div class="pp-card">
-        <div class="pp-card-head-icon" style="margin-bottom:14px">
-          <div class="pp-icon-tile" data-icon="phone"></div>
-          <div><h3 style="font-family:var(--font-display);font-size:1.1rem">Shelter line</h3>
-          <p class="pp-small pp-muted">Monday to Sunday, 9am – 5pm</p></div>
-        </div>
-        <div class="pp-facts">
-          <div class="pp-fact"><div class="pp-icon-tile" data-icon="phone"></div>
-            <div><b>General enquiries</b><a href="tel:0390001234">(03) 9000 1234</a></div></div>
-          <div class="pp-fact"><div class="pp-icon-tile pp-icon-tile-solid" data-icon="alert"></div>
-            <div><b>Urgent animal welfare</b><a href="tel:0390001299">(03) 9000 1299</a></div></div>
-          <div class="pp-fact"><div class="pp-icon-tile" data-icon="mail"></div>
-            <div><b>Email</b><a href="mailto:hello@pawpal.example">hello@pawpal.example</a></div></div>
-        </div>
-        <p class="pp-small pp-muted" style="margin-top:12px">Demo contact details for this prototype.</p>
-      </div>
-    </div>
-  </section>
-
-  <section class="about-section about-privacy" id="privacy">
-    <div class="about-inner">
-      <h2>Privacy policy</h2>
-      <p>We collect only what is needed to process an adoption: your name, contact details and the answers you give in the inquiry form. Your answers are visible to the shelter team only and are never sold or shared with third parties.</p>
-      <p>Passwords are stored as secure one-way hashes, and you stay signed in with a protected cookie that page scripts cannot read. Pet medical and rescue notes are visible to staff only. To update or delete your information, contact us using the form above.</p>
-    </div>
-  </section>
+<section class="section" id="team"><div class="container">
+  <div class="section-head"><span class="eyebrow">Who we are</span><h2 class="h2" style="margin-top:10px">A shelter team, a group of volunteers — and four students</h2>
+    <p class="lead">PawPal was designed and built by Victoria University students for the NIT3003/NIT3004 IT Capstone.</p></div>
+  <div class="grid grid-4">
+    <div class="card card-pad center" data-reveal><span class="avatar avatar-lg" style="margin:0 auto">US</span><h3 style="font-size:19px;margin-top:12px">Uniska Sthapit</h3><p class="small muted">Project team</p></div>
+    <div class="card card-pad center" data-reveal><span class="avatar avatar-lg" style="margin:0 auto">PB</span><h3 style="font-size:19px;margin-top:12px">Pratikshya Bhujel</h3><p class="small muted">Project team</p></div>
+    <div class="card card-pad center" data-reveal><span class="avatar avatar-lg" style="margin:0 auto">PS</span><h3 style="font-size:19px;margin-top:12px">Pemba Sange Sherpa</h3><p class="small muted">Project team</p></div>
+    <div class="card card-pad center" data-reveal><span class="avatar avatar-lg" style="margin:0 auto">SP</span><h3 style="font-size:19px;margin-top:12px">Sushrit Phuyal</h3><p class="small muted">Project team</p></div>
+  </div>
+</div></section>
+<style>@media (max-width:900px){#storyGridWrap{grid-template-columns:minmax(0,1fr)!important}}</style>
 </main>
-
-<footer data-footer></footer>
-
-<script src="js/api.js"></script>
-<script src="js/ui.js"></script>
-<script src="js/stories.js"></script>
-<script src="js/pages/about.js"></script>
-<script src="config.js"></script><script src="js/pp-enhance.js" defer></script></body>
+</body>
 </html>

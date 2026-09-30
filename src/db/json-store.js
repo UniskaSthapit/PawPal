@@ -50,6 +50,13 @@ function createJsonStore() {
       if (i >= 0) { list.splice(i, 1); persist(); }
       return i >= 0;
     },
+    async removeWhere(name, filter) {
+      const list = coll(name);
+      const keep = list.filter((d) => !matches(d, filter));
+      const n = list.length - keep.length;
+      if (n) { data[name] = keep; persist(); }
+      return n;
+    },
     async clear(name) { data[name] = []; persist(); },
     async flush() { clearTimeout(saveTimer); fs.mkdirSync(path.dirname(FILE), { recursive: true });
       fs.writeFileSync(FILE, JSON.stringify(data)); },

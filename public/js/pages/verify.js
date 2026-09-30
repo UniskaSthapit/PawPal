@@ -1,15 +1,19 @@
-// Email verification landing page (link from the verification email).
+// Email verification link handler.
 (async () => {
-  const card = PawPal.$('#verifyCard');
+  const { $, esc, icons } = PawPal;
+  await PawPal.booted;
   const token = PawPal.params.get('token');
-  const show = (icon, title, text, actions) => {
-    card.innerHTML = `<div class="pp-center-icon">${icon}</div><h1>${title}</h1><p>${PawPal.esc(text)}</p><div class="pp-center-actions">${actions}</div>`;
+  const box = $('#verifyBox');
+  const show = (ok, title, text, actions) => {
+    box.innerHTML = `<div class="e-icon" style="width:64px;height:64px;margin:0 auto 16px;border-radius:18px;display:grid;place-items:center;background:${ok ? 'var(--sage-soft)' : 'var(--danger-soft)'};color:${ok ? 'var(--sage)' : 'var(--danger)'}">${ok ? icons.checkCircle : icons.alert}</div>
+      <h1 class="h3">${esc(title)}</h1><p class="muted" style="margin:10px auto 22px;max-width:40ch">${esc(text)}</p><div class="row" style="justify-content:center">${actions}</div>`;
+    box.querySelector('svg').style.cssText = 'width:30px;height:30px';
   };
-  if (!token) return show('⚠️', 'Link incomplete', 'This verification link is missing part of its address. Try clicking the link in your email again.', '<a class="pp-btn pp-btn-primary" href="login.html">Go to log in</a>');
+  if (!token) return show(false, 'This link is incomplete', 'The verification link is missing its code. Open the link from your email again, or request a new one.', '<a class="btn btn-primary" href="login.html">Go to log in</a>');
   try {
     await PawPalAPI.post('/auth/verify-email', { token });
-    show('✅', 'Email verified!', 'Your PawPal account is active. Log in to apply for pets and track your applications.', '<a class="pp-btn pp-btn-primary" href="login.html?verified=1">Log in now</a>');
+    show(true, 'Your email is verified', 'Your PawPal account is ready. Log in to save favourites, get matched and apply to adopt.', '<a class="btn btn-primary" href="login.html?verified=1">Log in</a>');
   } catch (err) {
-    show('⚠️', 'We could not verify this link', err.message, '<a class="pp-btn pp-btn-primary" href="login.html">Go to log in</a>');
+    show(false, 'We couldn\'t verify this link', err.message, '<a class="btn btn-primary" href="login.html">Log in to request a new link</a>');
   }
 })();

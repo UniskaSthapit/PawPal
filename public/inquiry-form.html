@@ -1,144 +1,70 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>PawPal — Adoption inquiry</title>
-  
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="css/global.css"/>
-  <link rel="stylesheet" href="css/shared-nav.css"/>
-  <link rel="stylesheet" href="css/shared-footer.css"/>
-  <link rel="stylesheet" href="css/inquiry-form.css"/>
-  <link rel="stylesheet" href="css/app.css"/>
-  <link rel="stylesheet" href="css/pages.css"/>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-<link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png"><link rel="icon" type="image/png" sizes="192x192" href="images/favicon-192.png"><link rel="apple-touch-icon" href="images/apple-touch-icon.png"><link rel="canonical" href="YOUR_CANONICAL_URL">
-<meta property="og:title" content="PawPal — Adoption inquiry"><meta property="og:type" content="website"><meta property="og:image" content="YOUR_OG_IMAGE_URL"><link rel="stylesheet" href="css/pp-system.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Apply to adopt — PawPal</title>
+  <meta name="description" content="Apply to adopt a rescue pet through PawPal.">
+  <meta name="theme-color" content="#221610">
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
+  <link rel="preload" href="fonts/fraunces-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/plus-jakarta-sans-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/pawpal.css">
+  <script src="js/api.js" defer></script>
+  <script src="js/ui.js" defer></script>
+  <script src="js/pages/inquiry-form.js" defer></script>
 </head>
-<body class="page-inquiry">
-
-<nav class="pawpal-nav" data-nav="public"></nav>
-
-<main class="inq-main" id="main">
-  <div class="inq-inner">
-    <div class="inq-breadcrumb" role="navigation" aria-label="Breadcrumb">
-      <a href="home.html#pets">Browse Pets</a><span aria-hidden="true">›</span>
-      <a href="home.html" id="crumbPet">Pet</a><span aria-hidden="true">›</span><span>Apply</span>
+<body data-layout="public" data-page="apply">
+<main id="main" tabindex="-1">
+<section class="page-hero"><div class="container">
+  <nav class="breadcrumbs" aria-label="Breadcrumb"><a href="adopt.html">Adopt</a><span aria-hidden="true">/</span><a id="petCrumb" href="adopt.html">Pet</a><span aria-hidden="true">/</span><span>Apply</span></nav>
+  <h1 class="h1" id="applyTitle">Adoption application</h1>
+  <p class="lead">About 10 minutes. Your progress is saved on this device as you go. Stuck on a question? Tap “What does this mean?” — PawPal will explain it, but your answers are always your own.</p>
+</div></section>
+<section class="section-sm"><div class="container" style="display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:32px;align-items:start" id="applyLayout">
+  <form class="card" id="applyForm" novalidate>
+    <div class="card-head"><div><span class="small muted" id="stepLabel">Step 1 of 5</span><h2 id="stepTitle" style="font-size:22px">About you</h2></div>
+      <div class="progress-steps" style="grid-template-columns:repeat(5,1fr);width:180px" id="stepBar"><i></i><i></i><i></i><i></i><i></i></div></div>
+    <div class="card-body">
+      <div id="formMsg"></div>
+      <fieldset class="step form-grid" data-step="1" style="border:0;padding:0;margin:0"><legend class="sr-only">About you</legend>
+        <div class="field"><label for="name">Full name</label><input class="input" id="name" autocomplete="name" required maxlength="80"></div>
+        <div class="field"><label for="email">Email</label><input class="input" id="email" type="email" autocomplete="email" required></div>
+        <div class="field"><label for="phone">Mobile</label><input class="input" id="phone" type="tel" autocomplete="tel" maxlength="30"></div>
+        <div class="field"><label for="address">Suburb / address</label><input class="input" id="address" autocomplete="street-address" maxlength="160"></div>
+      </fieldset>
+      <fieldset class="step form-grid" data-step="2" hidden style="border:0;padding:0;margin:0"><legend class="sr-only">Your home</legend>
+        <div class="field full" data-q="livingType"><div class="row-between"><label for="livingType">What type of home do you live in?</label><button type="button" class="link-btn small" data-help="livingType" aria-expanded="false">What does this mean?</button></div><div class="choice-grid" role="radiogroup" aria-label="livingType"><label class="choice"><input type="radio" name="livingType" value="House with yard"><span>House with a yard</span></label><label class="choice"><input type="radio" name="livingType" value="House without yard"><span>House, no yard</span></label><label class="choice"><input type="radio" name="livingType" value="Apartment"><span>Apartment / unit</span></label><label class="choice"><input type="radio" name="livingType" value="Farm / acreage"><span>Farm / acreage</span></label></div><div class="help-slot" data-slot="livingType"></div></div>
+        <div class="field full" data-q="ownership"><div class="row-between"><label for="ownership">Do you own or rent?</label><button type="button" class="link-btn small" data-help="ownership" aria-expanded="false">What does this mean?</button></div><div class="choice-grid" role="radiogroup" aria-label="ownership"><label class="choice"><input type="radio" name="ownership" value="Own"><span>Own</span></label><label class="choice"><input type="radio" name="ownership" value="Rent"><span>Rent</span></label><label class="choice"><input type="radio" name="ownership" value="Live with family"><span>Live with family</span></label></div><div class="help-slot" data-slot="ownership"></div></div>
+        <div class="field full" data-q="landlordPermission" id="landlordWrap" hidden><div class="row-between"><span class="label">Do you have your landlord's permission for a pet?</span><button type="button" class="link-btn small" data-help="landlordPermission" aria-expanded="false">What does this mean?</button></div><div class="choice-grid" role="radiogroup" aria-label="landlordPermission"><label class="choice"><input type="radio" name="landlordPermission" value="true"><span>Yes</span></label><label class="choice"><input type="radio" name="landlordPermission" value="false"><span>Not yet</span></label></div><div class="help-slot" data-slot="landlordPermission"></div></div>
+        <div class="field" data-q="householdAdults"><div class="row-between"><label for="householdAdults">How many adults live in the home?</label><button type="button" class="link-btn small" data-help="householdAdults" aria-expanded="false">What does this mean?</button></div><select class="select" id="householdAdults"><option value="">Choose…</option><option>1</option><option>2</option><option>3</option><option>4</option><option value="5">5+</option></select><div class="help-slot" data-slot="householdAdults"></div></div>
+        <div class="field" data-q="hasChildren"><div class="row-between"><label for="hasChildren">Are there children in the home?</label><button type="button" class="link-btn small" data-help="hasChildren" aria-expanded="false">What does this mean?</button></div><div class="choice-grid" role="radiogroup" aria-label="hasChildren"><label class="choice"><input type="radio" name="hasChildren" value="true"><span>Yes</span></label><label class="choice"><input type="radio" name="hasChildren" value="false"><span>No</span></label></div><div class="help-slot" data-slot="hasChildren"></div></div>
+        <div class="field full" id="kidsWrap" hidden><label for="childrenAges">Children's ages</label><input class="input" id="childrenAges" maxlength="80" placeholder="e.g. 4 and 9"></div>
+        <div class="field full" data-q="hasOtherPets"><div class="row-between"><label for="hasOtherPets">Do you have other pets?</label><button type="button" class="link-btn small" data-help="hasOtherPets" aria-expanded="false">What does this mean?</button></div><div class="choice-grid" role="radiogroup" aria-label="hasOtherPets"><label class="choice"><input type="radio" name="hasOtherPets" value="true"><span>Yes</span></label><label class="choice"><input type="radio" name="hasOtherPets" value="false"><span>No</span></label></div><div class="help-slot" data-slot="hasOtherPets"></div></div>
+        <div class="field full" id="petsWrap" hidden><label for="otherPetsDetails">Tell us about them</label><input class="input" id="otherPetsDetails" maxlength="300" placeholder="e.g. a 6-year-old desexed male cat"></div>
+      </fieldset>
+      <fieldset class="step form-grid" data-step="3" hidden style="border:0;padding:0;margin:0"><legend class="sr-only">Lifestyle</legend>
+        <div class="field full" data-q="activityLevel"><div class="row-between"><label for="activityLevel">How active is your household?</label><button type="button" class="link-btn small" data-help="activityLevel" aria-expanded="false">What does this mean?</button></div><div class="choice-grid" role="radiogroup" aria-label="activityLevel"><label class="choice"><input type="radio" name="activityLevel" value="1"><span>Relaxed</span></label><label class="choice"><input type="radio" name="activityLevel" value="2"><span>Moderately active</span></label><label class="choice"><input type="radio" name="activityLevel" value="3"><span>Very active</span></label></div><div class="help-slot" data-slot="activityLevel"></div></div>
+        <div class="field" data-q="hoursAlone"><div class="row-between"><label for="hoursAlone">How many hours a day would the pet be alone?</label><button type="button" class="link-btn small" data-help="hoursAlone" aria-expanded="false">What does this mean?</button></div><select class="select" id="hoursAlone"><option value="">Choose…</option><option value="0">0 hours</option><option value="1">1 hours</option><option value="2">2 hours</option><option value="3">3 hours</option><option value="4">4 hours</option><option value="5">5 hours</option><option value="6">6 hours</option><option value="7">7 hours</option><option value="8">8 hours</option><option value="9">9 hours</option><option value="10">10 hours</option><option value="11">11 hours</option><option value="12">12 hours</option></select><div class="help-slot" data-slot="hoursAlone"></div></div>
+        <div class="field" data-q="workSchedule"><div class="row-between"><label for="workSchedule">What does a typical week look like?</label><button type="button" class="link-btn small" data-help="workSchedule" aria-expanded="false">What does this mean?</button></div><input class="input" id="workSchedule" maxlength="300" placeholder="e.g. office Mon–Wed, home Thu–Fri"><div class="help-slot" data-slot="workSchedule"></div></div>
+        <div class="field full" data-q="experience"><div class="row-between"><label for="experience">What is your experience with pets?</label><button type="button" class="link-btn small" data-help="experience" aria-expanded="false">What does this mean?</button></div><div class="choice-grid" role="radiogroup" aria-label="experience"><label class="choice"><input type="radio" name="experience" value="First-time owner"><span>First-time owner</span></label><label class="choice"><input type="radio" name="experience" value="Some experience"><span>Some experience</span></label><label class="choice"><input type="radio" name="experience" value="Experienced"><span>Experienced</span></label></div><div class="help-slot" data-slot="experience"></div></div>
+        <div class="field full" data-q="experienceDetails"><div class="row-between"><label for="experienceDetails">Tell us about your pet experience</label><button type="button" class="link-btn small" data-help="experienceDetails" aria-expanded="false">What does this mean?</button></div><textarea class="textarea" id="experienceDetails" maxlength="1500" style="min-height:100px"></textarea><div class="help-slot" data-slot="experienceDetails"></div></div>
+      </fieldset>
+      <fieldset class="step" data-step="4" hidden style="border:0;padding:0;margin:0"><legend class="sr-only">Why this pet</legend>
+        <div class="field full" data-q="motivation"><div class="row-between"><label for="motivation">Why would you like to adopt this pet?</label><button type="button" class="link-btn small" data-help="motivation" aria-expanded="false">What does this mean?</button></div><textarea class="textarea" id="motivation" maxlength="2000" style="min-height:180px"></textarea><span class="hint"><span id="motCount">0</span> characters — at least 20 please.</span><div class="help-slot" data-slot="motivation"></div></div>
+      </fieldset>
+      <fieldset class="step" data-step="5" hidden style="border:0;padding:0;margin:0"><legend class="sr-only">Review</legend>
+        <div id="review"></div>
+        <label class="check" style="margin-top:20px"><input type="checkbox" id="declaration"> <span>I confirm the information in this application is true and complete, and that it was written by me.</span></label>
+      </fieldset>
     </div>
-
-    <h1 class="inq-title">Adoption Inquiry Form</h1>
-    <p class="inq-subtitle">Tell us about your home and lifestyle so we can make sure it's a happy match for everyone.</p>
-
-    <div class="inq-pet-card" id="petSummary"><div class="skeleton" style="height:84px;width:100%"></div></div>
-
-    <div class="inq-card">
-      <div class="inq-progress" aria-hidden="true">
-        <div class="inq-step done"><div class="inq-step-dot">✓</div><span class="inq-step-label">Account</span><div class="inq-step-line"></div></div>
-        <div class="inq-step active" id="stepApp"><div class="inq-step-dot">2</div><span class="inq-step-label">Application</span><div class="inq-step-line"></div></div>
-        <div class="inq-step" id="stepReview"><div class="inq-step-dot">3</div><span class="inq-step-label">Shelter review</span></div>
-      </div>
-
-      <form id="inquiryForm" novalidate>
-        <div id="formAlert" class="pp-alert pp-alert-error" hidden role="alert"></div>
-
-        <div class="inq-section">
-          <h2 class="inq-section-title">About You</h2>
-          <div class="inq-grid-2">
-            <div class="inq-field"><label class="inq-label" for="fullName">Full name <span class="req" aria-hidden="true">*</span></label><input class="inq-input" id="fullName" type="text" autocomplete="name" required/></div>
-            <div class="inq-field"><label class="inq-label" for="email">Email address <span class="req" aria-hidden="true">*</span></label><input class="inq-input" id="email" type="email" autocomplete="email" required/></div>
-            <div class="inq-field"><label class="inq-label" for="phone">Phone number</label><input class="inq-input" id="phone" type="tel" autocomplete="tel" placeholder="04xx xxx xxx"/></div>
-            <div class="inq-field"><label class="inq-label" for="address">Suburb and state</label><input class="inq-input" id="address" type="text" autocomplete="address-level2" placeholder="e.g. Footscray VIC"/></div>
-          </div>
-        </div>
-
-        <div class="inq-section">
-          <h2 class="inq-section-title">Your Lifestyle</h2>
-          <div class="inq-grid-3">
-            <div class="inq-field">
-              <label class="inq-label" for="livingType">Living arrangement <span class="req" aria-hidden="true">*</span></label>
-              <div class="inq-select-wrap"><select class="inq-select" id="livingType" required><option value="" disabled selected>Select</option><option value="House with yard">House with a yard</option><option value="House without yard">House without a yard</option><option value="Apartment">Apartment or unit</option><option value="Farm / acreage">Farm or acreage</option></select></div>
-            </div>
-            <div class="inq-field">
-              <label class="inq-label" for="activityLevel">Activity level <span class="req" aria-hidden="true">*</span></label>
-              <div class="inq-select-wrap"><select class="inq-select" id="activityLevel" required><option value="" disabled selected>Select</option><option value="3">Very active</option><option value="2">Moderate</option><option value="1">Relaxed</option></select></div>
-            </div>
-            <div class="inq-field">
-              <label class="inq-label" for="hoursAlone">Hours the pet would be alone <span class="req" aria-hidden="true">*</span></label>
-              <div class="inq-select-wrap"><select class="inq-select" id="hoursAlone" required><option value="" disabled selected>Select</option><option value="1">0–2 hours</option><option value="3">2–4 hours</option><option value="5">4–6 hours</option><option value="7">6–8 hours</option><option value="9">8+ hours</option></select></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="inq-section">
-          <h2 class="inq-section-title">Your Home</h2>
-          <div class="inq-grid-2">
-            <div>
-              <p class="inq-pill-label" id="hasChildrenLabel">Children at home? <span class="req" aria-hidden="true">*</span></p>
-              <div class="inq-pill-row" role="radiogroup" aria-labelledby="hasChildrenLabel" data-group="hasChildren">
-                <button type="button" class="inq-pill" role="radio" aria-checked="false" data-value="true">Yes</button>
-                <button type="button" class="inq-pill" role="radio" aria-checked="false" data-value="false">No</button>
-              </div>
-            </div>
-            <div>
-              <p class="inq-pill-label" id="hasOtherPetsLabel">Other pets at home? <span class="req" aria-hidden="true">*</span></p>
-              <div class="inq-pill-row" role="radiogroup" aria-labelledby="hasOtherPetsLabel" data-group="hasOtherPets">
-                <button type="button" class="inq-pill" role="radio" aria-checked="false" data-value="true">Yes</button>
-                <button type="button" class="inq-pill" role="radio" aria-checked="false" data-value="false">No</button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="inq-section">
-          <h2 class="inq-section-title">Experience &amp; Motivation</h2>
-          <div class="inq-grid-3" style="margin-bottom:16px">
-            <div class="inq-field">
-              <label class="inq-label" for="experience">Pet ownership experience <span class="req" aria-hidden="true">*</span></label>
-              <div class="inq-select-wrap"><select class="inq-select" id="experience" required><option value="" disabled selected>Select</option><option value="First-time owner">First-time owner</option><option value="Some experience">Some experience</option><option value="Experienced">Experienced owner</option></select></div>
-            </div>
-          </div>
-          <div class="inq-field" style="margin-bottom:16px">
-            <label class="inq-label" for="experienceDetails">Tell us about pets you've had</label>
-            <textarea class="inq-textarea short" id="experienceDetails" maxlength="1500" placeholder="Breeds, how long you had them, any training…"></textarea>
-          </div>
-          <div class="inq-field">
-            <label class="inq-label" for="motivation">Why would you like to adopt <span class="js-pet-name">this pet</span>? <span class="req" aria-hidden="true">*</span></label>
-            <textarea class="inq-textarea tall" id="motivation" maxlength="2000" required placeholder="Share what you're looking for and how the pet would fit into your life…"></textarea>
-            <span class="pp-hint" id="motivationCount">0 / 2000 · at least 20 characters</span>
-          </div>
-        </div>
-
-        <label class="pp-check inq-consent"><input type="checkbox" id="consent" required/> I confirm these details are true and agree to a home check if shortlisted.</label>
-
-        <div class="inq-form-footer">
-          <div class="inq-secure"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-            </svg>Your information is only shared with the shelter team</div>
-          <div class="inq-btn-row">
-            <a class="inq-btn-cancel" href="home.html" id="cancelLink">Cancel</a>
-            <button type="submit" class="inq-btn-submit" id="submitBtn">Submit Application</button>
-          </div>
-        </div>
-      </form>
-
-      <div class="inq-success" id="successMsg">
-        <div class="inq-success-icon"><svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-            <polyline points="20 6 9 17 4 12"/>
-          </svg></div>
-        <h2>Application Submitted!</h2>
-        <p id="successText">Thank you for applying. Our team will review your application and get back to you within 2–3 business days.</p>
-        <a class="inq-success-btn" href="my-applications.html">Track My Application</a>
-      </div>
-    </div>
-  </div>
+    <div class="card-foot row-between"><button class="btn" type="button" id="backBtn">Back</button>
+      <div class="row"><span class="tiny muted" id="savedNote"></span><button class="btn btn-primary" type="button" id="nextBtn">Continue</button><button class="btn btn-primary" type="submit" id="submitBtn" hidden>Submit application</button></div></div>
+  </form>
+  <aside class="stack" style="--stack:16px;position:sticky;top:calc(var(--nav-h) + 20px)" id="petAside"><div class="skeleton" style="height:320px;border-radius:20px"></div></aside>
+</div></section>
+<style>@media (max-width: 960px) { #applyLayout { grid-template-columns: minmax(0,1fr) !important; } #petAside { position: static !important; order: -1; } }
+.help-slot:empty{display:none}.help-slot{margin-top:6px}</style>
 </main>
-
-<footer data-footer></footer>
-
-<script src="js/api.js"></script>
-<script src="js/ui.js"></script>
-<script src="js/pages/inquiry-form.js"></script>
-<script src="config.js"></script><script src="js/pp-enhance.js" defer></script></body>
+</body>
 </html>

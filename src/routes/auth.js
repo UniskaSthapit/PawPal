@@ -5,7 +5,10 @@ const rateLimit = require('express-rate-limit');
 const db = require('../db');
 const config = require('../config');
 const { emails } = require('../services/mailer');
-const { setAuthCookie, clearAuthCookie, publicUser } = require('../middleware/auth');
+const { setAuthCookie, clearAuthCookie, publicUser, requireAuth, isStaffRole } = require('../middleware/auth');
+const { notify } = require('../services/notify');
+const { sendSms, toE164 } = require('../services/sms');
+const crypto = require('crypto');
 const { newId, now, randomToken, hashToken, asyncHandler, clean, isEmail, passwordProblem, HttpError } = require('../utils');
 
 const router = express.Router();
@@ -49,8 +52,8 @@ router.post('/verify-email', asyncHandler(async (req, res) => {
   if (!user) throw new HttpError(400, 'This verification link is invalid or has already been used.');
   if (user.verifyTokenExpires < Date.now()) throw new HttpError(400, 'This verification link has expired. Log in to request a new one.');
   await db.update('users', user.id, { emailVerified: true, verifyTokenHash: null, verifyTokenExpires: null });
-  await db.insert('notifications', { id: newId('note'), userId: user.id, title: 'Email verified ✅',
-    message: 'Your account is ready. Take the AI matching quiz to meet pets that suit you.', link: 'ai-matching.html', read: false, at: now() });
+  await notify(user.id, { type: 'account', title: 'Email verified',
+    message: 'Your account is ready. Tell PawPal about your lifestyle to see pets that could suit you.', link: 'ai-matching.html' });
   res.json({ message: 'Email verified. You can now log in.' });
 }));
 
@@ -69,14 +72,14 @@ router.post('/login', authLimiter, asyncHandler(async (req, res) => {
   const user = email && await db.findOne('users', { email });
   const ok = user && user.active !== false && await bcrypt.compare(String(password || ''), user.passwordHash);
   if (!ok) throw new HttpError(401, 'Incorrect email or password.');
-  if (role === 'staff' && user.role !== 'staff') throw new HttpError(403, 'This is not a staff account. Use the User Login tab.');
-  if (role === 'user' && user.role === 'staff') throw new HttpError(403, 'This is a staff account. Use the Staff Login tab.');
+  if (role === 'staff' && !isStaffRole(user.role)) throw new HttpError(403, 'This is not a staff account. Use the Adopter tab.');
+  if (role === 'user' && isStaffRole(user.role)) throw new HttpError(403, 'This is a shelter staff account. Use the Shelter staff tab.');
   if (!user.emailVerified) {
     return res.status(403).json({ error: 'Please verify your email before logging in.', code: 'EMAIL_NOT_VERIFIED', email: user.email });
   }
   await db.update('users', user.id, { lastLoginAt: now() });
   setAuthCookie(res, user, Boolean(remember));
-  res.json({ user: publicUser(user), redirect: user.role === 'staff' ? 'index.html' : 'my-applications.html' });
+  res.json({ user: publicUser(user), redirect: isStaffRole(user.role) ? 'index.html' : 'dashboard.html' });
 }));
 
 router.post('/logout', (req, res) => { clearAuthCookie(res); res.json({ message: 'Logged out.' }); });
@@ -104,6 +107,42 @@ router.post('/reset-password', authLimiter, asyncHandler(async (req, res) => {
   await db.update('users', user.id, { passwordHash: await bcrypt.hash(req.body.password, 10), resetTokenHash: null,
     resetTokenExpires: null, emailVerified: true, tokenVersion: (user.tokenVersion || 0) + 1 });
   res.json({ message: 'Password updated. You can now log in.' });
+}));
+
+// ---- Phone verification (one-time code by SMS) ----
+const MIN = 60 * 1000;
+const phoneLimiter = rateLimit({ windowMs: 60 * MIN, limit: 8, standardHeaders: true, legacyHeaders: false,
+  keyGenerator: (req) => req.user?.id || rateLimit.ipKeyGenerator(req.ip),
+  message: { error: 'Too many code requests. Please wait an hour and try again.' } });
+
+router.post('/phone/send', requireAuth, phoneLimiter, asyncHandler(async (req, res) => {
+  const phone = toE164(req.body.countryCode, req.body.phone);
+  if (!phone) throw new HttpError(400, 'Please enter a valid mobile number, including the country code.');
+  const last = (await db.find('phoneCodes', { userId: req.user.id })).sort((a, b) => b.sentAt - a.sentAt)[0];
+  if (last && Date.now() - last.sentAt < MIN) throw new HttpError(429, 'Please wait a minute before requesting another code.');
+  const code = String(crypto.randomInt(0, 1_000_000)).padStart(6, '0');
+  await sendSms(phone, `Your PawPal verification code is ${code}. It expires in 10 minutes. Never share this code.`);
+  await db.removeWhere('phoneCodes', { userId: req.user.id });
+  await db.insert('phoneCodes', { id: newId('otp'), userId: req.user.id, phone, codeHash: hashToken(`${req.user.id}:${code}`),
+    expires: Date.now() + 10 * MIN, attempts: 0, sentAt: Date.now() });
+  res.json({ message: `We sent a 6-digit code to ${phone.slice(0, -4).replace(/\d/g, '•')}${phone.slice(-4)}.`, phone });
+}));
+
+router.post('/phone/verify', requireAuth, authLimiter, asyncHandler(async (req, res) => {
+  const code = clean(String(req.body.code ?? ''), 10).replace(/\D/g, '');
+  const rec = await db.findOne('phoneCodes', { userId: req.user.id });
+  if (!rec) throw new HttpError(400, 'Request a new code first.');
+  if (rec.expires < Date.now()) { await db.remove('phoneCodes', rec.id); throw new HttpError(400, 'That code has expired. Please request a new one.'); }
+  if (rec.attempts >= 5) { await db.remove('phoneCodes', rec.id); throw new HttpError(429, 'Too many incorrect attempts. Please request a new code.'); }
+  const ok = code.length === 6 && crypto.timingSafeEqual(Buffer.from(hashToken(`${req.user.id}:${code}`)), Buffer.from(rec.codeHash));
+  if (!ok) {
+    await db.update('phoneCodes', rec.id, { attempts: rec.attempts + 1 });
+    throw new HttpError(400, `That code is not right. ${4 - rec.attempts} attempt${4 - rec.attempts === 1 ? '' : 's'} left.`);
+  }
+  await db.remove('phoneCodes', rec.id);
+  const user = await db.update('users', req.user.id, { phone: rec.phone, phoneVerified: true, phoneVerifiedAt: now() });
+  await notify(user.id, { type: 'account', title: 'Mobile number verified', message: `${rec.phone} is now verified on your account.`, link: 'profile.html' });
+  res.json({ user: publicUser(user), message: 'Your mobile number is verified.' });
 }));
 
 module.exports = router;

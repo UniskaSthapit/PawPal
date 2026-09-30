@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Enquiries — PawPal shelter portal</title>
+  <meta name="description" content="Answer adopter questions about your pets.">
+  <meta name="theme-color" content="#221610">
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
+  <link rel="preload" href="fonts/fraunces-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/plus-jakarta-sans-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/pawpal.css">
+  <script src="js/api.js" defer></script>
+  <script src="js/ui.js" defer></script>
+  <script src="js/pages/staff-enquiries.js" defer></script>
+</head>
+<body data-layout="staff" data-page="staff-enq">
+<main id="main" tabindex="-1">
+<div class="app-head"><div><h1>Enquiries</h1><p>Questions adopters asked about your pets. Replies are emailed and appear in their dashboard.</p></div></div>
+<div class="tabs" role="tablist" id="enqTabs"><button class="tab" role="tab" data-f="Open" aria-selected="true">Open <span class="n" id="nOpen">0</span></button><button class="tab" role="tab" data-f="Answered" aria-selected="false">Answered</button><button class="tab" role="tab" data-f="Closed" aria-selected="false">Closed</button><button class="tab" role="tab" data-f="" aria-selected="false">All</button></div>
+<div class="stack" style="--stack:14px" id="enqList"><div class="skeleton" style="height:120px"></div></div>
+</main>
+</body>
+</html>
