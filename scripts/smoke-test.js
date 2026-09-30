@@ -93,6 +93,11 @@ const mailFor = async (anon, email, type) => (await anon('GET', `/api/dev/emails
   check('Chatbot keeps application status private when logged out', /log in/i.test(r.body.reply));
   r = await anon('POST', '/api/ai/chat', { message: 'Why did you recommend Ruby?', profile: { homeType: 'apartment', preferredType: 'dog' } });
   check('Chatbot explains a recommendation', /Ruby scored \d+%/.test(r.body.reply));
+  r = await anon('POST', '/api/ai/chat', { message: 'I live in an apartment and want a calm cat' });
+  const catProfile = r.body.profile; const catIds = r.body.picks.map((p) => p.pet.id);
+  check('Chat suggests cats when asked for a cat', r.body.picks.length > 0 && r.body.picks.every((p) => p.pet.type === 'Cat'));
+  r = await anon('POST', '/api/ai/chat', { message: 'what about dogs?', profile: catProfile, lastPetIds: catIds });
+  check('Chat switches to dogs when the request changes', r.body.picks.length > 0 && r.body.picks.every((p) => p.pet.type === 'Dog') && r.body.profile.homeType === 'apartment');
   r = await anon('POST', '/api/ai/explain-question', { key: 'hoursAlone' });
   check('Application assistant explains a question', r.status === 200 && /alone/i.test(r.body.explanation));
 
@@ -277,8 +282,18 @@ const mailFor = async (anon, email, type) => (await anon('GET', `/api/dev/emails
   r = await admin('POST', '/api/admin/shelters', { name: 'PawPal Adelaide', suburb: 'Norwood', state: 'SA' });
   check('Admin can add a shelter', r.status === 201);
   const shelterId = r.body.shelter.id;
-  r = await admin('POST', '/api/admin/users', { name: 'New Staffer', email: `staff${Date.now()}@pawpal.com`, role: 'staff', shelterId });
-  check('Admin can invite staff', r.status === 201);
+  const staffEmail = `staff${Date.now()}@pawpal.com`;
+  r = await admin('POST', '/api/admin/users', { name: 'New Staffer', email: staffEmail, role: 'staff', shelterId });
+  check('Admin can invite staff', r.status === 201 && r.body.emailSent === true);
+  const newStaffId = r.body.user.id;
+  r = await admin('POST', `/api/admin/users/${newStaffId}/invite`);
+  check('Admin can resend an invite', r.status === 200 && r.body.emailSent === true);
+  const inviteMail = (await anon('GET', `/api/dev/emails?to=${encodeURIComponent(staffEmail)}`)).body.emails.find((m) => m.type === 'staff-invite');
+  check('Invite email has a set-password link and no password', Boolean(inviteMail?.link?.includes('reset-password.html?token=')) && !/password:/i.test(inviteMail.html));
+  r = await anon('POST', '/api/auth/reset-password', { token: new URL(inviteMail.link).searchParams.get('token'), password: 'StaffPaws88' });
+  check('Invited staff can choose a password', r.status === 200);
+  r = await client()('POST', '/api/auth/login', { email: staffEmail, password: 'StaffPaws88', role: 'staff' });
+  check('Invited staff can log in', r.status === 200);
   const target = (await admin('GET', `/api/admin/users?q=${encodeURIComponent(email)}`)).body.users[0];
   r = await admin('PATCH', `/api/admin/users/${target.id}`, { active: false });
   check('Admin can deactivate a user', r.status === 200);

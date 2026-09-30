@@ -561,10 +561,10 @@ ul.plain { list-style: none; padding: 0; margin: 0; }
 .match-input { position: sticky; top: calc(var(--nav-h) + 20px); }
 .match-textarea { min-height: 170px; font-size: 16.5px; }
 .understood { display: flex; flex-wrap: wrap; gap: 6px; }
-.match-card { display: grid; grid-template-columns: 200px minmax(0, 1fr); background: var(--card); border: 1px solid var(--line); border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--sh-1);
+.match-card { display: grid; grid-template-columns: 250px minmax(0, 1fr); background: var(--card); border: 1px solid var(--line); border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--sh-1);
   animation: rise .5s var(--ease) both; }
-.match-card .media { position: relative; min-height: 220px; background: var(--paper-2); }
-.match-card .media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.match-card .media { position: relative; align-self: start; margin: 14px 0 14px 14px; aspect-ratio: 4 / 5; border-radius: var(--r); overflow: hidden; background: var(--paper-2); }
+.match-card .media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 35%; }
 .match-card .body { padding: 20px 22px; display: flex; flex-direction: column; gap: 12px; }
 .match-card h3 { font-size: 26px; }
 .match-card h3 a { color: inherit; text-decoration: none; }
@@ -580,7 +580,8 @@ ul.plain { list-style: none; padding: 0; margin: 0; }
 .reason-list.con svg { color: var(--honey-ink); }
 @keyframes rise { from { opacity: 0; transform: translateY(16px); } }
 @media (max-width: 960px) { .match-layout { grid-template-columns: 1fr; } .match-input { position: static; } }
-@media (max-width: 600px) { .match-card { grid-template-columns: 1fr; } .match-card .media { min-height: 0; aspect-ratio: 16 / 10; } }
+@media (max-width: 760px) { .match-card { grid-template-columns: 190px minmax(0, 1fr); } }
+@media (max-width: 600px) { .match-card { grid-template-columns: 1fr; } .match-card .media { margin: 12px 12px 0; aspect-ratio: 4 / 5; max-height: 460px; width: calc(100% - 24px); justify-self: center; } }
 
 /* ---------- Chat ---------- */
 .chat-launcher { position: fixed; right: 20px; bottom: 20px; z-index: 80; display: inline-flex; align-items: center; gap: 10px; height: 56px; padding: 0 20px 0 16px; border-radius: 999px; border: 0;
@@ -828,13 +829,17 @@ a.list-row:hover { background: var(--paper); color: var(--ink); }
 .dropzone:hover, .dropzone.is-drag { border-color: var(--brand); background: var(--brand-tint); }
 .dropzone svg { width: 30px; height: 30px; margin: 0 auto 8px; color: var(--brand); }
 .bar-chart { display: grid; gap: 10px; }
-.bar-row { display: grid; grid-template-columns: 120px 1fr 44px; gap: 12px; align-items: center; font-size: 14px; }
+.bar-row { display: grid; grid-template-columns: minmax(0, 120px) minmax(0, 1fr) auto; gap: 12px; align-items: center; font-size: 14px; }
 .bar-row .bar { height: 12px; border-radius: 6px; background: var(--paper-2); overflow: hidden; }
 .bar-row .bar i { display: block; height: 100%; border-radius: 6px; background: var(--brand); transition: width .8s var(--ease); }
-.bar-row b { text-align: right; }
+.bar-row b { text-align: right; min-width: 32px; }
+.bar-row > span, .funnel-row > span { overflow-wrap: anywhere; }
 .funnel { display: grid; gap: 8px; }
-.funnel-row { display: grid; grid-template-columns: 130px 1fr 60px; gap: 12px; align-items: center; font-size: 14px; }
-.funnel-row .f-bar { height: 34px; border-radius: 8px; background: linear-gradient(90deg, var(--brand), #DD7A58); min-width: 4px; transition: width .8s var(--ease); }
+.funnel-row { display: grid; grid-template-columns: minmax(0, 130px) minmax(0, 1fr) auto; gap: 12px; align-items: center; font-size: 14px; }
+.funnel-row > div { min-width: 0; overflow: hidden; border-radius: 8px; background: var(--paper-2); }
+.funnel-row b { min-width: 40px; text-align: right; }
+.funnel-row .f-bar { max-width: 100%; height: 34px; border-radius: 8px; background: linear-gradient(90deg, var(--brand), #DD7A58); min-width: 4px; transition: width .8s var(--ease); }
+@media (max-width: 520px) { .funnel-row, .bar-row { grid-template-columns: minmax(0, 92px) minmax(0, 1fr) auto; gap: 8px; font-size: 13px; } }
 .insight { display: flex; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--line-2); font-size: 15px; }
 .insight:last-child { border-bottom: 0; }
 .insight svg { width: 20px; height: 20px; color: var(--honey-ink); flex: none; margin-top: 2px; }

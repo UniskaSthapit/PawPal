@@ -131,13 +131,13 @@ const emails = {
       p('If you did not ask for this, you can ignore this email — your password will not change.'),
     buttonText: 'Choose a new password', buttonUrl: link,
   }),
-  staffInvite: (user, tempPassword, roleLabel = 'staff') => sendMail({
-    to: user.email, type: 'staff-invite', subject: 'Your PawPal account',
+  staffInvite: (user, link, roleLabel = 'staff') => sendMail({
+    to: user.email, type: 'staff-invite', subject: 'You have been invited to PawPal',
     heading: `Hi ${first(user.name)}, you've been added to PawPal`,
     body: p(`A ${escapeHtml(roleLabel)} account has been created for you on the PawPal shelter portal.`) +
-      p(`Email: <b>${escapeHtml(user.email)}</b><br>Temporary password: <b>${escapeHtml(tempPassword)}</b>`) +
-      p('Please log in and change your password in Settings straight away.'),
-    buttonText: 'Go to staff login', buttonUrl: `${config.appUrl}/login.html?role=staff`,
+      p(`Your login email is <b>${escapeHtml(user.email)}</b>. Choose a password to finish setting up your account.`) +
+      p('This link works once and expires in 7 days. If it expires, use “Forgot password” on the log in page or ask your administrator to resend the invite.'),
+    buttonText: 'Set up my account', buttonUrl: link,
   }),
   ownerSetup: (user, link) => sendMail({
     to: user.email, type: 'password-reset', subject: 'Set up your PawPal administrator account',
