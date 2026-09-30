@@ -1,58 +1,56 @@
-// Staff: add or edit a pet (FR-01), AI description (FR-02), staff-only fields (FR-03).
+// Staff: create / edit a pet. Photos are resized in the browser and uploaded to /api/images.
+// The AI description only receives public fields; internal notes are never sent.
 (async () => {
-  const { $, esc, toast, setBusy, confirm, params } = PawPal;
+  const { $, $$, esc, icons, params, toast, setBusy, confirm, errorHTML, statusBadge } = PawPal;
+  const u = await PawPal.booted;
   const editId = params.get('id');
-  let photos = [];
-  let status = 'Available';
-  let dirty = false;
+  let photos = []; let current = null; let dirty = false;
+  const BOOL = ['goodWithChildren', 'goodWithOtherPets', 'requiresYard', 'firstTimeFriendly', 'specialNeeds', 'vaccinated', 'desexed', 'microchipped'];
+  const TEXT = ['name', 'type', 'breed', 'colour', 'age', 'gender', 'size', 'adoptionFee', 'location', 'energyLevel', 'idealHome', 'description', 'medicalHistory', 'rescueBackground', 'internalNotes'];
 
-  // ---------- load for editing ----------
+  if (u.role === 'admin') {
+    try {
+      const { shelters } = await PawPalAPI.get('/shelters');
+      $('#shelterField').hidden = false;
+      $('#shelterId').innerHTML = '<option value="">No shelter</option>' + shelters.map((s) => `<option value="${esc(s.id)}">${esc(s.name)}</option>`).join('');
+    } catch { /* ignore */ }
+  }
+
   if (editId) {
     try {
-      const { pet } = await PawPalAPI.get(`/pets/${encodeURIComponent(editId)}`);
-      status = pet.status;
-      document.title = `PawPal Admin — Edit ${pet.name}`;
-      $('#pageTitle').textContent = `Edit ${pet.name}`;
-      $('#crumb').textContent = `Edit ${pet.name}`;
-      $('#statusPill').hidden = false;
-      $('#statusPill').textContent = `Status: ${pet.status}`;
-      $('#petName').value = pet.name; $('#type').value = pet.type; $('#breed').value = pet.breed; $('#age').value = pet.age;
-      $('#gender').value = pet.gender; $('#size').value = pet.size; $('#location').value = pet.location || ''; $('#energyLevel').value = String(pet.energyLevel || 2);
-      $('#keywords').value = (pet.traits || []).join(', ');
-      ['goodWithChildren', 'goodWithOtherPets', 'requiresYard', 'vaccinated', 'desexed', 'microchipped'].forEach((k) => { $('#' + k).checked = !!pet[k]; });
-      $('#aiDescription').value = pet.description || '';
-      $('#medical').value = pet.medicalHistory || '';
-      $('#rescue').value = pet.rescueBackground || '';
-      photos = [...(pet.photos || [])];
-      $('#publishBtn').textContent = pet.status === 'Draft' ? 'Publish Pet Profile' : 'Save Changes';
-      $('#draftBtn').textContent = pet.status === 'Draft' ? 'Save Draft' : 'Move to Drafts';
-    } catch (err) {
-      $('#petForm').innerHTML = `<div class="pp-empty"><h3>This pet could not be loaded</h3><p>${esc(err.message)}</p><a class="pp-btn pp-btn-primary" href="pets.html">Back to Manage Pets</a></div>`;
-      return;
-    }
+      const res = await PawPalAPI.get(`/pets/${encodeURIComponent(editId)}`);
+      current = res.pet;
+      TEXT.forEach((k) => { if (current[k] !== undefined && $(`#${k}`)) $(`#${k}`).value = current[k]; });
+      BOOL.forEach((k) => { $(`#${k}`).checked = !!current[k]; });
+      $('#traits').value = (current.traits || []).join(', ');
+      if (u.role === 'admin') $('#shelterId').value = current.shelterId || '';
+      photos = [...(current.photos || [])];
+      document.title = `Edit ${current.name} — PawPal shelter portal`;
+      $('#pageTitle').textContent = `Edit ${current.name}`; $('#crumb').textContent = current.name;
+      $('#statusPill').innerHTML = `${statusBadge(current.status)} <span class="small muted">${res.applicationCount} applications · ${res.enquiryCount} enquiries · ${res.favouriteCount} saves</span>`;
+      $('#publishBtn').textContent = current.status === 'Draft' ? 'Publish pet' : 'Save changes';
+      $('#draftBtn').textContent = current.status === 'Draft' ? 'Save draft' : 'Move to drafts';
+      $('#editActions').hidden = false;
+      $('#viewPublic').href = `pet-profile.html?id=${encodeURIComponent(current.id)}`;
+    } catch (err) { $('#petForm').innerHTML = `<div style="grid-column:1/-1">${errorHTML(err.message)}</div>`; return; }
   }
 
   // ---------- photos ----------
   function renderPhotos() {
-    $('#photoGrid').innerHTML = photos.map((src, i) => `<div class="photo-item">
-        <img src="${esc(src)}" alt="Pet photo ${i + 1}" onerror="this.onerror=null;this.src='images/pet-placeholder.svg'"/>
-        ${i === 0 ? '<span class="photo-cover">Cover</span>' : `<button type="button" class="photo-make-cover" data-cover="${i}">Make cover</button>`}
-        <button type="button" class="photo-remove" data-remove="${i}" aria-label="Remove photo ${i + 1}">✕</button></div>`).join('');
+    $('#photoCount').textContent = `${photos.length} / 8`;
+    $('#photoGrid').innerHTML = photos.map((src, i) => `<div class="photo-tile"><img src="${esc(PawPal.sized(src, 300))}" alt="Photo ${i + 1}" data-fallback="${PawPal.PLACEHOLDER}">
+      ${i === 0 ? '<span class="badge badge-dark cover">Cover</span>' : ''}
+      <div class="tile-actions">${i ? `<button type="button" data-cover="${i}" aria-label="Make photo ${i + 1} the cover" title="Make cover">${icons.star}</button>` : ''}<button type="button" data-remove="${i}" aria-label="Remove photo ${i + 1}" title="Remove">${icons.trash}</button></div></div>`).join('');
   }
-  // Resize big photos in the browser so uploads stay small (max 1000px, JPEG)
   const compress = (file) => new Promise((resolve, reject) => {
     if (!/^image\/(jpeg|png|webp)$/.test(file.type)) return reject(new Error(`${file.name} is not a JPG, PNG or WebP image.`));
-    if (file.size > 12 * 1024 * 1024) return reject(new Error(`${file.name} is larger than 12 MB.`));
-    const img = new Image();
-    const url = URL.createObjectURL(file);
+    if (file.size > 15 * 1024 * 1024) return reject(new Error(`${file.name} is larger than 15 MB.`));
+    const img = new Image(); const url = URL.createObjectURL(file);
     img.onload = () => {
-      const scale = Math.min(1, 1000 / Math.max(img.width, img.height));
-      const canvas = document.createElement('canvas');
-      canvas.width = Math.round(img.width * scale);
-      canvas.height = Math.round(img.height * scale);
-      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-      URL.revokeObjectURL(url);
-      resolve(canvas.toDataURL('image/jpeg', 0.82));
+      const scale = Math.min(1, 1400 / Math.max(img.width, img.height));
+      const c = document.createElement('canvas'); c.width = Math.round(img.width * scale); c.height = Math.round(img.height * scale);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url);
+      resolve(c.toDataURL('image/jpeg', 0.84));
     };
     img.onerror = () => reject(new Error(`${file.name} could not be read.`));
     img.src = url;
@@ -60,9 +58,9 @@
   async function addFiles(files) {
     for (const f of [...files]) {
       if (photos.length >= 8) { toast('You can add up to 8 photos.', 'info'); break; }
-      try { photos.push(await compress(f)); dirty = true; } catch (err) { toast(err.message, 'error'); }
+      try { const { url } = await PawPalAPI.post('/images', { data: await compress(f) }); photos.push(url); dirty = true; renderPhotos(); }
+      catch (err) { toast(err.message, 'error'); }
     }
-    renderPhotos();
   }
   const zone = $('#dropZone');
   zone.addEventListener('click', () => $('#photoInput').click());
@@ -73,76 +71,64 @@
   zone.addEventListener('drop', (e) => addFiles(e.dataTransfer.files));
   $('#addUrl').addEventListener('click', () => {
     const url = $('#photoUrl').value.trim();
-    if (!/^https:\/\/\S+$/.test(url)) return toast('Paste a full image link that starts with https://', 'error');
+    if (!/^https:\/\/\S+$/.test(url)) return toast('Paste a full image link starting with https://', 'error');
     if (photos.length >= 8) return toast('You can add up to 8 photos.', 'info');
     photos.push(url); $('#photoUrl').value = ''; dirty = true; renderPhotos();
   });
   $('#photoGrid').addEventListener('click', (e) => {
-    const rm = e.target.closest('[data-remove]');
-    const cover = e.target.closest('[data-cover]');
+    const rm = e.target.closest('[data-remove]'); const cv = e.target.closest('[data-cover]');
     if (rm) photos.splice(Number(rm.dataset.remove), 1);
-    if (cover) photos.unshift(photos.splice(Number(cover.dataset.cover), 1)[0]);
-    if (rm || cover) { dirty = true; renderPhotos(); }
+    if (cv) photos.unshift(...photos.splice(Number(cv.dataset.cover), 1));
+    if (rm || cv) { dirty = true; renderPhotos(); }
   });
+  renderPhotos();
 
-  // ---------- AI description (FR-02) ----------
-  const collect = () => ({
-    name: $('#petName').value.trim(), type: $('#type').value, breed: $('#breed').value.trim(), age: $('#age').value,
-    gender: $('#gender').value, size: $('#size').value, location: $('#location').value.trim(), energyLevel: $('#energyLevel').value,
-    traits: $('#keywords').value.split(',').map((t) => t.trim()).filter(Boolean),
-    goodWithChildren: $('#goodWithChildren').checked, goodWithOtherPets: $('#goodWithOtherPets').checked, requiresYard: $('#requiresYard').checked,
-    vaccinated: $('#vaccinated').checked, desexed: $('#desexed').checked, microchipped: $('#microchipped').checked,
-    description: $('#aiDescription').value.trim(), medicalHistory: $('#medical').value.trim(), rescueBackground: $('#rescue').value.trim(), photos,
-  });
-  $('#genBtn').addEventListener('click', async (e) => {
-    const data = collect();
-    if (!data.name || !data.breed) { toast('Add the pet\'s name and breed first.', 'info'); ($('#petName').value ? $('#breed') : $('#petName')).focus(); return; }
-    if (data.description && !(await confirm({ title: 'Replace description?', message: 'This will replace the current description with a new AI-generated one.', confirmText: 'Generate' }))) return;
-    setBusy(e.target, true, 'Writing…');
+  // ---------- AI description (public fields only) ----------
+  $('#aiBtn').addEventListener('click', async () => {
+    const body = { name: $('#name').value, type: $('#type').value, breed: $('#breed').value, age: $('#age').value, gender: $('#gender').value, size: $('#size').value,
+      energyLevel: $('#energyLevel').value, traits: $('#traits').value, idealHome: $('#idealHome').value,
+      goodWithChildren: $('#goodWithChildren').checked, goodWithOtherPets: $('#goodWithOtherPets').checked, requiresYard: $('#requiresYard').checked };
+    if (!body.name.trim() || !body.breed.trim()) return toast('Add the name and breed first.', 'error');
+    if ($('#description').value.trim() && !(await confirm({ title: 'Replace the description?', message: 'The AI draft will replace what is currently in the description box.', confirmText: 'Replace' }))) return;
+    const btn = $('#aiBtn'); setBusy(btn, true, 'Writing…');
     try {
-      const r = await PawPalAPI.post('/ai/describe', data);
-      $('#aiDescription').value = r.description;
-      $('#aiSource').textContent = r.source === 'openai' ? 'Written by OpenAI — please check it before publishing.' : 'Written by PawPal\'s built-in AI — edit freely before publishing.';
-      dirty = true;
+      const r = await PawPalAPI.post('/ai/describe', body);
+      $('#description').value = r.description; dirty = true;
+      $('#aiNote').innerHTML = `<p class="tiny muted" style="margin-top:6px">${icons.sparkle} Drafted by ${r.source === 'anthropic' ? 'Claude' : r.source === 'openai' ? 'OpenAI' : 'PawPal\'s template writer'} — please review before publishing.</p>`;
     } catch (err) { toast(err.message, 'error'); }
-    setBusy(e.target, false);
+    setBusy(btn, false);
   });
 
   // ---------- save ----------
-  async function save(targetStatus, btn) {
-    $('#formAlert').hidden = true;
-    document.querySelectorAll('.field-error').forEach((el) => el.classList.remove('field-error'));
-    const data = collect();
-    const missing = [];
-    if (!data.name) { $('#petName').classList.add('field-error'); missing.push('name'); }
-    if (!data.breed) { $('#breed').classList.add('field-error'); missing.push('breed'); }
-    if (targetStatus !== 'Draft' && !data.description) { $('#aiDescription').classList.add('field-error'); missing.push('description (use Generate Description)'); }
-    if (missing.length) {
-      $('#formAlert').innerHTML = `<span>Please add the pet's ${missing.join(', ')}.</span>`;
-      $('#formAlert').hidden = false;
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
-    }
+  function payload(status) {
+    const p = { photos, traits: $('#traits').value, status };
+    TEXT.forEach((k) => { p[k] = $(`#${k}`).value; });
+    BOOL.forEach((k) => { p[k] = $(`#${k}`).checked; });
+    if (u.role === 'admin') p.shelterId = $('#shelterId').value;
+    return p;
+  }
+  async function save(status, btn) {
+    $('#formMsg').innerHTML = '';
+    if (!$('#name').value.trim() || !$('#breed').value.trim()) { $('#formMsg').innerHTML = errorHTML('Name and breed are required.'); return; }
+    if (status !== 'Draft' && !$('#description').value.trim()) { $('#formMsg').innerHTML = errorHTML('Add a public description before publishing (or use Generate with AI).'); return; }
     setBusy(btn, true, 'Saving…');
     try {
-      const body = { ...data, status: targetStatus };
-      const r = editId ? await PawPalAPI.put(`/pets/${editId}`, body) : await PawPalAPI.post('/pets', body);
-      dirty = false;
-      toast(r.message);
-      setTimeout(() => { location.href = 'pets.html'; }, 700);
-    } catch (err) {
-      $('#formAlert').innerHTML = `<span>${esc(err.message)}</span>`;
-      $('#formAlert').hidden = false;
-      setBusy(btn, false);
-    }
+      const r = current ? await PawPalAPI.put(`/pets/${encodeURIComponent(current.id)}`, payload(status)) : await PawPalAPI.post('/pets', payload(status));
+      dirty = false; toast(r.message);
+      location.href = current ? `add-pet.html?id=${encodeURIComponent(r.pet.id)}` : 'pets.html';
+    } catch (err) { setBusy(btn, false); $('#formMsg').innerHTML = errorHTML(err.message); }
   }
-  $('#petForm').addEventListener('submit', (e) => {
-    e.preventDefault();
-    save(editId && status !== 'Draft' ? status : 'Available', $('#publishBtn'));
+  $('#petForm').addEventListener('submit', (e) => { e.preventDefault(); save(current && current.status !== 'Draft' ? current.status : 'Available', $('#publishBtn')); });
+  $('#draftBtn').addEventListener('click', () => save('Draft', $('#draftBtn')));
+  $$('[data-status]').forEach((b) => b.addEventListener('click', async () => {
+    const s = b.dataset.status;
+    if (!(await confirm({ title: `Mark ${current.name} as ${s.toLowerCase()}?`, message: 'They will leave the public listings and anyone who saved them will be notified.', confirmText: `Mark ${s.toLowerCase()}` }))) return;
+    save(s, b);
+  }));
+  $('#deleteBtn')?.addEventListener('click', async () => {
+    if (!(await confirm({ title: `Delete ${current.name}?`, message: 'This permanently removes the listing. Pets with applications can only be archived.', confirmText: 'Delete', danger: true }))) return;
+    try { const r = await PawPalAPI.del(`/pets/${encodeURIComponent(current.id)}`); toast(r.message); location.href = 'pets.html'; } catch (err) { toast(err.message, 'error'); }
   });
-  $('#draftBtn').addEventListener('click', (e) => save('Draft', e.currentTarget));
   $('#petForm').addEventListener('input', () => { dirty = true; });
   window.addEventListener('beforeunload', (e) => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
-
-  renderPhotos();
 })();

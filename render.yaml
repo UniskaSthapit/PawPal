@@ -4,8 +4,9 @@ services:
     name: pawpal
     runtime: node
     plan: free
-    buildCommand: npm install
+    buildCommand: npm ci --omit=dev
     startCommand: npm start
+    healthCheckPath: /api/config
     envVars:
       - key: NODE_ENV
         value: production
@@ -16,7 +17,15 @@ services:
       - key: APP_URL
         sync: false   # e.g. https://pawpal.onrender.com
       - key: MONGODB_URI
-        sync: false   # MongoDB Atlas connection string (required on Render — its disk is wiped on redeploy)
+        sync: false   # MongoDB Atlas connection string (required — Render's disk is wiped on redeploy)
+      - key: ADMIN_EMAIL
+        sync: false   # the owner's email — becomes the administrator and default sender
+      - key: BREVO_API_KEY
+        sync: false   # email over HTTPS from a verified single sender (works with a Gmail address)
+      - key: RESEND_API_KEY
+        sync: false   # alternative: needs your own domain
+      - key: MAIL_FROM
+        sync: false   # optional — defaults to "PawPal <ADMIN_EMAIL>"
       - key: SMTP_HOST
         sync: false
       - key: SMTP_PORT
@@ -27,6 +36,16 @@ services:
         sync: false
       - key: SMTP_PASS
         sync: false
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: TWILIO_FROM_NUMBER
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false   # Claude — PawPal's AI provider
+      - key: ANTHROPIC_MODEL
+        value: claude-sonnet-5-5
       - key: OPENAI_API_KEY
         sync: false
       - key: GOOGLE_MAPS_API_KEY

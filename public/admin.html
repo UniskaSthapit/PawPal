@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Users & shelters — PawPal administration</title>
+  <meta name="description" content="Manage users and shelters.">
+  <meta name="theme-color" content="#221610">
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
+  <link rel="preload" href="fonts/fraunces-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/plus-jakarta-sans-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/pawpal.css">
+  <script src="js/api.js" defer></script>
+  <script src="js/ui.js" defer></script>
+  <script src="js/pages/admin.js" defer></script>
+</head>
+<body data-layout="staff" data-page="admin">
+<main id="main" tabindex="-1">
+<div class="app-head"><div><h1>Users &amp; shelters</h1><p>Administrator tools: manage roles, shelter assignments, access and partner shelters.</p></div>
+  <div class="row"><button class="btn" id="addShelter"><span data-icon="building"></span>Add shelter</button><button class="btn btn-primary" id="inviteBtn"><span data-icon="plus"></span>Invite staff</button></div></div>
+<section class="card" style="margin-bottom:20px"><div class="card-head"><h2>Shelters</h2></div><div class="card-body"><div class="grid grid-2" id="shelters"></div></div></section>
+<section><div class="row-between" style="margin-bottom:14px"><div class="tabs" role="tablist" id="roleTabs" style="margin:0;border:0"></div>
+  <div class="input-group" style="min-width:260px"><span data-icon="search"></span><label class="sr-only" for="userQ">Search users</label><input class="input" id="userQ" placeholder="Search name or email"></div></div>
+<div class="table-wrap"><table class="table table-cards"><thead><tr><th>User</th><th>Role</th><th>Shelter</th><th>Status</th><th>Joined</th></tr></thead><tbody id="users"></tbody></table></div></section>
+</main>
+</body>
+</html>

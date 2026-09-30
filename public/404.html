@@ -1,33 +1,26 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>PawPal — Page not found</title>
-  
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="css/global.css"/>
-  <link rel="stylesheet" href="css/shared-nav.css"/>
-  <link rel="stylesheet" href="css/shared-footer.css"/>
-  <link rel="stylesheet" href="css/app.css"/>
-  <link rel="stylesheet" href="css/pages.css"/>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-<link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png"><link rel="icon" type="image/png" sizes="192x192" href="images/favicon-192.png"><link rel="apple-touch-icon" href="images/apple-touch-icon.png"><link rel="canonical" href="YOUR_CANONICAL_URL">
-<meta property="og:title" content="PawPal — Page not found"><meta property="og:type" content="website"><meta property="og:image" content="YOUR_OG_IMAGE_URL"><link rel="stylesheet" href="css/pp-system.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Page not found — PawPal</title>
+  <meta name="description" content="This page could not be found.">
+  <meta name="theme-color" content="#221610">
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
+  <link rel="preload" href="fonts/fraunces-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/plus-jakarta-sans-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/pawpal.css">
+  <script src="js/api.js" defer></script>
+  <script src="js/ui.js" defer></script>
+  <script src="js/chat.js" defer></script>
 </head>
-<body>
-<nav class="pawpal-nav" data-nav="public"></nav>
-<main class="pp-center-main">
-  <div class="pp-center-card">
-    <div class="pp-center-icon">🐾</div>
-    <h1>This page wandered off</h1>
-    <p>We couldn't find the page you were looking for. It may have moved, or the link may be wrong.</p>
-    <div class="pp-center-actions"><a class="pp-btn pp-btn-primary" href="home.html">Browse pets</a><a class="pp-btn pp-btn-ghost" href="ai-matching.html">Take the AI quiz</a></div>
-  </div>
+<body data-layout="public" data-page="notfound">
+<main id="main" tabindex="-1">
+<section class="section"><div class="container" style="max-width:640px">
+  <div class="empty"><div class="e-icon"><span data-icon="paw"></span></div><h1 class="h2">This page has wandered off</h1>
+  <p>We couldn't find the page you were looking for. It may have moved, or the pet may have found their home.</p>
+  <div class="row" style="justify-content:center"><a class="btn btn-primary" href="adopt.html">Browse pets</a><a class="btn" href="home.html">Go home</a></div></div>
+</div></section>
 </main>
-<footer data-footer></footer>
-<script src="js/api.js"></script>
-<script src="js/ui.js"></script>
-<script src="config.js"></script><script src="js/pp-enhance.js" defer></script></body>
+</body>
 </html>

@@ -29,10 +29,26 @@ module.exports = {
   // Use this on hosts (like Render's free plan) that block outbound SMTP ports.
   // If set, it's used instead of SMTP. Get a free key at https://resend.com/api-keys
   resendApiKey: env.RESEND_API_KEY || '',
-  mailFrom: env.MAIL_FROM || 'PawPal <no-reply@pawpal.app>',
+  // Brevo can send from a single verified address (e.g. a Gmail account) over HTTPS: https://app.brevo.com/settings/keys/api
+  brevoApiKey: env.BREVO_API_KEY || '',
+  // The owner's address: becomes the administrator account on start-up and the default sender
+  adminEmail: (env.ADMIN_EMAIL || '').trim().toLowerCase(),
+  mailFrom: env.MAIL_FROM || (env.ADMIN_EMAIL ? `PawPal <${env.ADMIN_EMAIL.trim()}>` : 'PawPal <no-reply@pawpal.app>'),
 
+  // AI — Anthropic (Claude) is used when its key is set, otherwise OpenAI, otherwise
+  // PawPal's built-in rules engine (which still works on the real database).
+  anthropicKey: env.ANTHROPIC_API_KEY || '',
+  anthropicModel: env.ANTHROPIC_MODEL || 'claude-sonnet-5-5',
   openaiKey: env.OPENAI_API_KEY || '',
   openaiModel: env.OPENAI_MODEL || 'gpt-4o-mini',
+
+  // SMS one-time codes for phone verification (Twilio Programmable Messaging)
+  twilio: {
+    accountSid: env.TWILIO_ACCOUNT_SID || '',
+    authToken: env.TWILIO_AUTH_TOKEN || '',
+    from: env.TWILIO_FROM_NUMBER || '',
+  },
+  defaultCountryCode: env.DEFAULT_COUNTRY_CODE || '+61',
 
   mapsKey: env.GOOGLE_MAPS_API_KEY || '',
 

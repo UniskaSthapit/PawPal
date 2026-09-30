@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>My dashboard — PawPal</title>
+  <meta name="description" content="Your PawPal matches, applications, favourites and messages.">
+  <meta name="theme-color" content="#221610">
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
+  <link rel="preload" href="fonts/fraunces-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/plus-jakarta-sans-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/pawpal.css">
+  <script src="js/api.js" defer></script>
+  <script src="js/ui.js" defer></script>
+  <script src="js/chat.js" defer></script>
+  <script src="js/pages/dashboard.js" defer></script>
+</head>
+<body data-layout="account" data-page="dashboard">
+<main id="main" tabindex="-1">
+<div class="app-head">
+  <div><h1 id="hello">Welcome back</h1><p id="helloSub">Here's everything happening with your adoption journey.</p></div>
+  <div class="row"><a class="btn" href="adopt.html"><span data-icon="search"></span>Browse pets</a><a class="btn btn-primary" href="ai-matching.html"><span data-icon="sparkle"></span>Update my matches</a></div>
+</div>
+<div id="nudges" class="stack" style="--stack:10px;margin-bottom:20px"></div>
+<div class="kpis" id="kpis">
+  <div class="kpi skeleton" style="height:118px"></div><div class="kpi skeleton" style="height:118px"></div><div class="kpi skeleton" style="height:118px"></div><div class="kpi skeleton" style="height:118px"></div>
+</div>
+
+<div class="dash-grid">
+  <section class="card" aria-labelledby="appsTitle">
+    <div class="card-head"><h2 id="appsTitle">Active applications</h2><a class="small" href="my-applications.html">View all</a></div>
+    <div id="apps"><div class="card-body"><div class="skeleton" style="height:90px"></div></div></div>
+  </section>
+  <section class="card" aria-labelledby="notesTitle">
+    <div class="card-head"><h2 id="notesTitle">Recent activity</h2><a class="small" href="notifications.html">All notifications</a></div>
+    <div id="notes"><div class="card-body"><div class="skeleton" style="height:90px"></div></div></div>
+  </section>
+</div>
+
+<section style="margin-top:32px" aria-labelledby="recoTitle">
+  <div class="row-between" style="margin-bottom:14px"><div><span class="src-label src-ai"><span data-icon="sparkle"></span>PawPal's interpretation</span><h2 class="h3" id="recoTitle" style="margin-top:4px">Recommended for you</h2></div><a class="small" href="profile.html#preferences">Edit my lifestyle</a></div>
+  <div id="recoUnderstood" class="understood" style="margin-bottom:14px"></div>
+  <div class="pet-grid" id="reco"></div>
+</section>
+
+<section style="margin-top:36px" id="favourites" aria-labelledby="favTitle">
+  <div class="row-between" style="margin-bottom:14px"><h2 class="h3" id="favTitle">Favourites</h2><span class="small muted" id="favCount"></span></div>
+  <div class="pet-grid" id="favs"></div>
+</section>
+
+<div class="dash-grid" style="margin-top:36px">
+  <section class="card" id="enquiries" aria-labelledby="enqTitle">
+    <div class="card-head"><h2 id="enqTitle">Questions to shelters</h2></div>
+    <div id="enqs"></div>
+  </section>
+  <section class="card" aria-labelledby="convTitle">
+    <div class="card-head"><h2 id="convTitle">Assistant conversations</h2><button class="btn btn-sm" data-ask="Hi PawPal!"><span data-icon="plus"></span>New</button></div>
+    <div id="convs"></div>
+  </section>
+</div>
+</main>
+</body>
+</html>
