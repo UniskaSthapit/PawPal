@@ -85,7 +85,13 @@ app.get(/^\/([a-z-]+\.html)$/, (req, res, next) => {
   next();
 });
 
-app.use(express.static(path.join(__dirname, 'public'), { extensions: ['html'], maxAge: config.isProd ? '1h' : 0 }));
+// Pages, scripts and styles are revalidated on every visit so a new deploy never mixes an old page with new scripts
+// (which left sections stuck on "Loading"); images and fonts can be cached.
+app.use(express.static(path.join(__dirname, 'public'), {
+  extensions: ['html'],
+  maxAge: config.isProd ? '1h' : 0,
+  setHeaders: (res, file) => { if (/\.(html|js|css)$/.test(file)) res.setHeader('Cache-Control', 'no-cache'); },
+}));
 app.use((req, res) => res.status(404).sendFile(path.join(__dirname, 'public', '404.html')));
 
 // ---------- Errors ----------
