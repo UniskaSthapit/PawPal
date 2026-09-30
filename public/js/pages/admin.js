@@ -18,7 +18,8 @@
       <td class="cell-first"><div class="cell-pet"><span class="avatar">${esc(PawPal.initials(x.name))}</span><div><b>${esc(x.name)}</b><span>${esc(x.email)}${x.role === 'user' ? ` · ${x.applications} applications` : ''}</span></div></div></td>
       <td data-label="Role"><label class="sr-only" for="role-${esc(x.id)}">Role</label><select class="select" id="role-${esc(x.id)}" data-field="role" style="min-height:38px;width:auto" ${x.id === me.id ? 'disabled' : ''}>${roles.map((r2) => `<option value="${r2.id}" ${r2.id === x.role ? 'selected' : ''}>${esc(r2.label)}</option>`).join('')}</select></td>
       <td data-label="Shelter">${x.role === 'user' ? '<span class="muted small">—</span>' : `<label class="sr-only" for="sh-${esc(x.id)}">Shelter</label><select class="select" id="sh-${esc(x.id)}" data-field="shelterId" style="min-height:38px;width:auto;max-width:220px">${shelterOptions(x.shelterId)}</select>`}</td>
-      <td data-label="Status">${x.id === me.id ? '<span class="badge badge-sage">You</span>' : `<button class="btn btn-sm ${x.active ? '' : 'btn-sage'}" data-toggle="${x.active ? 'off' : 'on'}">${x.active ? 'Deactivate' : 'Reactivate'}</button>`}</td>
+      <td data-label="Status">${x.id === me.id ? '<span class="badge badge-sage">You</span>' : `<div class="row" style="gap:6px"><button class="btn btn-sm ${x.active ? '' : 'btn-sage'}" data-toggle="${x.active ? 'off' : 'on'}">${x.active ? 'Deactivate' : 'Reactivate'}</button>
+        ${x.role !== 'user' && x.active && !x.lastLoginAt ? `<button class="btn btn-sm" data-reinvite>${icons.mail || ''}Resend invite</button>` : ''}</div>`}</td>
       <td data-label="Joined"><span class="small muted">${esc(fmtDate(x.createdAt))}${x.lastLoginAt ? `<br>seen ${esc(timeAgo(x.lastLoginAt))}` : ''}</span></td></tr>`).join('');
   }
   async function patchUser(id, body) {
@@ -27,6 +28,12 @@
   }
   $('#users').addEventListener('change', (e) => { const f = e.target.closest('[data-field]'); if (f) patchUser(f.closest('[data-user]').dataset.user, { [f.dataset.field]: f.value }); });
   $('#users').addEventListener('click', async (e) => {
+    const ri = e.target.closest('[data-reinvite]');
+    if (ri) {
+      setBusy(ri, true, 'Sending…');
+      try { const r = await PawPalAPI.post(`/admin/users/${encodeURIComponent(ri.closest('[data-user]').dataset.user)}/invite`); toast(r.message); } catch (err) { toast(err.message, 'error'); }
+      setBusy(ri, false); return;
+    }
     const b = e.target.closest('[data-toggle]'); if (!b) return;
     const id = b.closest('[data-user]').dataset.user; const on = b.dataset.toggle === 'on';
     if (!on && !(await PawPal.confirm({ title: 'Deactivate this account?', message: 'They will be signed out everywhere and unable to log in until reactivated.', confirmText: 'Deactivate', danger: true }))) return;
@@ -39,10 +46,10 @@
       <div class="field"><label for="iName">Name</label><input class="input" id="iName"></div><div class="field"><label for="iEmail">Email</label><input class="input" id="iEmail" type="email"></div>
       <div class="field"><label for="iRole">Role</label><select class="select" id="iRole"><option value="staff">Shelter staff</option><option value="admin">Administrator</option></select></div>
       <div class="field"><label for="iShelter">Shelter</label><select class="select" id="iShelter">${shelterOptions(shelters[0]?.id)}</select></div>
-      <p class="small muted">They'll receive an email with a temporary password to change on first login.</p><div id="iErr"></div></div>`,
+      <p class="small muted">They'll receive an email with a link to choose their own password. The link is valid for 7 days.</p><div id="iErr"></div></div>`,
     actions: [{ label: 'Cancel', value: false }, { label: 'Send invite', variant: 'btn-primary', onClick: async (m, btn) => {
       setBusy(btn, true, 'Inviting…');
-      try { const r = await PawPalAPI.post('/admin/users', { name: $('#iName', m).value, email: $('#iEmail', m).value, role: $('#iRole', m).value, shelterId: $('#iShelter', m).value }); toast(r.message); loadUsers(); loadShelters(); return true; }
+      try { const r = await PawPalAPI.post('/admin/users', { name: $('#iName', m).value, email: $('#iEmail', m).value, role: $('#iRole', m).value, shelterId: $('#iShelter', m).value }); toast(r.message, r.emailSent ? undefined : 'error'); loadUsers(); loadShelters(); return true; }
       catch (err) { setBusy(btn, false); $('#iErr', m).innerHTML = errorHTML(err.message); return false; }
     } }] }));
 

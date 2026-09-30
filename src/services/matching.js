@@ -52,19 +52,22 @@ function parseProfile(text, prev = {}, knownLocations = []) {
   if (has(/\b(no other pets?|dont have (any )?(other )?pets|only pet)\b/)) p.hasOtherPets = false;
   else if (has(/\b(other pets?|another (dog|cat)|have (a |two |2 )?(dogs?|cats?)|my (dog|cat)|our (dog|cat)|resident (dog|cat))\b/)) p.hasOtherPets = true;
 
-  // Species (explicit wish, not other pets in the home)
-  const wantsDog = has(/\b(want|looking for|adopt|like|after|prefer|hoping for|find)\b[^.]{0,40}\b(dog|puppy|pup|pooch)s?\b/) || has(/\b(calm|friendly|small|big|large|active|quiet|gentle|playful|senior|young|older) (dog|puppy)\b/);
-  const wantsCat = has(/\b(want|looking for|adopt|like|after|prefer|hoping for|find)\b[^.]{0,40}\b(cat|kitten|kitty)s?\b/) || has(/\b(calm|friendly|small|affectionate|active|quiet|gentle|playful|senior|young|older|indoor) (cat|kitten)\b/);
-  const wantsOther = has(/\b(rabbit|bunny|bunnies|guinea pig|bird|budgie|small pet|small animal)s?\b/);
+  // Species (explicit wish, not other pets in the home). The newest message wins, so "what about dogs?" after
+  // talking about cats switches the search instead of repeating the earlier results.
+  const ts = t.replace(/\b(my|our|have (a |an |two |2 )?|had (a |an )?|another|resident|grew up with|owned (a |an )?|not (a |an )?|no |instead of (a |an )?|rather than (a |an )?|other than (a |an )?)(dog|puppy|pup|pooch|cat|kitten|kitty)s?\b/g, ' ');
+  const wantsDog = /\b(want|looking for|adopt|like|after|prefer|hoping for|find)\b[^.]{0,40}\b(dog|puppy|pup|pooch)s?\b/.test(ts) || /\b(calm|friendly|small|big|large|active|quiet|gentle|playful|senior|young|older) (dog|puppy)\b/.test(ts);
+  const wantsCat = /\b(want|looking for|adopt|like|after|prefer|hoping for|find)\b[^.]{0,40}\b(cat|kitten|kitty)s?\b/.test(ts) || /\b(calm|friendly|small|affectionate|active|quiet|gentle|playful|senior|young|older|indoor) (cat|kitten)\b/.test(ts);
+  const wantsOther = /\b(rabbit|bunny|bunnies|guinea pig|bird|budgie|small pet|small animal|hamster|ferret)s?\b/.test(ts);
+  const mentionsDog = /\b(dog|puppy|puppies|pup|pooch|doggo)s?\b/.test(ts); const mentionsCat = /\b(cat|kitten|kitty|kitties)s?\b/.test(ts);
+  const prevType = p.preferredType;
   if (wantsDog && !wantsCat) p.preferredType = 'dog';
   else if (wantsCat && !wantsDog) p.preferredType = 'cat';
-  else if (wantsOther && !wantsDog && !wantsCat) p.preferredType = 'other';
-  else if (has(/\b(any pet|open to (any|anything)|dont mind (what|which))\b/)) p.preferredType = 'any';
-  if (!p.preferredType) {
-    const dog = has(/\b(dog|puppy|pup)s?\b/); const cat = has(/\b(cat|kitten)s?\b/);
-    if (dog && !cat && !p.hasOtherPets) p.preferredType = 'dog';
-    if (cat && !dog && !p.hasOtherPets) p.preferredType = 'cat';
-  }
+  else if (wantsOther && !mentionsDog && !mentionsCat) p.preferredType = 'other';
+  else if (has(/\b(any pet|any animal|open to (any|anything)|dont mind (what|which)|either|all pets|any kind)\b/)) p.preferredType = 'any';
+  else if (mentionsDog && !mentionsCat) p.preferredType = 'dog';
+  else if (mentionsCat && !mentionsDog) p.preferredType = 'cat';
+  // Size and age wishes usually belong to the previous kind of animal, so start fresh when the species changes
+  if (prevType && p.preferredType !== prevType) { p.size = []; p.age = []; }
 
   // Size & age preferences
   const size = new Set(p.size || []);

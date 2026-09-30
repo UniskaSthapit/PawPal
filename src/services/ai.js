@@ -68,7 +68,10 @@ async function understandLifestyle(text, prev = {}, locations = []) {
         '"preferredType":"dog|cat|other|any|null","size":["small"|"medium"|"large"],"age":["baby"|"young"|"adult"|"senior"],' +
         '"temperament":["calm","quiet","gentle","playful","affectionate","cuddly","friendly","smart","loyal","independent","active","curious","social"],"location":string|null}',
       messages: [{ role: 'user', content: `Previously known: ${JSON.stringify(prev)}\nMessage: ${String(text).slice(0, 1500)}` }] });
-    return { profile: sanitizeProfile(raw, ruled), source: llm.provider };
+    const profile = sanitizeProfile(raw, ruled);
+    // A species change spotted in this message always wins over anything carried over from earlier in the chat
+    if (ruled.preferredType !== (prev.preferredType ?? null)) { profile.preferredType = ruled.preferredType; profile.size = ruled.size; profile.age = ruled.age; }
+    return { profile, source: llm.provider };
   } catch (err) {
     console.warn('AI profile fallback:', err.message);
     return { profile: ruled, source: 'rules' };
@@ -230,7 +233,8 @@ async function chat(ctx) {
     const myApps = applications.map((a) => ({ pet: a.petName, status: a.status, meaning: APP_STATUS_INFO[a.status], appointment: a.appointmentAt, updated: a.updatedAt }));
     const raw = await llm.complete({ json: true, maxTokens: 700,
       system: `You are PawPal's adoption assistant for Australian animal shelters. Help people find compatible pets, answer questions about specific pets and the adoption process, and explain application status. ${GUARDRAILS}
-Keep replies under 120 words; plain text with simple "•" bullets when listing. Recommend at most 3 pets and include their ids in petIds. When recommending, prefer the ranked candidates and quote their matchScore as the match percentage. If the user asks about their application and "myApplications" is empty or the user is not logged in, say so.
+Keep replies under 120 words; plain text with simple "•" bullets when listing. Recommend at most 3 pets and include their ids in petIds. When recommending, prefer the ranked candidates and quote their matchScore as the match percentage.
+Always answer the latest message. rankedCandidates already reflect the adopter's current wishes: if they change what they want (for example cats to dogs, or a different size or age), recommend pets that fit the new request and do not repeat earlier suggestions unless they ask about them. Only recommend pets whose type matches the kind of animal they asked for. If the user asks about their application and "myApplications" is empty or the user is not logged in, say so.
 Return {"reply": string, "petIds": string[]}.
 Adoption FAQ: ${JSON.stringify(FAQ.map((f) => ({ q: f.q, a: f.a })))}`,
       messages: [
@@ -241,8 +245,13 @@ Adoption FAQ: ${JSON.stringify(FAQ.map((f) => ({ q: f.q, a: f.a })))}`,
         { role: 'user', content: message },
       ] });
     const ids = Array.isArray(raw.petIds) ? raw.petIds : [];
-    const picks = ids.map((id) => pets.find((p) => p.id === id)).filter(Boolean).slice(0, 3)
+    const wantedType = ['dog', 'cat', 'other'].includes(profile.preferredType) ? profile.preferredType : null;
+    const typeOk = (pet) => !wantedType || (wantedType === 'other' ? !['dog', 'cat'].includes(String(pet.type).toLowerCase()) : String(pet.type).toLowerCase() === wantedType);
+    // Never show pets of a different kind than the adopter asked for (a pet they name explicitly is still allowed)
+    const named = nameMention(message, pets);
+    const picks = ids.map((id) => pets.find((p) => p.id === id)).filter(Boolean).filter((pet) => typeOk(pet) || pet === named).slice(0, 3)
       .map((pet) => ({ pet, ...evaluateMatch(pet, profile) }));
+    if (ids.length && !picks.length) return { ...rules, profile, source: 'rules' };
     return { reply: String(raw.reply || rules.reply).slice(0, 1500), picks, actions: rules.actions, profile, source: llm.provider };
   } catch (err) {
     console.warn('AI chat fallback:', err.message);
