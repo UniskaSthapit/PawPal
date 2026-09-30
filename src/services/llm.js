@@ -75,7 +75,9 @@ async function callGemini(system, messages, maxTokens, retried = false) {
     signal: AbortSignal.timeout(30000),
   });
   if (!res.ok) {
-    const detail = (await res.text()).slice(0, 300);
+    const body = await res.text();
+    const retryInfo = (/"retryDelay":\s*"[^"]+"/.exec(body) || [''])[0];
+    const detail = `${body.slice(0, 300)}${/PerDay/.test(body) ? ' PerDay' : ''} ${retryInfo}`.trim();
     if (!retried && (res.status === 404 || /model/i.test(detail) && res.status === 400)) {
       geminiModel = await pickGeminiModel();
       return callGemini(system, messages, maxTokens, true);
@@ -86,15 +88,35 @@ async function callGemini(system, messages, maxTokens, retried = false) {
   return data.choices?.[0]?.message?.content?.trim() || '';
 }
 
+// When the provider says the quota or rate limit is used up (HTTP 429), stop calling it for a while instead of
+// failing on every request. Callers fall back to PawPal's rules engine in the meantime.
+let pausedUntil = 0;
+function pauseFor(err) {
+  const msg = String(err.message || '');
+  const retry = /retry(?:Delay)?["\s:]*"?(\d+(?:\.\d+)?)s/i.exec(msg);
+  const daily = /per ?day|PerDay|daily/i.test(msg);
+  const ms = daily ? 60 * 60 * 1000 : retry ? Math.min(15 * 60, Math.ceil(Number(retry[1])) + 5) * 1000 : 2 * 60 * 1000;
+  pausedUntil = Date.now() + ms;
+  console.warn(`🤖 ${providerLabel} limit reached — using PawPal's matching engine for the next ${Math.round(ms / 60000) || 1} min.`);
+}
+const isPaused = () => Date.now() < pausedUntil;
+
 async function complete({ system, messages, maxTokens = 700, json = false }) {
   if (!llmEnabled) throw new Error('No language model configured');
+  if (isPaused()) throw Object.assign(new Error('AI temporarily paused (usage limit)'), { quiet: true });
   const sys = json ? `${system}\n\nRespond with a single valid JSON object only — no markdown fences, no commentary.` : system;
-  const text = provider === 'anthropic' ? await callAnthropic(sys, messages, maxTokens)
-    : provider === 'gemini' ? await callGemini(sys, messages, maxTokens) : await callOpenAI(sys, messages, maxTokens, json);
+  let text;
+  try {
+    text = provider === 'anthropic' ? await callAnthropic(sys, messages, maxTokens)
+      : provider === 'gemini' ? await callGemini(sys, messages, maxTokens) : await callOpenAI(sys, messages, maxTokens, json);
+  } catch (err) {
+    if (/ error 429\b/.test(err.message)) { pauseFor(err); throw Object.assign(new Error('AI usage limit reached'), { quiet: true }); }
+    throw err;
+  }
   if (!json) return text;
   const start = text.indexOf('{'); const end = text.lastIndexOf('}');
   if (start < 0 || end < start) throw new Error('Model did not return JSON');
   return JSON.parse(text.slice(start, end + 1));
 }
 
-module.exports = { complete, llmEnabled, provider, providerLabel, modelName };
+module.exports = { complete, llmEnabled, provider, providerLabel, modelName, isPaused };
