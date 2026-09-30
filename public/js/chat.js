@@ -14,7 +14,7 @@ const PawPalChat = (() => {
   const save = () => { try { sessionStorage.setItem(SESSION_KEY, JSON.stringify({ ...state, messages: state.messages.slice(-30) })); } catch { /* ignore */ } };
   try { Object.assign(state, JSON.parse(sessionStorage.getItem(SESSION_KEY)) || {}); } catch { /* ignore */ }
 
-  const sourceLabel = (s) => (s === 'anthropic' ? 'Claude' : s === 'openai' ? 'OpenAI' : 'PawPal matching engine');
+  const sourceLabel = (s) => PawPal.aiLabel(s);
 
   function petsHTML(picks = []) {
     if (!picks.length) return '';
