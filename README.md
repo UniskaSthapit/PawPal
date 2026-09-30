@@ -106,7 +106,7 @@ shows which mode each service is in.
 | Owner admin | `ADMIN_EMAIL` | Demo admin only (local) |
 | Email | `BREVO_API_KEY` (single verified sender, e.g. Gmail) **or** `RESEND_API_KEY` (own domain) **or** `SMTP_*` | Dev mailbox (local only) |
 | SMS | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER` | Codes in dev mailbox locally; disabled in production |
-| AI | `ANTHROPIC_API_KEY` — Claude, PawPal's AI provider (`OPENAI_API_KEY` also supported) | Rules engine on the same live data |
+| AI | `GEMINI_API_KEY` (free tier) **or** `ANTHROPIC_API_KEY` (Claude) **or** `OPENAI_API_KEY` | Rules engine on the same live data |
 | Maps | `GOOGLE_MAPS_API_KEY` | Keyless Google Maps embed |
 
 Existing databases are upgraded automatically on start (versioned migration): legacy statuses
@@ -129,7 +129,7 @@ src/
   routes/                 auth · pets · images · applications · favourites · enquiries · ai · admin · misc
   services/
     matching.js           Lifestyle parser + explainable compatibility engine
-    ai.js / llm.js        AI features (Claude/OpenAI) with grounded prompts and rules fallback
+    ai.js / llm.js        AI features (Claude/OpenAI/Gemini) with grounded prompts and rules fallback
     knowledge.js          FAQ + application question explanations
     mailer.js / sms.js    Email (Resend/Brevo/SMTP/dev) and SMS (Twilio/dev)
     bootstrap.js          Owner administrator (ADMIN_EMAIL) and production demo-account lockout
