@@ -32,6 +32,8 @@ const PawPal = (() => {
   const statusClass = (s) => `st st-${String(s).replace(/[^A-Za-z]/g, '')}`;
   const statusBadge = (s) => `<span class="${statusClass(s)}">${esc(s)}</span>`;
   const scoreBadge = (n) => `<span class="score ${n >= 80 ? 'score-high' : n >= 60 ? 'score-mid' : 'score-low'}" title="Suitability score">${n}</span>`;
+  // Which engine produced an AI answer (shown so people always know)
+  const aiLabel = (source, fallback = 'PawPal matching engine') => ({ anthropic: 'Claude', openai: 'OpenAI', gemini: 'Google Gemini' }[source] || fallback);
   const money = (n) => (n ? `$${Number(n).toLocaleString('en-AU')}` : 'Contact shelter');
 
   // ---------- images ----------
@@ -513,7 +515,7 @@ const PawPal = (() => {
     return u;
   })();
 
-  return { $, $$, params, page, layout, esc, fmtDate, fmtDateTime, timeAgo, initials, ageText, ageLong, energyText, money, photo, sized, srcset, icons, icon,
+  return { $, $$, params, page, layout, esc, fmtDate, fmtDateTime, timeAgo, initials, ageText, ageLong, energyText, money, photo, sized, srcset, icons, icon, aiLabel,
     FALLBACK, PLACEHOLDER, statusBadge, statusClass, scoreBadge, toast, modal, confirm: confirmDialog, setBusy, errorHTML, emptyHTML, skeletonCards,
     favs, petCardHTML, petTags, ready, booted, get user() { return user; }, isStaffUser, logout, loadBell, noteHTML, hydrateIcons, reveal, reduceMotion };
 })();

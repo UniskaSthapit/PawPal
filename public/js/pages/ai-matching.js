@@ -53,7 +53,7 @@
       ${[0, 1, 2].map(() => '<div class="skeleton" style="height:240px;margin-top:16px;border-radius:20px"></div>').join('')}`;
     try {
       const res = await PawPalAPI.post('/ai/match', body);
-      const engine = res.source === 'anthropic' ? 'Claude' : res.source === 'openai' ? 'OpenAI' : 'PawPal matching engine';
+      const engine = PawPal.aiLabel(res.source);
       $('#results').innerHTML = `
         <div class="ai-panel">
           <div class="row-between"><span class="src-label src-ai">${icons.sparkle}What PawPal understood</span><span class="tiny muted">${esc(engine)}</span></div>

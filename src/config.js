@@ -41,6 +41,9 @@ module.exports = {
   anthropicModel: env.ANTHROPIC_MODEL || 'claude-sonnet-5-5',
   openaiKey: env.OPENAI_API_KEY || '',
   openaiModel: env.OPENAI_MODEL || 'gpt-4o-mini',
+  // Google Gemini — has a free tier (key from https://aistudio.google.com/apikey, no card needed)
+  geminiKey: env.GEMINI_API_KEY || '',
+  geminiModel: env.GEMINI_MODEL || 'gemini-flash-latest',
 
   // SMS one-time codes for phone verification (Twilio Programmable Messaging)
   twilio: {
