@@ -49,14 +49,15 @@
   <section class="container section-sm">
     <div class="profile-top">
       <div>
-        <div class="gallery-main"><img id="mainImg" src="${esc(sized(photos[0], 1200))}" ${srcset(photos[0]) ? `srcset="${srcset(photos[0])}" sizes="(max-width: 960px) 100vw, 55vw"` : ''} alt="${esc(pet.name)}, a ${esc(pet.breed)}" data-fallback="${PawPal.FALLBACK[pet.type]}" fetchpriority="high">
-          ${staff || adopted ? '' : `<button class="fav-btn" data-fav="${esc(pet.id)}" data-name="${esc(pet.name)}" aria-pressed="${PawPal.favs.has(pet.id)}" aria-label="Save ${esc(pet.name)} to favourites" style="width:50px;height:50px;right:16px;top:16px">${icons.heart}</button>`}</div>
+        <div class="gallery-main" data-reveal="scale"><img id="mainImg" src="${esc(sized(photos[0], 1200))}" ${srcset(photos[0]) ? `srcset="${srcset(photos[0])}" sizes="(max-width: 960px) 100vw, 55vw"` : ''} alt="${esc(pet.name)}, a ${esc(pet.breed)}" data-fallback="${PawPal.FALLBACK[pet.type]}" fetchpriority="high">
+          ${staff || adopted ? '' : `<button class="fav-btn" data-fav="${esc(pet.id)}" data-name="${esc(pet.name)}" aria-pressed="${PawPal.favs.has(pet.id)}" aria-label="Save ${esc(pet.name)} to favourites" style="width:52px;height:52px;right:18px;top:18px">${icons.heart}</button>`}
+          ${photos.length > 1 ? `<span class="gallery-count" id="galleryCount">1 / ${photos.length}</span>` : ''}</div>
         ${photos.length > 1 ? `<div class="gallery-thumbs" role="group" aria-label="More photos of ${esc(pet.name)}">${photos.map((p, i) => `<button type="button" data-thumb="${i}" aria-label="Photo ${i + 1}" aria-current="${i === 0}"><img src="${esc(sized(p, 240))}" alt="" loading="lazy" data-fallback="${PawPal.FALLBACK[pet.type]}"></button>`).join('')}</div>` : ''}
       </div>
-      <div class="profile-side">
+      <div class="profile-side"><div class="profile-card" data-reveal>
         <div class="row">${pet.status === 'On Hold' ? '<span class="badge badge-honey">On hold — meeting an adopter</span>' : adopted ? '<span class="badge badge-dark">Adopted</span>' : '<span class="badge badge-sage">Available for adoption</span>'}
           <span class="badge">${icons.pin}${esc(pet.location || 'Location on request')}</span></div>
-        <h1 class="profile-name" style="margin-top:14px">${esc(pet.name)}</h1>
+        <h1 class="profile-name" style="margin-top:18px">${esc(pet.name)}</h1>
         <p class="lead" style="margin-top:6px">${esc(pet.breed)} · ${esc(pet.gender === 'Unknown' ? pet.type : pet.gender)}</p>
         <dl class="key-facts">
           <div><dt>Age</dt><dd>${esc(ageLong(pet.age))}</dd></div>
@@ -72,25 +73,25 @@
           <button class="btn btn-block" data-ask="Tell me about ${esc(pet.name)}. Would ${esc(pronoun)} suit my lifestyle?" style="flex:1">${icons.sparkle}Ask about ${esc(pet.name)}</button>
           <button class="btn btn-block" id="askShelter" style="flex:1">${icons.message}Ask the shelter</button></div>`}`}
         <div id="compat" style="margin-top:18px"></div>
-      </div>
+      </div></div>
     </div>
   </section>
 
   <section class="container section-sm" style="padding-top:0">
     <div class="profile-body">
       <div class="stack" style="--stack:32px">
-        <div>
+        <div class="profile-section" data-reveal>
           <span class="src-label src-shelter">${icons.building}From the shelter</span>
           <h2 class="h3" style="margin-top:8px">About ${esc(pet.name)}</h2>
           <div class="prose" style="margin-top:12px">${String(pet.description || `${pet.name} is waiting to meet you. Contact the shelter to learn more.`).split(/\n+/).map((p) => `<p>${esc(p)}</p>`).join('')}</div>
           ${pet.traits?.length ? `<div class="row" style="margin-top:16px;gap:6px">${pet.traits.map((t) => `<span class="tag">${esc(t)}</span>`).join('')}</div>` : ''}
         </div>
-        <div>
+        <div data-reveal>
           <h2 class="h3">Good with</h2>
           <div class="good-with" style="margin-top:14px">${goodWith.map(([yes, ic, label, sub]) => `<div class="gw-item ${yes ? 'gw-yes' : 'gw-no'}"><span class="gw-ic">${icons[ic]}</span><div>${esc(label)}<small>${esc(sub)}</small></div></div>`).join('')}</div>
         </div>
-        ${pet.idealHome ? `<div class="fact-panel"><span class="src-label src-shelter">${icons.home}The shelter's ideal home for ${esc(pet.name)}</span><p style="margin-top:8px;font-size:17px">${esc(pet.idealHome)}</p></div>` : ''}
-        <div>
+        ${pet.idealHome ? `<div class="fact-panel" data-reveal><span class="src-label src-shelter">${icons.home}The shelter's ideal home for ${esc(pet.name)}</span><p style="margin-top:8px;font-size:17px">${esc(pet.idealHome)}</p></div>` : ''}
+        <div class="profile-section" data-reveal>
           <h2 class="h3">Health &amp; care</h2>
           <ul class="plain reason-list pos" style="margin-top:12px">
             ${[['vaccinated', 'Vaccinated'], ['desexed', 'Desexed'], ['microchipped', 'Microchipped']].map(([k, l]) => `<li>${pet[k] ? icons.checkCircle : icons.minus}<span>${pet[k] ? l : `Not yet ${l.toLowerCase()} — ask the shelter`}</span></li>`).join('')}
@@ -99,15 +100,15 @@
         </div>
       </div>
       <div class="stack" style="--stack:20px">
-        ${shelter ? `<div class="card card-pad"><div class="shelter-card"><span class="s-ic">${icons.building}</span><div>
+        ${shelter ? `<div class="card card-pad" data-reveal><div class="shelter-card"><span class="s-ic">${icons.building}</span><div>
           <span class="src-label src-shelter">Cared for by</span><h3 style="font-size:21px;margin-top:4px">${esc(shelter.name)}</h3>
           <p class="small muted" style="margin-top:4px">${esc(shelter.about || '')}</p>
           <dl class="kv" style="margin-top:14px">
             ${shelter.address ? `<dt>Address</dt><dd>${esc(shelter.address)}</dd>` : ''}${shelter.hours ? `<dt>Hours</dt><dd>${esc(shelter.hours)}</dd>` : ''}
             ${shelter.phone ? `<dt>Phone</dt><dd><a href="tel:${esc(shelter.phone.replace(/[^\d+]/g, ''))}">${esc(shelter.phone)}</a></dd>` : ''}
             ${shelter.email ? `<dt>Email</dt><dd><a href="mailto:${esc(shelter.email)}">${esc(shelter.email)}</a></dd>` : ''}</dl></div></div></div>` : ''}
-        <div class="card card-pad">
-          <h3 style="font-size:21px">Adopting ${esc(pet.name)}</h3>
+        <div class="card card-pad" data-reveal>
+          <h3 style="font-size:22px">Adopting ${esc(pet.name)}</h3>
           <ol class="plain reason-list pos" style="margin-top:14px">
             <li>${icons.file}<span><b>Apply online</b> — takes about 10 minutes.</span></li>
             <li>${icons.user}<span><b>Review &amp; chat</b> — the shelter reviews your application and may call you.</span></li>
@@ -121,10 +122,14 @@
   </section>
 
   <section class="section section-tint" id="similarWrap" hidden>
-    <div class="container"><div class="section-head"><span class="eyebrow">You might also like</span><h2 class="h2" style="margin-top:8px">Pets similar to ${esc(pet.name)}</h2></div>
-    <div class="pet-grid" id="similar"></div></div>
+    <div class="container carousel" id="similarCarousel">
+      <div class="row-between section-head" style="max-width:none;align-items:flex-end"><div><span class="eyebrow">You might also like</span><h2 class="h2" style="margin-top:12px">Pets similar to <em>${esc(pet.name)}</em></h2></div>
+        <div class="rail-nav"><button class="rail-btn" type="button" data-prev aria-label="Previous pets">${icons.arrowLeft}</button><button class="rail-btn" type="button" data-next aria-label="More pets">${icons.arrowRight}</button></div></div>
+      <div class="carousel-track" id="similar" tabindex="0" aria-label="Similar pets — drag or scroll sideways"></div>
+    </div>
   </section>`;
   PawPal.hydrateIcons(root);
+  PawPal.reveal(root);
 
   // ---------- gallery ----------
   root.addEventListener('click', (e) => {
@@ -132,9 +137,12 @@
     if (!t) return;
     const i = Number(t.dataset.thumb);
     const img = $('#mainImg');
-    img.removeAttribute('srcset'); delete img.dataset.fellBack;
-    img.src = sized(photos[i], 1200);
     $$('[data-thumb]').forEach((b) => b.setAttribute('aria-current', String(b === t)));
+    if ($('#galleryCount')) $('#galleryCount').textContent = `${i + 1} / ${photos.length}`;
+    const swap = () => { img.removeAttribute('srcset'); delete img.dataset.fellBack; img.src = sized(photos[i], 1200); img.classList.remove('is-swapping'); };
+    if (PawPal.reduceMotion) return swap();
+    img.classList.add('is-swapping');
+    setTimeout(swap, 180);
   });
   root.addEventListener('keydown', (e) => {
     if (!e.target.closest('[data-thumb]') || !['ArrowLeft', 'ArrowRight'].includes(e.key)) return;
@@ -178,7 +186,11 @@
   // ---------- similar pets ----------
   try {
     const { pets } = await PawPalAPI.get('/pets', { type: ['Dog', 'Cat'].includes(pet.type) ? pet.type.toLowerCase() : 'other', available: 1 });
-    const similar = pets.filter((p) => p.id !== pet.id).sort((a, b) => (Math.abs(a.energyLevel - energy) + (a.size === pet.size ? 0 : 1)) - (Math.abs(b.energyLevel - energy) + (b.size === pet.size ? 0 : 1))).slice(0, 4);
-    if (similar.length) { $('#similar').innerHTML = similar.map((p) => petCardHTML(p)).join(''); $('#similarWrap').hidden = false; }
+    const similar = pets.filter((p) => p.id !== pet.id).sort((a, b) => (Math.abs(a.energyLevel - energy) + (a.size === pet.size ? 0 : 1)) - (Math.abs(b.energyLevel - energy) + (b.size === pet.size ? 0 : 1))).slice(0, 8);
+    if (similar.length) {
+      $('#similar').innerHTML = similar.map((p, i) => petCardHTML(p, { index: i })).join('');
+      $('#similarWrap').hidden = false;
+      PawPal.carousel($('#similarCarousel'));
+    }
   } catch { /* optional section */ }
 })();

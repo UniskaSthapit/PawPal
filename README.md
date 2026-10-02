@@ -146,6 +146,29 @@ scripts/                  smoke-test.js · ui-test.js · reset-data.js
 **Collections:** users, shelters, pets, images, applications (with history + messages), favourites, enquiries,
 notifications, conversations, matches, phoneCodes, emails, sms, searches, events, messages, meta.
 
+## Design system (v6 "Hearth")
+
+The interface is a premium redesign built on the same pages, scripts, API and data as before.
+
+- **Palette** — cream paper, terracotta, soft brown, peach and honey gold, defined once as CSS tokens at the top of
+  `public/css/pawpal.css` (sage, sky and red are kept only for status meaning).
+- **Type** — Fraunces, used light and tightly tracked for headings with italic terracotta accents, and Plus Jakarta Sans
+  for the interface. Both are self-hosted, so the strict Content-Security-Policy is unchanged.
+- **Shape** — organic radii, pill controls, floating "island" sections, morphing blob shapes and soft, warm,
+  layered shadows.
+- **Motion** — a small vanilla toolkit in `public/js/ui.js` (no libraries):
+  - `PawPal.reveal()`: staggered scroll reveals.
+  - `PawPal.hscroll()`: the home page's pet rail. It pins on desktop and vertical scrolling moves it sideways; on touch
+    devices it becomes a swipe carousel.
+  - `PawPal.carousel()`: a momentum carousel with mouse-drag inertia, buttons and dots.
+  - `PawPal.countUp()`: animated stat numbers.
+  - `PawPal.accordion()`: smooth FAQ open and close.
+
+  Every effect is progressive. Content is readable without JavaScript, and `prefers-reduced-motion` turns animation off.
+- **Interactions** — pet cards lift with a soft shadow on hover, filter chips show a check when selected, and the
+  favourite heart pops when tapped. The Adopt page also has a species category bar that stays in sync with the
+  Species filter.
+
 ## Security & data safety
 - bcrypt password hashes; signed JWT in an httpOnly, SameSite cookie (Secure in production); changing/resetting a
   password or changing access signs out other sessions.
