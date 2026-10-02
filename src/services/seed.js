@@ -5,7 +5,7 @@ const db = require('../db');
 const { newId, now } = require('../utils');
 const { calculateSuitabilityScore } = require('./scoring');
 const { templateDescription } = require('./ai');
-const { DEFAULT_SHELTERS, SCHEMA_VERSION, shelterFor } = require('./migrate');
+const { DEFAULT_SHELTERS, SCHEMA_VERSION, shelterFor, addExtraPets } = require('./migrate');
 const { parseProfile } = require('./matching');
 
 const img = (id, w = 1000, h = 800) => `https://images.unsplash.com/${id}?w=${w}&h=${h}&fit=crop&auto=format&q=80`;
@@ -80,7 +80,7 @@ const PETS = [
     traits: ['Loyal', 'Gentle', 'Affectionate'], energyLevel: 2, requiresYard: false, goodWithChildren: false, goodWithOtherPets: true,
     vaccinated: true, desexed: true, microchipped: true, idealHome: 'An adult household with a relaxed routine.',
     photos: [img('photo-1450778869180-41d0601e046e')] },
-  { name: 'Peanut', type: 'Other', breed: 'Syrian Hamster', age: 0, gender: 'Male', size: 'Small', colour: 'Golden', location: 'Osborne Park, WA', adoptionFee: 25,
+  { name: 'Peanut', type: 'Hamster', breed: 'Syrian Hamster', age: 0, gender: 'Male', size: 'Small', colour: 'Golden', location: 'Osborne Park, WA', adoptionFee: 25,
     traits: ['Curious', 'Quiet', 'Apartment Friendly'], energyLevel: 2, requiresYard: false, goodWithChildren: true, goodWithOtherPets: false, firstTimeFriendly: true,
     vaccinated: false, desexed: false, microchipped: false, idealHome: 'A calm indoor home with a large enclosure and gentle handling.',
     photos: [img('photo-1425082661705-1834bfd09dca')] },
@@ -168,6 +168,8 @@ async function seedIfEmpty({ force = false } = {}) {
     else if (['Approved', 'Meet & Greet', 'Adoption Scheduled'].includes(status) && pet.status === 'Available') pet.status = 'On Hold';
   }
   for (const pet of pets) await db.insert('pets', pet);
+  // Reptiles, birds, fish, hamsters, goats and cows (see extra-pets.js)
+  await addExtraPets(shelters, { createdBy: admin.id });
 
   // Enquiries and favourites
   const enquiries = [[2, 'Is Max okay being left alone for a few hours while I\'m at work?', 'Answered', 'He copes well with 4–5 hours once settled. We recommend a slow start with short absences.'],

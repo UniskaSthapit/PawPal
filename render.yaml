@@ -20,6 +20,8 @@ services:
         sync: false   # MongoDB Atlas connection string (required — Render's disk is wiped on redeploy)
       - key: ADMIN_EMAIL
         sync: false   # the owner's email — becomes the administrator and default sender
+      - key: CONTACT_EMAIL
+        sync: false   # public contact address (defaults to ADMIN_EMAIL)
       - key: BREVO_API_KEY
         sync: false   # email over HTTPS from a verified single sender (works with a Gmail address)
       - key: RESEND_API_KEY

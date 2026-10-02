@@ -33,6 +33,8 @@ module.exports = {
   brevoApiKey: env.BREVO_API_KEY || '',
   // The owner's address: becomes the administrator account on start-up and the default sender
   adminEmail: (env.ADMIN_EMAIL || '').trim().toLowerCase(),
+  // Public contact address shown on the site and on every shelter (defaults to the owner's address)
+  contactEmail: (env.CONTACT_EMAIL || env.ADMIN_EMAIL || 'pawpaladmin@gmail.com').trim().toLowerCase(),
   mailFrom: env.MAIL_FROM || (env.ADMIN_EMAIL ? `PawPal <${env.ADMIN_EMAIL.trim()}>` : 'PawPal <no-reply@pawpal.app>'),
 
   // AI — Anthropic is used when its key is set, otherwise OpenAI, then Google Gemini, otherwise

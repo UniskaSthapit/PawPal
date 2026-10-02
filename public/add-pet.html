@@ -5,14 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Add a pet — PawPal shelter portal</title>
   <meta name="description" content="Create or edit a pet listing.">
-  <meta name="theme-color" content="#221610">
+  <meta name="theme-color" content="#FBF6EE">
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
   <link rel="preload" href="fonts/fraunces-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="fonts/plus-jakarta-sans-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="css/pawpal.css?v=5">
-  <script src="js/api.js?v=5" defer></script>
-  <script src="js/ui.js?v=5" defer></script>
-  <script src="js/pages/add-pet.js?v=5" defer></script>
+  <link rel="stylesheet" href="css/pawpal.css?v=6">
+  <script src="js/api.js?v=6" defer></script>
+  <script src="js/ui.js?v=6" defer></script>
+  <script src="js/pages/add-pet.js?v=6" defer></script>
 </head>
 <body data-layout="staff" data-page="staff-addpet">
 <main id="main" tabindex="-1">
@@ -21,7 +21,7 @@
   <div class="stack" style="--stack:20px">
     <section class="card"><div class="card-head"><div><span class="src-label src-shelter"><span data-icon="eye"></span>Public</span><h2>Basics</h2></div></div><div class="card-body form-grid">
       <div class="field"><label for="name">Name *</label><input class="input" id="name" maxlength="40" required></div>
-      <div class="field"><label for="type">Species *</label><select class="select" id="type"><option>Dog</option><option>Cat</option><option>Rabbit</option><option>Bird</option><option>Guinea Pig</option><option>Other</option></select></div>
+      <div class="field"><label for="type">Species *</label><select class="select" id="type"><option>Dog</option><option>Cat</option><option>Rabbit</option><option>Bird</option><option>Guinea Pig</option><option>Hamster</option><option>Reptile</option><option>Fish</option><option value="Farm Animal">Farm animal (goat, cow…)</option><option>Other</option></select></div>
       <div class="field"><label for="breed">Breed *</label><input class="input" id="breed" maxlength="60" placeholder="e.g. Kelpie cross or Mixed breed" required></div>
       <div class="field"><label for="colour">Colour</label><input class="input" id="colour" maxlength="40"></div>
       <div class="field"><label for="age">Age (years)</label><input class="input" id="age" type="number" min="0" max="30" value="1"><span class="hint">Use 0 for under one year.</span></div>

@@ -2,7 +2,8 @@
 // ui.js — shared layout and helpers used by every page.
 // Pages declare <body data-layout="public|account|staff" data-page="…"> and put content in <main id="main">.
 // This script renders the header, footer and dashboard sidebars, and provides toasts, modals,
-// favourites, pet cards and formatting helpers.
+// favourites, pet cards, formatting helpers and the shared motion toolkit
+// (scroll reveals, momentum carousels, scroll-driven horizontal rails, count-ups, smooth accordions).
 // ============================================================
 const PawPal = (() => {
   const $ = (sel, root = document) => root.querySelector(sel);
@@ -12,6 +13,7 @@ const PawPal = (() => {
   const layout = document.body.dataset.layout || 'public';
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const hasShell = layout === 'account' || layout === 'staff';
+  const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
 
   // ---------- formatting ----------
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -37,7 +39,8 @@ const PawPal = (() => {
   const money = (n) => (n ? `$${Number(n).toLocaleString('en-AU')}` : 'Contact shelter');
 
   // ---------- images ----------
-  const FALLBACK = { Dog: 'images/pets/dog-a.svg', Cat: 'images/pets/cat-a.svg', Rabbit: 'images/pets/rabbit-a.svg', Bird: 'images/pets/bird-a.svg', 'Guinea Pig': 'images/pets/small-a.svg', Other: 'images/pets/small-b.svg' };
+  const FALLBACK = { Dog: 'images/pets/dog-a.svg', Cat: 'images/pets/cat-a.svg', Rabbit: 'images/pets/rabbit-a.svg', Bird: 'images/pets/bird-a.svg', 'Guinea Pig': 'images/pets/small-a.svg',
+    Hamster: 'images/pets/small-c.svg', Reptile: 'images/pets/lizard-a.svg', Fish: 'images/pets/fish-a.svg', 'Farm Animal': 'images/pets/goat-a.svg', Other: 'images/pets/small-b.svg' };
   const PLACEHOLDER = 'images/pet-placeholder.svg';
   const photo = (pet, i = 0) => (pet?.photos && pet.photos[i]) || pet?.petPhoto || FALLBACK[pet?.type] || PLACEHOLDER;
   // Responsive Unsplash sizes; uploaded and local images are used as-is
@@ -129,6 +132,11 @@ const PawPal = (() => {
     minus: svg('<path d="M5 12h14"/>'),
     pause: svg('<path d="M9 5v14M15 5v14"/>'),
     play: svg('<path d="m7 4 13 8-13 8z"/>'),
+    bird: svg('<path d="M16 7h.01"/><path d="M3.4 18H12a8 8 0 0 0 8-8V7a4 4 0 0 0-7.28-2.3L2 20"/><path d="m20 7 2 .5-2 .5M10 18v3M14 17.75V21"/><path d="M7 18a6 6 0 0 0 3.84-10.61"/>'),
+    fish: svg('<path d="M6.5 12c.94-3.46 4.94-6 8.5-6 3.56 0 6.06 2.54 7 6-.94 3.47-3.44 6-7 6s-7.56-2.53-8.5-6Z"/><path d="M18 12v.5"/><path d="M7 10.67C7 8 5.58 5.97 2.73 5.5c-1 1.5-1 5 .23 6.5-1.24 1.5-1.24 5-.23 6.5C5.58 18.03 7 16 7 13.33"/>'),
+    turtle: svg('<path d="m12 10 2 4v3a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-3a8 8 0 1 0-16 0v3a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-3l2-4h4Z"/><path d="M4.82 7.9 8 10M15.18 7.9 12 10M16.93 10H20a2 2 0 0 1 0 4H2"/>'),
+    barn: svg('<path d="M3 21V10l9-6 9 6v11"/><path d="M8 21v-6h8v6"/><path d="m8 15 8 6M16 15l-8 6"/><path d="M10 10h4"/>'),
+    globe: svg('<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>'),
   };
   const icon = (name) => icons[name] || '';
 
@@ -244,7 +252,11 @@ const PawPal = (() => {
         writeLocal([...favIds]);
         toast(on ? `${name} saved on this device — log in to keep your favourites` : 'Removed from favourites', 'info');
       }
-      $$(`[data-fav="${CSS.escape(id)}"]`).forEach((b) => { b.setAttribute('aria-pressed', String(on)); b.classList.toggle('pop', on); });
+      $$(`[data-fav="${CSS.escape(id)}"]`).forEach((b) => {
+        b.setAttribute('aria-pressed', String(on));
+        b.classList.remove('pop');
+        if (on) { void b.offsetWidth; b.classList.add('pop'); } // restart the heart animation
+      });
       document.dispatchEvent(new CustomEvent('pawpal:fav', { detail: { id, on } }));
       return on;
     },
@@ -268,11 +280,12 @@ const PawPal = (() => {
     if (Number(pet.energyLevel) === 1) tags.push('Calm');
     return tags.slice(0, 3);
   }
-  function petCardHTML(pet, { match, reason } = {}) {
+  // `index` staggers the entrance animation when cards are rendered as a group
+  function petCardHTML(pet, { match, reason, index = 0 } = {}) {
     const fav = favIds.has(pet.id);
     const staff = isStaffUser(user);
     const img = photo(pet);
-    return `<article class="pet-card" data-id="${esc(pet.id)}">
+    return `<article class="pet-card" data-id="${esc(pet.id)}" style="--i:${index}">
       <div class="pet-card-media">
         <img src="${esc(sized(img, 800))}" ${srcset(img) ? `srcset="${srcset(img)}" sizes="(max-width: 680px) 100vw, 320px"` : ''} alt="${esc(pet.name)}, a ${esc(pet.breed)}" loading="lazy" decoding="async" data-fallback="${FALLBACK[pet.type] || PLACEHOLDER}"/>
         <div class="pet-card-flags">
@@ -288,6 +301,7 @@ const PawPal = (() => {
         ${reason ? `<div class="pet-card-reason">${esc(reason)}</div>` : ''}
         <div class="pet-card-tags">${petTags(pet).map((t) => `<span class="tag">${esc(t)}</span>`).join('')}</div>
       </div>
+      <span class="pet-card-go" aria-hidden="true">${icons.arrowRight}</span>
     </article>`;
   }
 
@@ -363,10 +377,10 @@ const PawPal = (() => {
     const f = document.createElement('footer');
     f.className = 'site-footer';
     f.innerHTML = `
-      ${layout === 'public' ? `<div class="footer-cta"><div class="container">
+      ${layout === 'public' && page !== 'home.html' ? `<div class="footer-cta"><div class="container"><div>
         <h2>Somewhere out there is a pet who fits your life.</h2>
         <div class="row"><a class="btn btn-primary btn-lg" href="ai-matching.html">${icons.sparkle}Find my PawPal</a><a class="btn btn-light btn-lg" href="adopt.html">Browse all pets</a></div>
-      </div></div>` : ''}
+      </div></div></div>` : ''}
       <div class="container">
         <div class="footer-main">
           <div class="footer-brand">
@@ -378,9 +392,10 @@ const PawPal = (() => {
               <a href="https://www.linkedin.com" target="_blank" rel="noopener" aria-label="PawPal on LinkedIn">${icons.linkedin}</a>
             </div>
           </div>
-          <div><h3>Adopt</h3><a href="adopt.html">All pets</a><a href="adopt.html?type=dog">Dogs</a><a href="adopt.html?type=cat">Cats</a><a href="adopt.html?type=other">Rabbits & small pets</a><a href="ai-matching.html">Find my PawPal</a></div>
+          <div><h3>Adopt</h3><a href="adopt.html">All pets</a><a href="adopt.html?type=dog">Dogs</a><a href="adopt.html?type=cat">Cats</a><a href="adopt.html?type=small">Rabbits & small pets</a><a href="adopt.html?type=bird">Birds</a><a href="adopt.html?type=reptile">Reptiles</a><a href="adopt.html?type=fish">Fish</a><a href="adopt.html?type=farm">Goats & cows</a></div>
           <div><h3>Help & advice</h3><a href="home.html#how">How adoption works</a><a href="home.html#faq">Adoption FAQ</a><a href="vet-finder.html">Find a vet</a><a href="ending-animal-cruelty.html">Report animal cruelty</a></div>
-          <div><h3>PawPal</h3><a href="about.html">About us</a><a href="about.html#stories">Rescue stories</a><a href="contact.html">Contact</a><a href="login.html?role=staff">Shelter staff login</a></div>
+          <div><h3>PawPal</h3><a href="about.html">About us</a><a href="about.html#stories">Rescue stories</a><a href="contact.html">Contact</a><a href="login.html?role=staff">Shelter staff login</a>
+            <a data-contact-email href="mailto:pawpaladmin@gmail.com">${icons.mail} pawpaladmin@gmail.com</a><a data-site-url href="home.html">${icons.globe} Website</a></div>
         </div>
         <p class="ack">PawPal acknowledges the Traditional Custodians of the lands on which we work and pay our respects to Elders past and present. Pet profiles, stories and people shown in this demo are illustrative.</p>
         <div class="footer-bottom"><span>© ${new Date().getFullYear()} PawPal. Because every paw matters.</span><span><a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a></span></div>
@@ -475,16 +490,200 @@ const PawPal = (() => {
     });
   }
 
-  // ---------- scroll reveal ----------
+  // ============================================================
+  // Motion toolkit
+  // Everything here is progressive: content is fully readable without JS, and every effect
+  // is skipped (final state rendered immediately) when the visitor prefers reduced motion.
+  // ============================================================
+  const canAnimate = !reduceMotion && 'IntersectionObserver' in window;
+  if (canAnimate) document.documentElement.classList.add('js-motion');
+  const clamp = (n, min, max) => Math.min(max, Math.max(min, n));
+
+  // ---------- scroll reveal: [data-reveal] (optionally ="scale" | "left" | "right") ----------
+  // Siblings revealed together are staggered by 80ms so groups "ripple" in.
   let revealObs;
   function reveal(root = document) {
     const items = [...root.querySelectorAll('[data-reveal]:not(.revealed)')];
     if (!items.length) return;
-    if (reduceMotion || !('IntersectionObserver' in window)) { items.forEach((el) => el.classList.add('revealed')); return; }
+    if (!canAnimate) { items.forEach((el) => el.classList.add('revealed')); return; }
     revealObs ||= new IntersectionObserver((entries, obs) => {
-      entries.forEach((en) => { if (en.isIntersecting) { en.target.classList.add('revealed'); obs.unobserve(en.target); } });
-    }, { rootMargin: '0px 0px -40px 0px', threshold: 0.05 });
-    items.forEach((el, i) => { el.style.transitionDelay = `${Math.min(i % 4, 3) * 70}ms`; revealObs.observe(el); });
+      entries.filter((en) => en.isIntersecting).forEach((en) => { en.target.classList.add('revealed'); obs.unobserve(en.target); });
+    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
+    items.forEach((el) => {
+      const siblings = [...el.parentElement.children].filter((c) => c.hasAttribute('data-reveal'));
+      el.style.setProperty('--rd', `${Math.min(siblings.indexOf(el), 5) * 80}ms`);
+      revealObs.observe(el);
+    });
+  }
+
+  // ---------- count-up numbers (stats) ----------
+  function countUp(el, to, { duration = 1400 } = {}) {
+    const final = Number(to) || 0;
+    const fmt = (n) => Math.round(n).toLocaleString('en-AU');
+    if (!canAnimate || final < 2) { el.textContent = fmt(final); return; }
+    el.textContent = '0';
+    const run = () => {
+      const start = performance.now();
+      const tick = (now) => {
+        const t = clamp((now - start) / duration, 0, 1);
+        el.textContent = fmt(final * (1 - Math.pow(1 - t, 4))); // ease-out quart
+        if (t < 1) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    };
+    const io = new IntersectionObserver(([en]) => { if (en.isIntersecting) { io.disconnect(); run(); } }, { threshold: 0.4 });
+    io.observe(el);
+  }
+
+  // ---------- momentum carousel ----------
+  // A native horizontal scroller, enhanced so a mouse can drag it with inertia (touch devices already
+  // have native momentum). Optional prev/next buttons ([data-prev]/[data-next]) and dots ([data-dots]).
+  function carousel(root) {
+    const track = $('.carousel-track, .rail', root);
+    if (!track || track.dataset.carousel) return;
+    track.dataset.carousel = '1';
+    const prev = $('[data-prev]', root); const next = $('[data-next]', root); const dots = $('[data-dots]', root);
+    const items = () => [...track.children];
+    const step = () => { const [a, b] = items(); return b ? b.offsetLeft - a.offsetLeft : track.clientWidth * 0.8; };
+
+    function sync() {
+      const max = track.scrollWidth - track.clientWidth - 2;
+      if (prev) prev.disabled = track.scrollLeft <= 2;
+      if (next) next.disabled = track.scrollLeft >= max;
+      if (dots) {
+        const n = items().length; const i = Math.round(track.scrollLeft / Math.max(1, step()));
+        if (dots.childElementCount !== n) dots.innerHTML = '<i></i>'.repeat(n);
+        [...dots.children].forEach((d, k) => d.classList.toggle('on', k === clamp(i, 0, n - 1)));
+      }
+    }
+    track.addEventListener('scroll', () => requestAnimationFrame(sync), { passive: true });
+    window.addEventListener('resize', sync);
+    prev?.addEventListener('click', () => track.scrollBy({ left: -step(), behavior: reduceMotion ? 'auto' : 'smooth' }));
+    next?.addEventListener('click', () => track.scrollBy({ left: step(), behavior: reduceMotion ? 'auto' : 'smooth' }));
+
+    // Settle on the nearest card after a drag or glide
+    const snapToNearest = () => {
+      const base = items()[0]?.offsetLeft || 0;
+      const target = items().map((c) => c.offsetLeft - base).reduce((best, x) => (Math.abs(x - track.scrollLeft) < Math.abs(best - track.scrollLeft) ? x : best), 0);
+      track.scrollTo({ left: target, behavior: reduceMotion ? 'auto' : 'smooth' });
+      setTimeout(() => track.classList.remove('is-gliding'), 450);
+    };
+
+    // Mouse drag with velocity tracking and exponential friction
+    let startX = 0; let startScroll = 0; let lastX = 0; let lastT = 0; let v = 0; let dragging = false; let down = false; let glide = 0;
+    track.addEventListener('pointerdown', (e) => {
+      if (e.pointerType !== 'mouse' || e.button !== 0) return;
+      cancelAnimationFrame(glide);
+      down = true; dragging = false; startX = lastX = e.clientX; startScroll = track.scrollLeft; lastT = performance.now(); v = 0;
+    });
+    window.addEventListener('pointermove', (e) => {
+      if (!down) return;
+      const dx = e.clientX - startX;
+      if (!dragging && Math.abs(dx) > 5) { dragging = true; track.classList.add('is-dragging', 'is-gliding'); }
+      if (!dragging) return;
+      e.preventDefault();
+      const now = performance.now();
+      v = 0.8 * ((lastX - e.clientX) / Math.max(1, now - lastT)) + 0.2 * v; // smoothed px/ms
+      lastX = e.clientX; lastT = now;
+      track.scrollLeft = startScroll - dx;
+    });
+    window.addEventListener('pointerup', () => {
+      if (!down) return;
+      down = false;
+      if (!dragging) return;
+      track.classList.remove('is-dragging');
+      // A drag must not also "click" the card under the cursor
+      track.addEventListener('click', (ev) => { ev.preventDefault(); ev.stopPropagation(); }, { capture: true, once: true });
+      if (reduceMotion) return snapToNearest();
+      let last = performance.now();
+      const frame = (now) => {
+        const dt = now - last; last = now;
+        track.scrollLeft += v * dt;
+        v *= Math.pow(0.94, dt / 16); // friction
+        if (Math.abs(v) > 0.03) glide = requestAnimationFrame(frame); else snapToNearest();
+      };
+      glide = requestAnimationFrame(frame);
+    });
+    track.addEventListener('dragstart', (e) => e.preventDefault());
+    sync();
+  }
+
+  // ---------- scroll-linked horizontal rail ----------
+  // As the section travels through the viewport, vertical scrolling glides the rail sideways (smoothed),
+  // so the pets drift past while the page keeps scrolling normally — it never pins or traps the scroll.
+  // The moment someone drags, swipes, uses the arrows or the keyboard, the rail is theirs to control.
+  function hscroll(section) {
+    const rail = $('.rail', section);
+    const bar = $('.hscroll-progress', section);
+    if (!rail) return;
+    let driven = canAnimate; let target = 0; let raf = 0;
+
+    const setProgress = () => {
+      if (!bar) return;
+      const max = rail.scrollWidth - rail.clientWidth;
+      const p = max > 0 ? clamp(rail.scrollLeft / max, 0, 1) : 0;
+      bar.style.setProperty('--p', p.toFixed(3));
+      const n = rail.children.length;
+      const label = $('[data-count]', bar);
+      if (label) label.textContent = `${String(Math.min(n, Math.round(p * (n - 1)) + 1)).padStart(2, '0')} / ${String(n).padStart(2, '0')}`;
+    };
+    // Ease the rail towards its target position each frame
+    const glide = () => {
+      raf = 0;
+      if (!driven) return;
+      const diff = target - rail.scrollLeft;
+      if (Math.abs(diff) < 0.5) { rail.scrollLeft = target; return; }
+      rail.scrollLeft += diff * 0.14;
+      raf = requestAnimationFrame(glide);
+    };
+    const onPageScroll = () => {
+      if (!driven) return;
+      const r = section.getBoundingClientRect();
+      const vh = window.innerHeight;
+      if (r.bottom < 0 || r.top > vh) return;
+      // 0 when the section's top enters the bottom of the screen, 1 when its bottom leaves the top
+      const p = clamp((vh - r.top) / (vh + r.height), 0, 1);
+      // Start moving once the heading is in view and finish a little before the section leaves
+      const eased = clamp((p - 0.25) / 0.55, 0, 1);
+      target = eased * (rail.scrollWidth - rail.clientWidth);
+      if (!raf) raf = requestAnimationFrame(glide);
+    };
+    const takeOver = () => {
+      if (!driven) return;
+      driven = false; cancelAnimationFrame(raf); raf = 0;
+      rail.classList.remove('is-driven');
+    };
+    if (driven) {
+      rail.classList.add('is-driven');
+      window.addEventListener('scroll', onPageScroll, { passive: true });
+      window.addEventListener('resize', onPageScroll);
+      ['pointerdown', 'touchstart', 'keydown'].forEach((ev) => rail.addEventListener(ev, takeOver, { passive: true }));
+      rail.addEventListener('wheel', (e) => { if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) takeOver(); }, { passive: true });
+      $$('[data-prev],[data-next]', section).forEach((b) => b.addEventListener('click', takeOver));
+      onPageScroll();
+    }
+    rail.addEventListener('scroll', () => requestAnimationFrame(setProgress), { passive: true });
+    carousel(section); // drag with inertia, arrow buttons
+    setProgress();
+    return { release: takeOver };
+  }
+  // ---------- smooth accordion for <details> ----------
+  function accordion(root) {
+    if (!canAnimate || !root.animate) return;
+    $$('details', root).forEach((d) => {
+      const summary = $('summary', d);
+      summary.addEventListener('click', (e) => {
+        e.preventDefault();
+        const from = d.offsetHeight;
+        if (d.open) {
+          const anim = d.animate({ height: [`${from}px`, `${summary.offsetHeight}px`] }, { duration: 280, easing: 'cubic-bezier(.22,.8,.24,1)' });
+          anim.onfinish = () => { d.open = false; };
+        } else {
+          d.open = true;
+          d.animate({ height: [`${from}px`, `${d.offsetHeight}px`] }, { duration: 380, easing: 'cubic-bezier(.22,.8,.24,1)' });
+        }
+      });
+    });
   }
 
   // ---------- cookie notice (essential cookies only) ----------
@@ -495,6 +694,14 @@ const PawPal = (() => {
     bar.innerHTML = '<p>PawPal only uses essential cookies to keep you signed in. <a href="privacy.html">Privacy</a></p><button class="btn btn-dark btn-sm">OK</button>';
     $('button', bar).addEventListener('click', () => { try { localStorage.setItem('pp_cookie_ok', '1'); } catch { /* ignore */ } bar.remove(); });
     document.body.appendChild(bar);
+  }
+
+  // ---------- contact links: [data-contact-email] and [data-site-url] use the server's CONTACT_EMAIL / APP_URL ----------
+  const siteConfig = PawPalAPI.get('/config').catch(() => ({}));
+  async function fillContactLinks(root = document) {
+    const c = await siteConfig;
+    if (c.contactEmail) $$('[data-contact-email]', root).forEach((a) => { a.href = `mailto:${c.contactEmail}`; a.lastChild.textContent = ` ${c.contactEmail}`; });
+    if (c.siteUrl) $$('[data-site-url]', root).forEach((a) => { a.href = c.siteUrl; a.title = c.siteUrl; });
   }
 
   // ---------- boot ----------
@@ -508,6 +715,7 @@ const PawPal = (() => {
     hydrateIcons();
     reveal();
     if (u) loadBell(false);
+    fillContactLinks();
     if (layout === 'public') cookieNotice();
     try {
       if (!sessionStorage.getItem('pp_visit') && layout === 'public') { sessionStorage.setItem('pp_visit', '1'); PawPalAPI.post('/events', { type: 'visit' }).catch(() => {}); }
@@ -517,5 +725,6 @@ const PawPal = (() => {
 
   return { $, $$, params, page, layout, esc, fmtDate, fmtDateTime, timeAgo, initials, ageText, ageLong, energyText, money, photo, sized, srcset, icons, icon, aiLabel,
     FALLBACK, PLACEHOLDER, statusBadge, statusClass, scoreBadge, toast, modal, confirm: confirmDialog, setBusy, errorHTML, emptyHTML, skeletonCards,
-    favs, petCardHTML, petTags, ready, booted, get user() { return user; }, isStaffUser, logout, loadBell, noteHTML, hydrateIcons, reveal, reduceMotion };
+    favs, petCardHTML, petTags, ready, booted, get user() { return user; }, isStaffUser, logout, loadBell, noteHTML, hydrateIcons, reveal, reduceMotion,
+    finePointer, countUp, carousel, hscroll, accordion, siteConfig, fillContactLinks };
 })();

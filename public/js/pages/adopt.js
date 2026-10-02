@@ -1,9 +1,10 @@
-// Pet discovery: filters synced to the URL, plus natural-language search through /api/ai/search.
+// Pet discovery: filters synced to the URL, a species category bar, animated filter chips,
+// plus natural-language search through /api/ai/search.
 (async () => {
   const { $, $$, esc, icons, petCardHTML, emptyHTML, errorHTML, skeletonCards, params } = PawPal;
   const PAGE = 12;
   const MULTI = ['age', 'size', 'energy'];
-  const LABELS = { type: { dog: 'Dogs', cat: 'Cats', other: 'Other pets' }, age: { baby: 'Under 1', young: '1–2 yrs', adult: '3–7 yrs', senior: '8+ yrs' },
+  const LABELS = { type: { dog: 'Dogs', cat: 'Cats', small: 'Small pets', bird: 'Birds', reptile: 'Reptiles', fish: 'Fish', farm: 'Goats & cows', other: 'Other pets' }, age: { baby: 'Under 1', young: '1–2 yrs', adult: '3–7 yrs', senior: '8+ yrs' },
     size: { small: 'Small', medium: 'Medium', large: 'Large' }, gender: { female: 'Female', male: 'Male' }, energy: { 1: 'Calm', 2: 'Moderate energy', 3: 'Very active' },
     apartment: 'Apartment OK', kids: 'Good with kids', otherPets: 'Good with pets', firstTime: 'First-time friendly', available: 'Hide on hold' };
   let state = readUrl();
@@ -32,6 +33,7 @@
       else if (el.type === 'checkbox') el.checked = !!state[k];
       else el.value = state[k] || '';
     });
+    $$('[data-cat]').forEach((b) => b.setAttribute('aria-pressed', String(!state.ask && (b.dataset.cat || '') === state.type)));
     $('#sort').value = state.sort;
     $('#nlInput').value = state.ask;
     const n = ['type', 'gender', 'location', 'breed'].filter((k) => state[k]).length + MULTI.reduce((t, k) => t + state[k].length, 0)
@@ -56,7 +58,7 @@
       $('#loadMore').hidden = true;
       return;
     }
-    grid.innerHTML = pets.slice(0, shown).map((p) => (p.pet ? petCardHTML(p.pet, { match: p.score, reason: p.summary }) : petCardHTML(p))).join('');
+    grid.innerHTML = pets.slice(0, shown).map((p, i) => (p.pet ? petCardHTML(p.pet, { match: p.score, reason: p.summary, index: i }) : petCardHTML(p, { index: i }))).join('');
     $('#loadMore').hidden = shown >= pets.length;
   }
 
@@ -140,7 +142,25 @@
       refresh();
     }
   });
-  $('#loadMore').addEventListener('click', () => { shown += PAGE; render(); });
+  // "Show more" appends the next page; only the new cards animate in
+  $('#loadMore').addEventListener('click', () => {
+    const from = shown; shown += PAGE;
+    $('#grid').insertAdjacentHTML('beforeend', pets.slice(from, shown).map((p, i) => (p.pet ? petCardHTML(p.pet, { match: p.score, reason: p.summary, index: i }) : petCardHTML(p, { index: i }))).join(''));
+    $('#loadMore').hidden = shown >= pets.length;
+  });
+  // Category bar mirrors the Species chips
+  $('.cat-bar').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-cat]');
+    if (!b) return;
+    state.type = b.dataset.cat; state.ask = '';
+    refresh();
+  });
+  // Give a selected chip a little "pop" so the change is felt
+  $('#filters').addEventListener('click', (e) => {
+    const chip = e.target.closest('.chip[data-f]');
+    if (!chip) return;
+    requestAnimationFrame(() => { chip.classList.remove('pop'); if (chip.getAttribute('aria-pressed') === 'true') { void chip.offsetWidth; chip.classList.add('pop'); } });
+  });
   // Mobile filter drawer
   const openF = () => { document.body.classList.add('filters-open'); $('#closeFilters').style.display = 'grid'; $('#closeFilters').focus(); };
   const closeF = () => { document.body.classList.remove('filters-open'); $('#closeFilters').style.display = 'none'; };
