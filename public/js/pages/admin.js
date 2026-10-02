@@ -15,11 +15,12 @@
     users = r.users; roles = r.roles;
     $('#roleTabs').innerHTML = [['', 'All'], ...roles.map((x) => [x.id, x.label])].map(([k, l]) => `<button class="tab" role="tab" data-role="${k}" aria-selected="${roleTab === k}">${esc(l)}</button>`).join('');
     $('#users').innerHTML = users.map((x) => `<tr data-user="${esc(x.id)}">
-      <td class="cell-first"><div class="cell-pet"><span class="avatar">${esc(PawPal.initials(x.name))}</span><div><b>${esc(x.name)}</b><span>${esc(x.email)}${x.role === 'user' ? ` · ${x.applications} applications` : ''}</span></div></div></td>
+      <td class="cell-first"><div class="cell-pet"><span class="avatar">${esc(PawPal.initials(x.name))}</span><div><b>${esc(x.name)}</b><span>${esc(x.email)}${x.role === 'user' ? ` · ${x.applications} applications` : ''}</span>${x.emailVerified ? '' : '<span class="badge badge-honey" style="margin-top:4px">Email not verified</span>'}</div></div></td>
       <td data-label="Role"><label class="sr-only" for="role-${esc(x.id)}">Role</label><select class="select" id="role-${esc(x.id)}" data-field="role" style="min-height:38px;width:auto" ${x.id === me.id ? 'disabled' : ''}>${roles.map((r2) => `<option value="${r2.id}" ${r2.id === x.role ? 'selected' : ''}>${esc(r2.label)}</option>`).join('')}</select></td>
       <td data-label="Shelter">${x.role === 'user' ? '<span class="muted small">—</span>' : `<label class="sr-only" for="sh-${esc(x.id)}">Shelter</label><select class="select" id="sh-${esc(x.id)}" data-field="shelterId" style="min-height:38px;width:auto;max-width:220px">${shelterOptions(x.shelterId)}</select>`}</td>
       <td data-label="Status">${x.id === me.id ? '<span class="badge badge-sage">You</span>' : `<div class="row" style="gap:6px"><button class="btn btn-sm ${x.active ? '' : 'btn-sage'}" data-toggle="${x.active ? 'off' : 'on'}">${x.active ? 'Deactivate' : 'Reactivate'}</button>
-        ${x.role !== 'user' && x.active && !x.lastLoginAt ? `<button class="btn btn-sm" data-reinvite>${icons.mail || ''}Resend invite</button>` : ''}</div>`}</td>
+        ${x.role !== 'user' && x.active && !x.lastLoginAt ? `<button class="btn btn-sm" data-reinvite>${icons.mail || ''}Resend invite</button>` : ''}
+        ${x.role === 'user' && x.active && !x.emailVerified ? `<button class="btn btn-sm" data-reverify>${icons.mail || ''}Resend verification</button>` : ''}</div>`}</td>
       <td data-label="Joined"><span class="small muted">${esc(fmtDate(x.createdAt))}${x.lastLoginAt ? `<br>seen ${esc(timeAgo(x.lastLoginAt))}` : ''}</span></td></tr>`).join('');
   }
   async function patchUser(id, body) {
@@ -28,6 +29,12 @@
   }
   $('#users').addEventListener('change', (e) => { const f = e.target.closest('[data-field]'); if (f) patchUser(f.closest('[data-user]').dataset.user, { [f.dataset.field]: f.value }); });
   $('#users').addEventListener('click', async (e) => {
+    const rv = e.target.closest('[data-reverify]');
+    if (rv) {
+      setBusy(rv, true, 'Sending…');
+      try { const r = await PawPalAPI.post(`/admin/users/${encodeURIComponent(rv.closest('[data-user]').dataset.user)}/verification`); toast(r.message); } catch (err) { toast(err.message, 'error'); }
+      setBusy(rv, false); return;
+    }
     const ri = e.target.closest('[data-reinvite]');
     if (ri) {
       setBusy(ri, true, 'Sending…');
