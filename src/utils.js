@@ -23,7 +23,8 @@ const toInt = (v, min, max, fallback) => {
   return Math.min(max, Math.max(min, n));
 };
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+// Local part: letters, digits and . _ % + - ' ; domain: labels of letters, digits and hyphens. Rejects commas, spaces and other characters email providers refuse.
+const EMAIL_RE = /^[A-Za-z0-9._%+'-]+@[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?)*\.[A-Za-z]{2,}$/;
 const isEmail = (v) => EMAIL_RE.test(String(v || '').trim());
 
 // At least 8 characters with at least one letter and one number
