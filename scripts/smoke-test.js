@@ -196,9 +196,15 @@ const mailFor = async (anon, email, type) => (await anon('GET', `/api/dev/emails
   r = await adopter('POST', '/api/applications', { ...form, declaration: true });
   check('Application is submitted', r.status === 201 && r.body.application.status === 'Submitted');
   check('Adopter does not see the suitability score', !('score' in r.body.application));
+  check('Application confirmation is emailed to the applicant', r.body.email?.sent?.includes(email) && Boolean(await mailFor(anon, email, 'application')));
   const appId = r.body.application.id;
   r = await adopter('POST', '/api/applications', { ...form, declaration: true });
   check('Duplicate open application is blocked', r.status === 409);
+  const otherPet = (await anon('GET', '/api/pets')).body.pets.find((p) => p.id !== max.id && p.status === 'Available');
+  const altEmail = `alt${Date.now()}@example.com`;
+  r = await adopter('POST', '/api/applications', { ...form, petId: otherPet.id, email: altEmail, declaration: true });
+  check('Confirmation goes to both the form email and the account email', r.status === 201 && r.body.email.sent.length === 2 && Boolean(await mailFor(anon, altEmail, 'application')));
+  await adopter('POST', `/api/applications/${r.body.application.id}/withdraw`);
 
   console.log('\nShelter staff');
   r = await staff('POST', '/api/auth/login', { email: 'staff@pawpal.com', password: 'Staff@123', role: 'staff' });
@@ -216,6 +222,7 @@ const mailFor = async (anon, email, type) => (await anon('GET', `/api/dev/emails
   const others = (await admin('GET', `/api/applications?petId=${max.id}`)).body.applications.filter((a) => a.id !== appId && !['Declined', 'Adopted', 'Withdrawn'].includes(a.status));
   r = await admin('PATCH', `/api/applications/${appId}/status`, { status: 'Under Review' });
   check('Status → Under Review', r.status === 200 && r.body.application.status === 'Under Review');
+  check('Status change is emailed and reported to staff', r.body.emailSent === true && /We emailed/.test(r.body.message) && Boolean(await mailFor(anon, email, 'status-update')));
   r = await admin('PATCH', `/api/applications/${appId}/status`, { status: 'Info Requested' });
   check('Info request needs a message', r.status === 400);
   r = await admin('PATCH', `/api/applications/${appId}/status`, { status: 'Info Requested', message: 'Please send your landlord approval.' });

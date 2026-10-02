@@ -20,6 +20,20 @@ const forApplicant = (a) => ({ id: a.id, petId: a.petId, petName: a.petName, pet
   shelterId: a.shelterId || null, answers: { livingType: a.livingType, ownership: a.ownership, activityLevel: a.activityLevel, hoursAlone: a.hoursAlone,
     hasChildren: a.hasChildren, hasOtherPets: a.hasOtherPets, experience: a.experience, motivation: a.motivation } });
 
+// Emails the applicant at the address on their application and, if different, their account email,
+// and reports what happened so the person who triggered it can see whether it went out.
+async function emailApplicant(kind, app, ...args) {
+  const account = app.userId ? await db.findOne('users', { id: app.userId }) : null;
+  const to = [...new Set([app.email, account?.email].map((e) => String(e || '').toLowerCase()).filter(isEmail))];
+  const results = [];
+  for (const email of to) {
+    try { results.push(await emails[kind]({ ...app, email }, ...args)); } catch (err) { results.push({ status: 'failed', error: err.message }); }
+  }
+  const sent = to.filter((_, i) => results[i].status === 'sent');
+  return { to, sent, error: results.find((r) => r.status !== 'sent')?.error || null };
+}
+const emailNote = (r) => (r.sent.length ? ` We emailed ${r.sent.join(' and ')}.` : r.to.length ? ` The email to ${r.to.join(' and ')} could not be sent (${r.error}).` : '');
+
 // Optional sections the shelter likes to have — used for "incomplete application" reporting
 const missingSections = (a) => [!a.phone && 'phone', !a.address && 'address', !a.experienceDetails && 'experience details',
   a.ownership === 'Rent' && !a.landlordPermission && 'landlord permission', !a.workSchedule && 'work schedule'].filter(Boolean);
@@ -71,8 +85,8 @@ router.post('/', requireAdopter, asyncHandler(async (req, res) => {
   if (!req.user.phone && form.phone) await db.update('users', req.user.id, { phone: form.phone });
   await notify(req.user.id, { type: 'application', title: 'Application submitted', message: `Your application for ${pet.name} has been sent to the shelter.`, link: `my-applications.html?id=${app.id}` });
   await notifyStaff(app.shelterId, { title: `New application for ${pet.name}`, message: `${form.name} applied to adopt ${pet.name}.`, link: `applications.html?id=${app.id}` });
-  emails.applicationReceived(app).catch(() => {});
-  res.status(201).json({ application: forApplicant(app), message: 'Application submitted.' });
+  const mail = await emailApplicant('applicationReceived', app);
+  res.status(201).json({ application: forApplicant(app), email: mail, message: `Application submitted.${mail.sent.length ? ` A confirmation is on its way to ${mail.sent.join(' and ')}.` : ''}` });
 }));
 
 // ---- Adopter: my applications ----
@@ -112,13 +126,15 @@ router.post('/:id/messages', requireAuth, asyncHandler(async (req, res) => {
     patch.history = [...app.history, { status: 'Under Review', at: now(), by: 'Applicant', note: 'Applicant provided more information.' }];
   }
   const updated = await db.update('applications', app.id, patch);
+  let mail = null;
   if (staff) {
     await notify(app.userId, { type: 'info', title: `Message about ${app.petName}`, message: text.slice(0, 140), link: `my-applications.html?id=${app.id}` });
-    emails.shelterMessage(updated, text).catch(() => {});
+    mail = await emailApplicant('shelterMessage', updated, text);
   } else {
     await notifyStaff(app.shelterId, { title: `Reply from ${app.name}`, message: `${app.petName}: ${text.slice(0, 120)}`, link: `applications.html?id=${app.id}` });
   }
-  res.json({ application: staff ? updated : forApplicant(updated), message: patch.status ? 'Thanks — your reply was sent and your application is back under review.' : 'Message sent.' });
+  res.json({ application: staff ? updated : forApplicant(updated), ...(mail ? { email: mail, emailSent: mail.sent.length > 0 } : {}),
+    message: patch.status ? 'Thanks — your reply was sent and your application is back under review.' : `Message sent.${mail ? emailNote(mail) : ''}` });
 }));
 
 // ---- Staff: list ----
@@ -188,8 +204,7 @@ router.patch('/:id/status', requireStaff, asyncHandler(async (req, res) => {
   if (note) patch.messages = [...(app.messages || []), { id: newId('msg'), from: 'staff', name: req.user.name, text: note, at }];
   const updated = await db.update('applications', app.id, patch);
 
-  if (status === 'Adopted') emails.adoptionComplete(updated).catch(() => {});
-  else emails.statusChanged(updated, note).catch(() => {});
+  const mail = await emailApplicant(status === 'Adopted' ? 'adoptionComplete' : 'statusChanged', updated, ...(status === 'Adopted' ? [] : [note]));
   const when = appointmentAt ? new Date(appointmentAt).toLocaleString('en-AU', { dateStyle: 'medium', timeStyle: 'short' }) : '';
   await notify(app.userId, { type: STATUS_NOTE_TYPE[status] || 'status', title: `${app.petName}: ${status}`,
     message: APP_NEEDS_DATE.includes(status) ? `${status} booked for ${when}.` : status === 'Info Requested' ? 'The shelter needs more information — tap to reply.' : APP_STATUS_INFO[status],
@@ -203,7 +218,7 @@ router.patch('/:id/status', requireStaff, asyncHandler(async (req, res) => {
     for (const o of others) {
       const closedApp = await db.update('applications', o.id, { status: 'Declined', updatedAt: at,
         history: [...o.history, { status: 'Declined', at, by: 'PawPal (automatic)', note: `${app.petName} was adopted by another applicant.` }] });
-      emails.adoptionClosed(closedApp).catch(() => {});
+      await emailApplicant('adoptionClosed', closedApp);
       await notify(o.userId, { type: 'declined', title: `${app.petName} has found a home`, message: 'This application was closed automatically. PawPal can suggest other pets for you.', link: 'ai-matching.html' });
       closed++;
     }
@@ -217,9 +232,9 @@ router.patch('/:id/status', requireStaff, asyncHandler(async (req, res) => {
     await releasePetIfIdle(app.petId);
   }
 
-  res.json({ application: updated, closedOthers: closed,
-    message: status === 'Adopted' ? `Adoption complete.${closed ? ` ${closed} other application${closed > 1 ? 's were' : ' was'} closed and notified.` : ''}`
-      : `Status updated to ${status}. The applicant has been notified by email and in the app.` });
+  res.json({ application: updated, closedOthers: closed, email: mail, emailSent: mail.sent.length > 0,
+    message: (status === 'Adopted' ? `Adoption complete.${closed ? ` ${closed} other application${closed > 1 ? 's were' : ' was'} closed and notified.` : ''}`
+      : `Status updated to ${status}. The applicant was notified in the app.`) + emailNote(mail) });
 }));
 
 router.patch('/:id/notes', requireStaff, asyncHandler(async (req, res) => {
