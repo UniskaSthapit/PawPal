@@ -302,6 +302,14 @@ const mailFor = async (anon, email, type) => (await anon('GET', `/api/dev/emails
   r = await admin('POST', '/api/admin/shelters', { name: 'PawPal Adelaide', suburb: 'Norwood', state: 'SA' });
   check('Admin can add a shelter', r.status === 201);
   const shelterId = r.body.shelter.id;
+  r = await admin('POST', '/api/admin/users', { name: 'Typo Person', email: 'first,second@gmail.com', role: 'staff', shelterId });
+  check('Invites to malformed addresses are refused', r.status === 400);
+  const unverifiedEmail = `unverified${Date.now()}@example.com`;
+  await client()('POST', '/api/auth/register', { name: 'Not Yet Verified', email: unverifiedEmail, password: 'Paws12345' });
+  const unverified = (await admin('GET', `/api/admin/users?q=${encodeURIComponent(unverifiedEmail)}`)).body.users[0];
+  r = await admin('POST', `/api/admin/users/${unverified.id}/verification`);
+  const verifyMails = (await anon('GET', `/api/dev/emails?to=${encodeURIComponent(unverifiedEmail)}`)).body.emails.filter((m) => m.type === 'verification');
+  check('Admin sees unverified accounts and can resend verification', unverified.emailVerified === false && r.status === 200 && verifyMails.length === 2);
   const staffEmail = `staff${Date.now()}@pawpal.com`;
   r = await admin('POST', '/api/admin/users', { name: 'New Staffer', email: staffEmail, role: 'staff', shelterId });
   check('Admin can invite staff', r.status === 201 && r.body.emailSent === true);

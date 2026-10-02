@@ -51,6 +51,18 @@ router.post('/users', asyncHandler(async (req, res) => {
   res.status(201).json({ user: publicUser(user), emailSent: r.sent, message: inviteMessage(name, r) });
 }));
 
+// Re-sends the "verify your email" link to an adopter who hasn't verified yet
+router.post('/users/:id/verification', asyncHandler(async (req, res) => {
+  const user = await db.findOne('users', { id: req.params.id });
+  if (!user) throw new HttpError(404, 'User not found.');
+  if (user.emailVerified) throw new HttpError(400, 'This email address is already verified.');
+  const token = randomToken();
+  await db.update('users', user.id, { verifyTokenHash: hashToken(token), verifyTokenExpires: Date.now() + 24 * 60 * 60 * 1000 });
+  const mail = await emails.verify(user, `${config.appUrl}/verify.html?token=${token}`);
+  if (mail.status !== 'sent') return res.status(502).json({ error: `The verification email to ${user.email} could not be sent (${mail.error || 'provider error'}).` });
+  res.json({ message: `Verification email sent to ${user.email}.` });
+}));
+
 router.post('/users/:id/invite', asyncHandler(async (req, res) => {
   const user = await db.findOne('users', { id: req.params.id });
   if (!user) throw new HttpError(404, 'User not found.');
