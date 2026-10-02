@@ -7,14 +7,35 @@
    On first start PawPal loads demo data into an empty database, or upgrades an existing PawPal database in place.
 
 ## 2. Owner account and email (required)
-PawPal sends from your own address — **pawpaladmin@gmail.com** — through **Brevo** (HTTPS, so it works on
-Render's free plan, which blocks SMTP; Resend can't be used because it needs a domain you own).
+Set `ADMIN_EMAIL=pawpaladmin@gmail.com`. On start-up PawPal makes this account the administrator and emails it a
+link to choose a password (valid 24 hours; afterwards use *Forgot password*).
+
+PawPal sends from that address over HTTPS (Render's free plan blocks SMTP). The first configured option is used.
+
+### Option A — Gmail API (recommended)
+Google sends the mail itself, so it passes Gmail's checks and lands in inboxes. Limit: about 500 emails a day.
+1. https://console.cloud.google.com → create a project (e.g. "PawPal").
+2. **APIs & Services → Library → Gmail API → Enable**.
+3. **APIs & Services → OAuth consent screen** (Google Auth Platform): app name "PawPal", user support email and
+   developer contact `pawpaladmin@gmail.com`, audience **External**. Under **Audience**, click **Publish app**
+   (status *In production*). Apps left in *Testing* have refresh tokens that expire after 7 days.
+4. **Clients → Create client → Web application**. Under *Authorised redirect URIs* add
+   `https://developers.google.com/oauthplayground`. Copy the **Client ID** and **Client secret**.
+5. Open https://developers.google.com/oauthplayground → gear icon → tick **Use your own OAuth credentials** →
+   paste the Client ID and secret. In *Step 1* type the scope `https://www.googleapis.com/auth/gmail.send`,
+   click **Authorize APIs** and sign in as `pawpaladmin@gmail.com` (Google warns the app isn't verified —
+   choose *Advanced → Go to PawPal*, it's your own app). In *Step 2* click **Exchange authorization code for
+   tokens** and copy the **Refresh token**.
+6. In Render set `GMAIL_CLIENT_ID`, `GMAIL_CLIENT_SECRET` and `GMAIL_REFRESH_TOKEN`. The startup log shows
+   `Email: Gmail API`, and `/api/config` shows `"emailMode":"gmail"`. Other email keys can stay; Gmail is used first.
+
+If emails start failing with `invalid_grant`, the token was revoked (e.g. the Google password changed) — repeat
+step 5 and update `GMAIL_REFRESH_TOKEN`.
+
+### Option B — Brevo
 1. Create a free account at https://www.brevo.com (300 emails/day).
 2. **Senders & IPs → Senders → Add a sender** → `pawpaladmin@gmail.com` → click the confirmation email Brevo sends.
 3. **SMTP & API → API keys → Generate a new API key** → put it in `BREVO_API_KEY`.
-4. Set `ADMIN_EMAIL=pawpaladmin@gmail.com`. On start-up PawPal makes this account the administrator and emails
-   it a link to choose a password (valid 24 hours; afterwards use *Forgot password*). `MAIL_FROM` defaults to
-   `PawPal <pawpaladmin@gmail.com>`.
 
 Deliverability tip: mail sent "from" a Gmail address by another service can land in spam for some recipients.
 If you later buy a domain, verify it in Brevo (or Resend) and switch `MAIL_FROM` to e.g. `hello@yourdomain.com`.
@@ -39,7 +60,7 @@ If several keys are set, the order is Anthropic → OpenAI → Gemini. The start
 ## 5. Deploy on Render
 1. Push this repo to GitHub (`.env` is git-ignored).
 2. Render → **New + → Blueprint** → choose the repo. `render.yaml` creates the service and generates `JWT_SECRET`.
-3. Fill in `APP_URL` (your Render URL), `MONGODB_URI`, `ADMIN_EMAIL`, `BREVO_API_KEY`, your AI key (`GEMINI_API_KEY` or `ANTHROPIC_API_KEY`), and any optional keys.
+3. Fill in `APP_URL` (your Render URL), `MONGODB_URI`, `ADMIN_EMAIL`, the `GMAIL_*` values (or `BREVO_API_KEY`), your AI key (`GEMINI_API_KEY` or `ANTHROPIC_API_KEY`), and any optional keys.
 4. After the first deploy, fix `APP_URL` if the real URL differs, then redeploy.
 
 ## 6. After going live

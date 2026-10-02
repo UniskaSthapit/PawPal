@@ -112,7 +112,7 @@ async function start() {
   app.listen(config.port, () => {
     console.log(`\n🐾 PawPal is running at ${config.appUrl}`);
     console.log(`   Database: ${db.name}${seeded ? ' (demo data loaded)' : migrated ? ' (data upgraded to the latest schema)' : ''}`);
-    console.log(`   Email:    ${{ resend: 'Resend API', brevo: 'Brevo API', smtp: 'SMTP ' + config.smtp.host, dev: 'dev mailbox → ' + config.appUrl + '/dev-mailbox.html' }[emailMode]}${emailMode !== 'dev' ? ` (from ${config.mailFrom})` : ''}`);
+    console.log(`   Email:    ${{ gmail: 'Gmail API', resend: 'Resend API', brevo: 'Brevo API', smtp: 'SMTP ' + config.smtp.host, dev: 'dev mailbox → ' + config.appUrl + '/dev-mailbox.html' }[emailMode]}${emailMode !== 'dev' ? ` (from ${config.mailFrom})` : ''}`);
     console.log(`   SMS:      ${{ twilio: 'Twilio', dev: 'dev SMS log → ' + config.appUrl + '/dev-mailbox.html', disabled: 'not configured (phone verification unavailable)' }[smsMode]}`);
     console.log(`   AI:       ${llm.providerLabel}`);
     console.log(`   Maps:     ${config.mapsKey ? 'Google Places API' : 'keyless Google Maps embed'}`);
