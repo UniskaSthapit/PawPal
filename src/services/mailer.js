@@ -59,8 +59,8 @@ function layout({ heading, body, buttonText, buttonUrl }) {
     <table role="presentation" cellspacing="0" cellpadding="0" style="margin:28px 0 8px"><tr><td style="border-radius:999px;background:#C4452A">
       <a href="${buttonUrl}" style="display:inline-block;padding:14px 28px;color:#ffffff;font-weight:700;text-decoration:none;font-size:15px;border-radius:999px">${escapeHtml(buttonText)}</a>
     </td></tr></table>
-    <p style="font-size:12px;color:#7A6557;margin:16px 0 0">Button not working? Paste this link into your browser:<br>
-      <a href="${buttonUrl}" style="color:#A8361E;word-break:break-all">${buttonUrl}</a></p>` : '';
+    <p style="font-size:12px;color:#7A6557;margin:16px 0 0">Button not working? Copy this address into your browser:<br>
+      <span style="display:inline-block;margin-top:6px;padding:8px 10px;background:#FBF4EC;border-radius:6px;color:#2A1B12;font-family:Menlo,Consolas,monospace;font-size:12px;word-break:break-all">${escapeHtml(buttonUrl)}</span></p>` : '';
   return `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"></head>
   <body style="margin:0;background:#F6EFE6;font-family:'Helvetica Neue',Arial,sans-serif;-webkit-font-smoothing:antialiased">
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#F6EFE6"><tr><td align="center" style="padding:32px 16px">
