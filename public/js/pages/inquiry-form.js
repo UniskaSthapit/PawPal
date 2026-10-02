@@ -150,7 +150,7 @@
       try { localStorage.removeItem(DRAFT); } catch { /* ignore */ }
       $('#applyForm').innerHTML = `<div class="card-body center" style="padding:48px 24px">
         <div class="e-icon" style="width:72px;height:72px;margin:0 auto 18px;border-radius:20px;background:var(--sage-soft);color:var(--sage);display:grid;place-items:center">${icons.checkCircle}</div>
-        <h2 class="h2">Application sent!</h2><p class="lead" style="margin:12px auto 24px">The team caring for ${esc(pet.name)} will review it — usually within 2–3 business days. We've emailed you a copy, and you can follow every step on your timeline.</p>
+        <h2 class="h2">Application sent!</h2><p class="lead" style="margin:12px auto 24px">The team caring for ${esc(pet.name)} will review it — usually within 2–3 business days. ${res.email?.sent?.length ? `We've emailed a copy to <b>${esc(res.email.sent.join(' and '))}</b> (check your spam folder if you can't see it), and you` : 'You'} can follow every step on your timeline.</p>
         <div class="row" style="justify-content:center"><a class="btn btn-primary btn-lg" href="my-applications.html?id=${encodeURIComponent(res.application.id)}">View my timeline</a><a class="btn btn-lg" href="adopt.html">Keep browsing</a></div></div>`;
       $('#applyForm svg').style.cssText = 'width:34px;height:34px';
     } catch (err) {
