@@ -3,7 +3,8 @@
 const express = require('express');
 const db = require('../db');
 const { requireStaff, isStaff, shelterScope, inScope } = require('../middleware/auth');
-const { PET_TYPES, PET_SIZES, PET_STATUSES, PUBLIC_PET_STATUSES } = require('../constants');
+const { PET_TYPES, PET_SIZES, PET_STATUSES, PUBLIC_PET_STATUSES, TYPE_GROUPS } = require('../constants');
+const config = require('../config');
 const { notify } = require('../services/notify');
 const { storeDataUrl } = require('./images');
 const { newId, now, asyncHandler, clean, toBool, toInt, HttpError } = require('../utils');
@@ -19,7 +20,7 @@ const toPublic = (pet) => {
 };
 
 const publicShelter = (s) => s && ({ id: s.id, name: s.name, suburb: s.suburb, state: s.state, address: s.address,
-  phone: s.phone, email: s.email, hours: s.hours, about: s.about });
+  phone: s.phone, email: s.email, hours: s.hours, about: s.about, website: config.appUrl });
 
 // Age bands used by the filters
 const AGE_BANDS = { baby: [0, 0], young: [1, 2], adult: [3, 7], senior: [8, 40] };
@@ -79,6 +80,7 @@ function sortPets(list, sort) {
 const matchesType = (pet, type) => {
   if (!type) return true;
   if (type === 'other') return !['Dog', 'Cat'].includes(pet.type);
+  if (TYPE_GROUPS[type]) return TYPE_GROUPS[type].includes(pet.type);
   return pet.type.toLowerCase() === type;
 };
 

@@ -5,15 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Contact PawPal</title>
   <meta name="description" content="Contact the PawPal team about a pet, an application, fostering or volunteering.">
-  <meta name="theme-color" content="#221610">
+  <meta name="theme-color" content="#FBF6EE">
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
   <link rel="preload" href="fonts/fraunces-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="fonts/plus-jakarta-sans-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="css/pawpal.css?v=5">
-  <script src="js/api.js?v=5" defer></script>
-  <script src="js/ui.js?v=5" defer></script>
-  <script src="js/chat.js?v=5" defer></script>
-  <script src="js/pages/contact.js?v=5" defer></script>
+  <link rel="stylesheet" href="css/pawpal.css?v=6">
+  <script src="js/api.js?v=6" defer></script>
+  <script src="js/ui.js?v=6" defer></script>
+  <script src="js/chat.js?v=6" defer></script>
+  <script src="js/pages/contact.js?v=6" defer></script>
 </head>
 <body data-layout="public" data-page="contact">
 <main id="main" tabindex="-1">
@@ -36,6 +36,10 @@
   </form>
   <div class="stack" style="--stack:16px">
     <div class="alert alert-warn"><span data-icon="alert"></span><div><b>Found an injured or stray animal?</b> Call your nearest shelter below, your local council, or a vet — don't wait for an email reply.</div></div>
+    <div class="card card-pad"><div class="shelter-card"><span class="s-ic" style="background:var(--brand-tint);color:var(--brand)" data-icon="mail"></span><div>
+      <h3 style="font-size:19px">Email the PawPal team</h3><p class="small muted">Prefer your own email app? Write to us directly.</p>
+      <dl class="kv small" style="margin-top:10px"><dt>Email</dt><dd><a data-contact-email href="mailto:pawpaladmin@gmail.com"> pawpaladmin@gmail.com</a></dd>
+        <dt>Website</dt><dd><a data-site-url href="home.html" target="_blank" rel="noopener"> Visit PawPal</a></dd></dl></div></div></div>
     <div id="shelterList" class="stack" style="--stack:12px"><div class="skeleton" style="height:140px"></div></div>
   </div>
 </div></section>
