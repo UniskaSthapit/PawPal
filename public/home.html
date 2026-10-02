@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>PawPal — Adopt a pet that fits your life</title>
+  <title>PawPal — Find Your Perfect Companion</title>
   <meta name="description" content="Adopt a rescue pet with PawPal. Tell us about your lifestyle and PawPal's matching suggests compatible dogs, cats and small pets from partner shelters across Australia.">
   <meta name="theme-color" content="#FBF6EE">
-  <meta property="og:title" content="PawPal — Adopt a pet that fits your life">
+  <meta property="og:title" content="PawPal — Find Your Perfect Companion">
   <meta property="og:description" content="Rescue dogs, cats and small pets from shelters across Australia. See who suits your home and apply online.">
   <meta property="og:type" content="website">
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
@@ -29,30 +29,32 @@
     <div class="container hero-grid">
       <div class="hero-copy">
         <span class="hero-eyebrow" data-hero style="--n:0"><span class="live">LIVE</span><span id="heroCount">Pets waiting for a home near you</span></span>
-        <h1 class="hero-h1" id="heroTitle" data-hero style="--n:1">Find the companion who <em>fits your life.</em></h1>
-        <p class="hero-sub" data-hero style="--n:2">Rescue dogs, cats, birds, reptiles, fish and farm animals from partner shelters across Australia — matched to your home, your routine and the way you live.</p>
+        <h1 class="hero-h1" id="heroTitle" data-hero style="--n:1">Find Your Perfect <em>Companion</em></h1>
+        <p class="hero-sub" data-hero style="--n:2">Connect with shelter pets in your area — dogs, cats, birds, reptiles, fish and farm animals — and let PawPal help you find the one who belongs with you.</p>
+        <p class="hero-motto" data-hero style="--n:2">Because Every Paw Matters</p>
 
         <form class="hero-searchbar" id="heroSearch" role="search" data-hero style="--n:3">
           <span class="hero-searchbar-icon" data-icon="search"></span>
           <label class="sr-only" for="heroQ">Search pets by name, breed or location, or describe what you're looking for</label>
-          <input id="heroQ" type="text" maxlength="300" autocomplete="off" placeholder="Try “calm dog for an apartment”">
+          <input id="heroQ" type="text" maxlength="300" autocomplete="off" placeholder="Search pets by name, breed, or location…">
           <button class="hero-search-clear" id="heroClear" type="button" aria-label="Clear search" hidden><span data-icon="close"></span></button>
           <button class="hero-search-btn" type="submit"><span>Search</span><span data-icon="arrowRight"></span></button>
         </form>
 
         <div class="hero-pills" aria-label="Quick filters" data-hero style="--n:4">
-          <span class="hero-pills-label">Popular:</span>
+          <span class="hero-pills-label">Filter:</span>
           <a class="hero-pill-link" href="adopt.html?type=dog"><span data-icon="dog"></span>Dogs</a>
           <a class="hero-pill-link" href="adopt.html?type=cat"><span data-icon="cat"></span>Cats</a>
-          <a class="hero-pill-link" href="adopt.html?type=small"><span data-icon="rabbit"></span>Small pets</a>
-          <a class="hero-pill-link" href="adopt.html?type=bird"><span data-icon="bird"></span>Birds</a>
-          <a class="hero-pill-link" href="adopt.html?type=reptile"><span data-icon="turtle"></span>Reptiles</a>
-          <a class="hero-pill-link" href="adopt.html?type=farm"><span data-icon="barn"></span>Goats &amp; cows</a>
+          <a class="hero-pill-link" href="adopt.html?type=other"><span data-icon="rabbit"></span>Other pets</a>
+          <a class="hero-pill-link" href="adopt.html?energy=3"><span data-icon="zap"></span>Active</a>
+          <a class="hero-pill-link" href="adopt.html?apartment=1"><span data-icon="building"></span>Apartment Friendly</a>
+          <a class="hero-pill-link" href="adopt.html?kids=1"><span data-icon="child"></span>Good with Kids</a>
         </div>
 
         <a class="hero-secondary" href="ai-matching.html" data-hero style="--n:5">
-          <span class="orb" data-icon="sparkle"></span>
-          <span>Not sure where to start?<small>Describe your life and let PawPal suggest who fits</small></span>
+          <span class="orb" data-icon="heart"></span>
+          <span>Not sure where to start? <b class="hero-secondary-cta">Find My Perfect Pet</b><small>Tell us about your lifestyle, home and preferences and we'll suggest pets that fit</small></span>
+          <span class="hero-secondary-arrow" data-icon="arrowRight"></span>
         </a>
         <div class="avatar-stack" id="avatarStack" aria-hidden="true"></div>
       </div>
