@@ -307,7 +307,7 @@ router.get('/config', (req, res) => res.json({
 router.get('/system/status', requireAdmin, asyncHandler(async (req, res) => {
   const [pets, apps, users, mails, shelters] = await Promise.all([db.count('pets'), db.count('applications'), db.count('users'), db.count('emails'), db.count('shelters')]);
   res.json({ database: db.name,
-    email: { resend: `Resend API (from ${config.mailFrom})`, brevo: `Brevo API (from ${config.mailFrom})`, smtp: `SMTP (${config.smtp.host})`, dev: 'Dev mailbox (no email provider configured)' }[emailMode],
+    email: { gmail: `Gmail API (from ${config.gmail.sender})`, resend: `Resend API (from ${config.mailFrom})`, brevo: `Brevo API (from ${config.mailFrom})`, smtp: `SMTP (${config.smtp.host})`, dev: 'Dev mailbox (no email provider configured)' }[emailMode],
     sms: { twilio: 'Twilio', dev: 'Dev SMS log (no SMS provider configured)', disabled: 'Not configured' }[smsMode],
     ai: llm.providerLabel, maps: maps.mapsEnabled ? 'Google Places API' : 'Keyless Google Maps embed',
     counts: { pets, apps, users, mails, shelters }, allowDemoReset: config.allowDemoReset,

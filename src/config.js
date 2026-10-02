@@ -29,6 +29,14 @@ module.exports = {
   // Use this on hosts (like Render's free plan) that block outbound SMTP ports.
   // If set, it's used instead of SMTP. Get a free key at https://resend.com/api-keys
   resendApiKey: env.RESEND_API_KEY || '',
+  // Gmail API: sends as your own Gmail address over HTTPS using an OAuth refresh token (see DEPLOY.md).
+  // Used first when all three values are set. The sender defaults to ADMIN_EMAIL.
+  gmail: {
+    clientId: (env.GMAIL_CLIENT_ID || '').trim(),
+    clientSecret: (env.GMAIL_CLIENT_SECRET || '').trim(),
+    refreshToken: (env.GMAIL_REFRESH_TOKEN || '').trim(),
+    sender: (env.GMAIL_SENDER || env.ADMIN_EMAIL || '').trim().toLowerCase(),
+  },
   // Brevo can send from a single verified address (e.g. a Gmail account) over HTTPS: https://app.brevo.com/settings/keys/api
   brevoApiKey: env.BREVO_API_KEY || '',
   // The owner's address: becomes the administrator account on start-up and the default sender

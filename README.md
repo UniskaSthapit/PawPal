@@ -109,7 +109,7 @@ shows which mode each service is in.
 | MongoDB Atlas | `MONGODB_URI`, `MONGODB_DB` | File database `data/pawpal-db.json` |
 | Owner admin | `ADMIN_EMAIL` | Demo admin only (local) |
 | Contact links | `CONTACT_EMAIL` (email), `APP_URL` (website) | `ADMIN_EMAIL`, then `pawpaladmin@gmail.com`; `http://localhost:3000` |
-| Email | `BREVO_API_KEY` (single verified sender, e.g. Gmail) **or** `RESEND_API_KEY` (own domain) **or** `SMTP_*` | Dev mailbox (local only) |
+| Email | `GMAIL_CLIENT_ID` + `GMAIL_CLIENT_SECRET` + `GMAIL_REFRESH_TOKEN` (Gmail API) **or** `BREVO_API_KEY` (single verified sender) **or** `RESEND_API_KEY` (own domain) **or** `SMTP_*` | Dev mailbox (local only) |
 | SMS | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER` | Codes in dev mailbox locally; disabled in production |
 | AI | `GEMINI_API_KEY` (free tier) **or** `ANTHROPIC_API_KEY` **or** `OPENAI_API_KEY` | Rules engine on the same live data |
 | Maps | `GOOGLE_MAPS_API_KEY` | Keyless Google Maps embed |

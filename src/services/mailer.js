@@ -1,4 +1,6 @@
 // Email service. The first configured provider is used:
+// - GMAIL_CLIENT_ID + GMAIL_CLIENT_SECRET + GMAIL_REFRESH_TOKEN: the Gmail API over HTTPS, sending as your own
+//                   Gmail address (best inbox placement for a Gmail sender; about 500 emails a day).
 // - RESEND_API_KEY: Resend over HTTPS (needs a domain you own for the sender).
 // - BREVO_API_KEY:  Brevo over HTTPS — can send from a single verified address such as a Gmail account.
 // - SMTP_HOST:      any SMTP server (note: Render's free plan blocks SMTP ports).
@@ -9,7 +11,8 @@ const config = require('../config');
 const db = require('../db');
 const { newId, now, escapeHtml } = require('../utils');
 
-const emailMode = config.resendApiKey ? 'resend' : config.brevoApiKey ? 'brevo' : config.smtp.host ? 'smtp' : 'dev';
+const gmailReady = Boolean(config.gmail.clientId && config.gmail.clientSecret && config.gmail.refreshToken);
+const emailMode = gmailReady ? 'gmail' : config.resendApiKey ? 'resend' : config.brevoApiKey ? 'brevo' : config.smtp.host ? 'smtp' : 'dev';
 const resendEnabled = emailMode === 'resend';
 const smtpEnabled = emailMode === 'smtp';
 const transporter = smtpEnabled
@@ -29,7 +32,56 @@ function parseFrom(from) {
   return m ? { name: m[1].trim() || 'PawPal', email: m[2].trim() } : { name: 'PawPal', email: String(from || '').trim() };
 }
 
+// ---- Gmail API helpers ----
+// A short-lived access token is fetched with the refresh token and reused until shortly before it expires.
+let gmailToken = { value: '', expires: 0 };
+async function gmailAccessToken() {
+  if (gmailToken.value && Date.now() < gmailToken.expires) return gmailToken.value;
+  const r = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ client_id: config.gmail.clientId, client_secret: config.gmail.clientSecret,
+      refresh_token: config.gmail.refreshToken, grant_type: 'refresh_token' }).toString(),
+    signal: AbortSignal.timeout(15000),
+  });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok || !data.access_token) {
+    const hint = data.error === 'invalid_grant' ? ' (the refresh token was revoked or has expired — create a new one, see DEPLOY.md)' : '';
+    throw new Error(`Gmail sign-in ${r.status}: ${data.error_description || data.error || 'no access token'}${hint}`);
+  }
+  gmailToken = { value: data.access_token, expires: Date.now() + (Number(data.expires_in) || 3600) * 1000 - 60000 };
+  return gmailToken.value;
+}
+// Header values with non-ASCII characters (names, "—", emoji) use RFC 2047 encoded words
+const mimeHeader = (v) => (/^[\x20-\x7E]*$/.test(v) ? v : `=?UTF-8?B?${Buffer.from(v, 'utf8').toString('base64')}?=`);
+function gmailRawMessage({ to, subject, html }) {
+  const from = parseFrom(config.mailFrom);
+  const sender = config.gmail.sender || from.email;
+  const lines = [
+    `From: ${mimeHeader(from.name || 'PawPal')} <${sender}>`,
+    `To: ${to}`,
+    `Subject: ${mimeHeader(subject)}`,
+    'MIME-Version: 1.0',
+    'Content-Type: text/html; charset=UTF-8',
+    'Content-Transfer-Encoding: base64',
+    '',
+    Buffer.from(html, 'utf8').toString('base64').replace(/.{76}/g, '$&\r\n'),
+  ];
+  return Buffer.from(lines.join('\r\n'), 'utf8').toString('base64url');
+}
+
 const HTTP_PROVIDERS = {
+  async gmail({ to, subject, html }) {
+    const send = async (token) => fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ raw: gmailRawMessage({ to, subject, html }) }),
+      signal: AbortSignal.timeout(20000),
+    });
+    let r = await send(await gmailAccessToken());
+    if (r.status === 401) { gmailToken = { value: '', expires: 0 }; r = await send(await gmailAccessToken()); }
+    if (!r.ok) throw new Error(`Gmail ${r.status}: ${(await r.text()).slice(0, 300)}`);
+  },
   async resend({ to, subject, html }) {
     const r = await fetch('https://api.resend.com/emails', {
       method: 'POST',
