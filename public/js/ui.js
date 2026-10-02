@@ -39,7 +39,8 @@ const PawPal = (() => {
   const money = (n) => (n ? `$${Number(n).toLocaleString('en-AU')}` : 'Contact shelter');
 
   // ---------- images ----------
-  const FALLBACK = { Dog: 'images/pets/dog-a.svg', Cat: 'images/pets/cat-a.svg', Rabbit: 'images/pets/rabbit-a.svg', Bird: 'images/pets/bird-a.svg', 'Guinea Pig': 'images/pets/small-a.svg', Other: 'images/pets/small-b.svg' };
+  const FALLBACK = { Dog: 'images/pets/dog-a.svg', Cat: 'images/pets/cat-a.svg', Rabbit: 'images/pets/rabbit-a.svg', Bird: 'images/pets/bird-a.svg', 'Guinea Pig': 'images/pets/small-a.svg',
+    Hamster: 'images/pets/small-c.svg', Reptile: 'images/pets/lizard-a.svg', Fish: 'images/pets/fish-a.svg', 'Farm Animal': 'images/pets/goat-a.svg', Other: 'images/pets/small-b.svg' };
   const PLACEHOLDER = 'images/pet-placeholder.svg';
   const photo = (pet, i = 0) => (pet?.photos && pet.photos[i]) || pet?.petPhoto || FALLBACK[pet?.type] || PLACEHOLDER;
   // Responsive Unsplash sizes; uploaded and local images are used as-is
@@ -131,6 +132,11 @@ const PawPal = (() => {
     minus: svg('<path d="M5 12h14"/>'),
     pause: svg('<path d="M9 5v14M15 5v14"/>'),
     play: svg('<path d="m7 4 13 8-13 8z"/>'),
+    bird: svg('<path d="M16 7h.01"/><path d="M3.4 18H12a8 8 0 0 0 8-8V7a4 4 0 0 0-7.28-2.3L2 20"/><path d="m20 7 2 .5-2 .5M10 18v3M14 17.75V21"/><path d="M7 18a6 6 0 0 0 3.84-10.61"/>'),
+    fish: svg('<path d="M6.5 12c.94-3.46 4.94-6 8.5-6 3.56 0 6.06 2.54 7 6-.94 3.47-3.44 6-7 6s-7.56-2.53-8.5-6Z"/><path d="M18 12v.5"/><path d="M7 10.67C7 8 5.58 5.97 2.73 5.5c-1 1.5-1 5 .23 6.5-1.24 1.5-1.24 5-.23 6.5C5.58 18.03 7 16 7 13.33"/>'),
+    turtle: svg('<path d="m12 10 2 4v3a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-3a8 8 0 1 0-16 0v3a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-3l2-4h4Z"/><path d="M4.82 7.9 8 10M15.18 7.9 12 10M16.93 10H20a2 2 0 0 1 0 4H2"/>'),
+    barn: svg('<path d="M3 21V10l9-6 9 6v11"/><path d="M8 21v-6h8v6"/><path d="m8 15 8 6M16 15l-8 6"/><path d="M10 10h4"/>'),
+    globe: svg('<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>'),
   };
   const icon = (name) => icons[name] || '';
 
@@ -386,9 +392,10 @@ const PawPal = (() => {
               <a href="https://www.linkedin.com" target="_blank" rel="noopener" aria-label="PawPal on LinkedIn">${icons.linkedin}</a>
             </div>
           </div>
-          <div><h3>Adopt</h3><a href="adopt.html">All pets</a><a href="adopt.html?type=dog">Dogs</a><a href="adopt.html?type=cat">Cats</a><a href="adopt.html?type=other">Rabbits & small pets</a><a href="ai-matching.html">Find my PawPal</a></div>
+          <div><h3>Adopt</h3><a href="adopt.html">All pets</a><a href="adopt.html?type=dog">Dogs</a><a href="adopt.html?type=cat">Cats</a><a href="adopt.html?type=small">Rabbits & small pets</a><a href="adopt.html?type=bird">Birds</a><a href="adopt.html?type=reptile">Reptiles</a><a href="adopt.html?type=fish">Fish</a><a href="adopt.html?type=farm">Goats & cows</a></div>
           <div><h3>Help & advice</h3><a href="home.html#how">How adoption works</a><a href="home.html#faq">Adoption FAQ</a><a href="vet-finder.html">Find a vet</a><a href="ending-animal-cruelty.html">Report animal cruelty</a></div>
-          <div><h3>PawPal</h3><a href="about.html">About us</a><a href="about.html#stories">Rescue stories</a><a href="contact.html">Contact</a><a href="login.html?role=staff">Shelter staff login</a></div>
+          <div><h3>PawPal</h3><a href="about.html">About us</a><a href="about.html#stories">Rescue stories</a><a href="contact.html">Contact</a><a href="login.html?role=staff">Shelter staff login</a>
+            <a data-contact-email href="mailto:pawpaladmin@gmail.com">${icons.mail} pawpaladmin@gmail.com</a><a data-site-url href="home.html">${icons.globe} Website</a></div>
         </div>
         <p class="ack">PawPal acknowledges the Traditional Custodians of the lands on which we work and pay our respects to Elders past and present. Pet profiles, stories and people shown in this demo are illustrative.</p>
         <div class="footer-bottom"><span>© ${new Date().getFullYear()} PawPal. Because every paw matters.</span><span><a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a></span></div>
@@ -601,63 +608,65 @@ const PawPal = (() => {
     sync();
   }
 
-  // ---------- scroll-driven horizontal rail ----------
-  // On large screens with a mouse/trackpad the section pins to the viewport and vertical scrolling moves
-  // the rail sideways. Elsewhere (touch, small screens, reduced motion) it stays a swipeable carousel.
+  // ---------- scroll-linked horizontal rail ----------
+  // As the section travels through the viewport, vertical scrolling glides the rail sideways (smoothed),
+  // so the pets drift past while the page keeps scrolling normally — it never pins or traps the scroll.
+  // The moment someone drags, swipes, uses the arrows or the keyboard, the rail is theirs to control.
   function hscroll(section) {
     const rail = $('.rail', section);
     const bar = $('.hscroll-progress', section);
     if (!rail) return;
-    const mq = window.matchMedia('(min-width: 1000px) and (hover: hover) and (pointer: fine)');
-    let maxX = 0; let pinned = false; let ticking = false;
+    let driven = canAnimate; let target = 0; let raf = 0;
 
-    const setProgress = (p) => {
+    const setProgress = () => {
       if (!bar) return;
+      const max = rail.scrollWidth - rail.clientWidth;
+      const p = max > 0 ? clamp(rail.scrollLeft / max, 0, 1) : 0;
       bar.style.setProperty('--p', p.toFixed(3));
       const n = rail.children.length;
       const label = $('[data-count]', bar);
-      if (label) label.textContent = `${String(Math.min(n, Math.max(1, Math.round(p * (n - 1)) + 1))).padStart(2, '0')} / ${String(n).padStart(2, '0')}`;
+      if (label) label.textContent = `${String(Math.min(n, Math.round(p * (n - 1)) + 1)).padStart(2, '0')} / ${String(n).padStart(2, '0')}`;
     };
-    function update() {
-      ticking = false;
-      if (!pinned) { const max = rail.scrollWidth - rail.clientWidth; setProgress(max > 0 ? rail.scrollLeft / max : 0); return; }
-      const p = maxX ? clamp(-section.getBoundingClientRect().top / maxX, 0, 1) : 0;
-      rail.style.transform = `translate3d(${(-p * maxX).toFixed(1)}px, 0, 0)`;
-      setProgress(p);
+    // Ease the rail towards its target position each frame
+    const glide = () => {
+      raf = 0;
+      if (!driven) return;
+      const diff = target - rail.scrollLeft;
+      if (Math.abs(diff) < 0.5) { rail.scrollLeft = target; return; }
+      rail.scrollLeft += diff * 0.14;
+      raf = requestAnimationFrame(glide);
+    };
+    const onPageScroll = () => {
+      if (!driven) return;
+      const r = section.getBoundingClientRect();
+      const vh = window.innerHeight;
+      if (r.bottom < 0 || r.top > vh) return;
+      // 0 when the section's top enters the bottom of the screen, 1 when its bottom leaves the top
+      const p = clamp((vh - r.top) / (vh + r.height), 0, 1);
+      // Start moving once the heading is in view and finish a little before the section leaves
+      const eased = clamp((p - 0.25) / 0.55, 0, 1);
+      target = eased * (rail.scrollWidth - rail.clientWidth);
+      if (!raf) raf = requestAnimationFrame(glide);
+    };
+    const takeOver = () => {
+      if (!driven) return;
+      driven = false; cancelAnimationFrame(raf); raf = 0;
+      rail.classList.remove('is-driven');
+    };
+    if (driven) {
+      rail.classList.add('is-driven');
+      window.addEventListener('scroll', onPageScroll, { passive: true });
+      window.addEventListener('resize', onPageScroll);
+      ['pointerdown', 'touchstart', 'keydown'].forEach((ev) => rail.addEventListener(ev, takeOver, { passive: true }));
+      rail.addEventListener('wheel', (e) => { if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) takeOver(); }, { passive: true });
+      $$('[data-prev],[data-next]', section).forEach((b) => b.addEventListener('click', takeOver));
+      onPageScroll();
     }
-    const onScroll = () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } };
-    function measure() {
-      pinned = canAnimate && mq.matches;
-      section.classList.toggle('is-pinned', pinned);
-      rail.style.transform = '';
-      if (!pinned) { section.style.height = ''; update(); return; }
-      const last = rail.lastElementChild;
-      const padEnd = parseFloat(getComputedStyle(rail).paddingRight) || 0;
-      maxX = Math.max(0, last.getBoundingClientRect().right - rail.getBoundingClientRect().left + padEnd - window.innerWidth);
-      section.style.height = `${Math.round(window.innerHeight + maxX)}px`;
-      update();
-    }
-    window.addEventListener('scroll', onScroll, { passive: true });
-    rail.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', measure);
-    mq.addEventListener?.('change', measure);
-    // Keyboard users: tabbing to an off-screen card scrolls the page so it slides into view
-    rail.addEventListener('focusin', (e) => {
-      if (!pinned) return;
-      const card = e.target.closest('.rail > *');
-      if (!card) return;
-      rail.style.transform = '';
-      const x = clamp(card.getBoundingClientRect().left - rail.getBoundingClientRect().left - window.innerWidth * 0.2, 0, maxX);
-      update();
-      window.scrollTo({ top: window.scrollY + section.getBoundingClientRect().top + x, behavior: 'auto' });
-    });
-    carousel(section); // drag + buttons for the non-pinned mode
-    measure();
-    // Images can change card sizes after load
-    window.addEventListener('load', measure, { once: true });
-    return { measure };
+    rail.addEventListener('scroll', () => requestAnimationFrame(setProgress), { passive: true });
+    carousel(section); // drag with inertia, arrow buttons
+    setProgress();
+    return { release: takeOver };
   }
-
   // ---------- smooth accordion for <details> ----------
   function accordion(root) {
     if (!canAnimate || !root.animate) return;
@@ -687,6 +696,14 @@ const PawPal = (() => {
     document.body.appendChild(bar);
   }
 
+  // ---------- contact links: [data-contact-email] and [data-site-url] use the server's CONTACT_EMAIL / APP_URL ----------
+  const siteConfig = PawPalAPI.get('/config').catch(() => ({}));
+  async function fillContactLinks(root = document) {
+    const c = await siteConfig;
+    if (c.contactEmail) $$('[data-contact-email]', root).forEach((a) => { a.href = `mailto:${c.contactEmail}`; a.lastChild.textContent = ` ${c.contactEmail}`; });
+    if (c.siteUrl) $$('[data-site-url]', root).forEach((a) => { a.href = c.siteUrl; a.title = c.siteUrl; });
+  }
+
   // ---------- boot ----------
   const booted = (async () => {
     renderHeader(null);
@@ -698,6 +715,7 @@ const PawPal = (() => {
     hydrateIcons();
     reveal();
     if (u) loadBell(false);
+    fillContactLinks();
     if (layout === 'public') cookieNotice();
     try {
       if (!sessionStorage.getItem('pp_visit') && layout === 'public') { sessionStorage.setItem('pp_visit', '1'); PawPalAPI.post('/events', { type: 'visit' }).catch(() => {}); }
@@ -708,5 +726,5 @@ const PawPal = (() => {
   return { $, $$, params, page, layout, esc, fmtDate, fmtDateTime, timeAgo, initials, ageText, ageLong, energyText, money, photo, sized, srcset, icons, icon, aiLabel,
     FALLBACK, PLACEHOLDER, statusBadge, statusClass, scoreBadge, toast, modal, confirm: confirmDialog, setBusy, errorHTML, emptyHTML, skeletonCards,
     favs, petCardHTML, petTags, ready, booted, get user() { return user; }, isStaffUser, logout, loadBell, noteHTML, hydrateIcons, reveal, reduceMotion,
-    finePointer, countUp, carousel, hscroll, accordion };
+    finePointer, countUp, carousel, hscroll, accordion, siteConfig, fillContactLinks };
 })();

@@ -7,8 +7,10 @@
     const { shelters } = await PawPalAPI.get('/shelters');
     $('#shelterList').innerHTML = shelters.map((s) => `<div class="card card-pad"><div class="shelter-card"><span class="s-ic">${icons.building}</span><div>
       <h3 style="font-size:19px">${esc(s.name)}</h3><p class="small muted">${esc(s.address || `${s.suburb}, ${s.state}`)}</p>
-      <dl class="kv small" style="margin-top:10px">${s.hours ? `<dt>Hours</dt><dd>${esc(s.hours)}</dd>` : ''}${s.phone ? `<dt>Phone</dt><dd><a href="tel:${esc(s.phone.replace(/[^\d+]/g, ''))}">${esc(s.phone)}</a></dd>` : ''}${s.email ? `<dt>Email</dt><dd><a href="mailto:${esc(s.email)}">${esc(s.email)}</a></dd>` : ''}</dl></div></div></div>`).join('');
+      <dl class="kv small" style="margin-top:10px">${s.hours ? `<dt>Hours</dt><dd>${esc(s.hours)}</dd>` : ''}${s.phone ? `<dt>Phone</dt><dd><a href="tel:${esc(s.phone.replace(/[^\d+]/g, ''))}">${esc(s.phone)}</a></dd>` : ''}${s.email ? `<dt>Email</dt><dd><a href="mailto:${esc(s.email)}?subject=${encodeURIComponent(`Message for ${s.name}`)}">${esc(s.email)}</a></dd>` : ''}${s.website ? `<dt>Website</dt><dd><a href="${esc(s.website)}" target="_blank" rel="noopener">${esc(s.website.replace(/^https?:\/\//, ''))}</a></dd>` : ''}</dl></div></div></div>`).join('');
   } catch { $('#shelterList').innerHTML = ''; }
+  // Show the website as its real address once the server's settings arrive
+  PawPal.siteConfig.then((c) => { const a = $('[data-site-url]', $('#main')); if (c.siteUrl && a) a.lastChild.textContent = ` ${c.siteUrl.replace(/^https?:\/\//, '')}`; });
   $('#contactForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = $('#cBtn'); setBusy(btn, true, 'Sending…');

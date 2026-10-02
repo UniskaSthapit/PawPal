@@ -59,8 +59,14 @@
       <img src="${esc(PawPal.sized(PawPal.photo(p), 160))}" alt="" data-fallback="${PawPal.FALLBACK[p.type]}"></a>`).join('')
       + (pets.length > 5 ? `<span>+${pets.length - 5} more waiting</span>` : '');
 
-    // Featured rail: newest pets plus a closing "see everyone" card
-    const featured = pets.slice(0, 10);
+    // Featured rail: a varied mix — take the newest pet of each kind in turn (dog, cat, reptile, bird…) — plus a closing "see everyone" card
+    const byType = new Map();
+    pets.forEach((p) => { if (!byType.has(p.type)) byType.set(p.type, []); byType.get(p.type).push(p); });
+    const order = ['Dog', 'Cat', 'Reptile', 'Bird', 'Farm Animal', 'Rabbit', 'Fish', 'Hamster'].filter((t) => byType.has(t)).concat([...byType.keys()].filter((t) => !['Dog', 'Cat', 'Reptile', 'Bird', 'Farm Animal', 'Rabbit', 'Fish', 'Hamster'].includes(t)));
+    const featured = [];
+    for (let round = 0; featured.length < 12 && featured.length < pets.length; round++) {
+      order.forEach((t) => { const p = byType.get(t)[round]; if (p && featured.length < 12) featured.push(p); });
+    }
     $('#featured').innerHTML = featured.length
       ? featured.map((p, i) => petCardHTML(p, { index: i })).join('')
         + `<a class="rail-end" href="adopt.html"><b>${pets.length > featured.length ? `${pets.length - featured.length} more pets are waiting` : 'Meet every pet looking for a home'}</b><span>Browse all pets ${icons.arrowRight}</span></a>`

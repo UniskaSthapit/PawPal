@@ -47,6 +47,14 @@ const mailFor = async (anon, email, type) => (await anon('GET', `/api/dev/emails
   console.log('\nPublic site & discovery');
   let r = await anon('GET', '/api/pets');
   check('Lists public pets', r.status === 200 && r.body.pets.length >= 12);
+  for (const [type, re] of [['reptile', /Reptile/], ['bird', /Bird/], ['fish', /Fish/], ['farm', /Farm Animal/], ['small', /Rabbit|Guinea Pig|Hamster|Other/]]) {
+    const g = await anon('GET', `/api/pets?type=${type}`);
+    check(`Species filter "${type}" returns only that kind`, g.body.pets.length >= 2 && g.body.pets.every((p) => re.test(p.type)));
+  }
+  const reptiles = await anon('GET', '/api/pets?type=reptile');
+  check('New species carry a care guide and health notes', reptiles.body.pets.every((p) => p.care?.lifespan && p.healthChecks?.length));
+  const contacts = await anon('GET', '/api/shelters');
+  check('Shelters list a real contact email and the website', contacts.body.shelters.every((s) => !/@pawpal\.app$/.test(s.email) && /^https?:\/\//.test(s.website)));
   check('Internal fields are hidden from the public', r.body.pets.every((p) => !('medicalHistory' in p) && !('rescueBackground' in p) && !('internalNotes' in p)));
   check('Drafts and adopted pets are not listed', r.body.pets.every((p) => ['Available', 'On Hold'].includes(p.status)));
   const max = r.body.pets.find((p) => p.name === 'Max');
@@ -102,8 +110,12 @@ const mailFor = async (anon, email, type) => (await anon('GET', `/api/dev/emails
   check('Chat greets without listing pets', r.body.picks.length === 0 && /looking for homes/.test(r.body.reply));
   r = await anon('POST', '/api/ai/chat', { message: 'do you have an elephant?', profile: catProfile });
   check('Chat says when an animal is not available', r.body.picks.length === 0 && /don.t have any elephants/i.test(r.body.reply) && /\d+ dogs/.test(r.body.reply));
-  r = await anon('POST', '/api/ai/chat', { message: 'any birds?' });
-  check('Chat says when a kind of pet has none listed', r.body.picks.length === 0 && /don.t have any birds/i.test(r.body.reply));
+  r = await anon('POST', '/api/ai/chat', { message: 'any ferrets?' });
+  check('Chat says when a kind of pet has none listed', r.body.picks.length === 0 && /don.t have any ferrets/i.test(r.body.reply));
+  r = await anon('POST', '/api/ai/chat', { message: 'do you have any snakes?' });
+  check('Chat shows snakes when asked, and only snakes', r.body.picks.length > 0 && r.body.picks.every((p) => /python|snake/i.test(p.pet.breed)));
+  r = await anon('POST', '/api/ai/chat', { message: 'do you have cows?' });
+  check('Chat shows cows when asked', r.body.picks.length > 0 && r.body.picks.every((p) => /\bcow\b/i.test(p.pet.breed)));
   r = await anon('POST', '/api/ai/chat', { message: 'do you have hamsters?', profile: catProfile });
   check('Chat shows only the kind of animal asked for', r.body.picks.length > 0 && r.body.picks.every((p) => /hamster/i.test(p.pet.breed)));
   r = await anon('POST', '/api/ai/explain-question', { key: 'hoursAlone' });
@@ -332,6 +344,15 @@ const mailFor = async (anon, email, type) => (await anon('GET', `/api/dev/emails
   await migrate();
   const legacy = await db.findOne('applications', { id: 'app_legacy' });
   check('Legacy statuses are upgraded', legacy.status === 'Meet & Greet' && legacy.history[0].status === 'Submitted' && legacy.appointmentAt && legacy.shelterId);
+  const petsBefore = await db.count('pets');
+  const goat = (await db.find('pets')).find((p) => p.breed === 'Pygmy Goat');
+  await db.remove('pets', goat.id);
+  const shelter = (await db.find('shelters'))[0];
+  await db.update('shelters', shelter.id, { email: 'melbourne@pawpal.app' });
+  await db.update('meta', 'schema', { version: 2 });
+  await migrate();
+  check('Upgrade adds missing species without duplicating any', (await db.count('pets')) === petsBefore && (await db.find('pets')).filter((p) => p.breed === 'Pygmy Goat').length === 1);
+  check('Upgrade replaces placeholder shelter emails', !/@pawpal\.app$/.test((await db.findOne('shelters', { id: shelter.id })).email));
 
   console.log('\nOwner administrator & production safeguards');
   const config = require('../src/config');

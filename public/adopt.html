@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Adopt a pet — PawPal</title>
-  <meta name="description" content="Browse rescue dogs, cats, rabbits and small pets available for adoption. Filter by species, age, size, location and lifestyle, or describe what you're looking for.">
+  <meta name="description" content="Browse rescue dogs, cats, small pets, birds, reptiles, fish, goats and cows available for adoption. Filter by species, age, size, location and lifestyle, or describe what you're looking for.">
   <meta name="theme-color" content="#FBF6EE">
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
   <link rel="preload" href="fonts/fraunces-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
@@ -41,7 +41,11 @@
           <div class="filter-group"><h3 id="fSpecies">Species</h3><div class="chips" role="group" aria-labelledby="fSpecies">
             <button class="chip" type="button" data-f="type" data-v="dog" aria-pressed="false"><span data-icon="dog"></span>Dogs</button>
             <button class="chip" type="button" data-f="type" data-v="cat" aria-pressed="false"><span data-icon="cat"></span>Cats</button>
-            <button class="chip" type="button" data-f="type" data-v="other" aria-pressed="false"><span data-icon="rabbit"></span>Other</button></div></div>
+            <button class="chip" type="button" data-f="type" data-v="small" aria-pressed="false"><span data-icon="rabbit"></span>Small pets</button>
+            <button class="chip" type="button" data-f="type" data-v="bird" aria-pressed="false"><span data-icon="bird"></span>Birds</button>
+            <button class="chip" type="button" data-f="type" data-v="reptile" aria-pressed="false"><span data-icon="turtle"></span>Reptiles</button>
+            <button class="chip" type="button" data-f="type" data-v="fish" aria-pressed="false"><span data-icon="fish"></span>Fish</button>
+            <button class="chip" type="button" data-f="type" data-v="farm" aria-pressed="false"><span data-icon="barn"></span>Farm</button></div></div>
           <div class="filter-group"><h3 id="fAge">Age</h3><div class="chips" role="group" aria-labelledby="fAge">
             <button class="chip" type="button" data-f="age" data-v="baby" aria-pressed="false">Under 1</button>
             <button class="chip" type="button" data-f="age" data-v="young" aria-pressed="false">1–2 yrs</button>
@@ -76,7 +80,11 @@
           <button class="cat" type="button" data-cat="" aria-pressed="true"><span class="ic" data-icon="paw"></span>All pets</button>
           <button class="cat" type="button" data-cat="dog" aria-pressed="false"><span class="ic" data-icon="dog"></span>Dogs</button>
           <button class="cat" type="button" data-cat="cat" aria-pressed="false"><span class="ic" data-icon="cat"></span>Cats</button>
-          <button class="cat" type="button" data-cat="other" aria-pressed="false"><span class="ic" data-icon="rabbit"></span>Rabbits &amp; small pets</button>
+          <button class="cat" type="button" data-cat="small" aria-pressed="false"><span class="ic" data-icon="rabbit"></span>Small pets</button>
+          <button class="cat" type="button" data-cat="bird" aria-pressed="false"><span class="ic" data-icon="bird"></span>Birds</button>
+          <button class="cat" type="button" data-cat="reptile" aria-pressed="false"><span class="ic" data-icon="turtle"></span>Reptiles</button>
+          <button class="cat" type="button" data-cat="fish" aria-pressed="false"><span class="ic" data-icon="fish"></span>Fish</button>
+          <button class="cat" type="button" data-cat="farm" aria-pressed="false"><span class="ic" data-icon="barn"></span>Goats &amp; cows</button>
         </div>
         <div id="nlResult" class="nl-result" hidden></div>
         <div class="results-bar">

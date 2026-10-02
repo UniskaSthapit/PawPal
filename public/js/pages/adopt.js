@@ -4,7 +4,7 @@
   const { $, $$, esc, icons, petCardHTML, emptyHTML, errorHTML, skeletonCards, params } = PawPal;
   const PAGE = 12;
   const MULTI = ['age', 'size', 'energy'];
-  const LABELS = { type: { dog: 'Dogs', cat: 'Cats', other: 'Other pets' }, age: { baby: 'Under 1', young: '1–2 yrs', adult: '3–7 yrs', senior: '8+ yrs' },
+  const LABELS = { type: { dog: 'Dogs', cat: 'Cats', small: 'Small pets', bird: 'Birds', reptile: 'Reptiles', fish: 'Fish', farm: 'Goats & cows', other: 'Other pets' }, age: { baby: 'Under 1', young: '1–2 yrs', adult: '3–7 yrs', senior: '8+ yrs' },
     size: { small: 'Small', medium: 'Medium', large: 'Large' }, gender: { female: 'Female', male: 'Male' }, energy: { 1: 'Calm', 2: 'Moderate energy', 3: 'Very active' },
     apartment: 'Apartment OK', kids: 'Good with kids', otherPets: 'Good with pets', firstTime: 'First-time friendly', available: 'Hide on hold' };
   let state = readUrl();

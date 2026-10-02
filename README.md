@@ -49,6 +49,10 @@ npm run seed       # wipe and reload the demo data
 - **Adopt** — filters for species, age, size, sex, activity, apartment/kids/other pets/first-time owner, location,
   breed and availability (synced to the URL), plus natural-language search ("calm dog for an apartment") that shows
   how PawPal interpreted it and relaxes criteria transparently when nothing matches.
+- **Many kinds of animal** — dogs, cats, rabbits, guinea pigs, hamsters, birds, reptiles (snakes and lizards), fish and
+  farm animals (goats and cows), each filterable on its own. The newer species come with a written profile, species-appropriate
+  health notes and a **care guide** (lifespan, setup, diet, routine, licence/PIC notes). Existing databases receive them
+  automatically on the next start (schema v3).
 - **Pet profiles** — gallery, key facts, "good with", health, shelter details, adoption steps, similar pets,
   favourite, **Ask the shelter** (real enquiry) and **Ask AI about this pet**. Shelter facts and PawPal's
   interpretation are always labelled separately.
@@ -104,6 +108,7 @@ shows which mode each service is in.
 |---|---|---|
 | MongoDB Atlas | `MONGODB_URI`, `MONGODB_DB` | File database `data/pawpal-db.json` |
 | Owner admin | `ADMIN_EMAIL` | Demo admin only (local) |
+| Contact links | `CONTACT_EMAIL` (email), `APP_URL` (website) | `ADMIN_EMAIL`, then `pawpaladmin@gmail.com`; `http://localhost:3000` |
 | Email | `BREVO_API_KEY` (single verified sender, e.g. Gmail) **or** `RESEND_API_KEY` (own domain) **or** `SMTP_*` | Dev mailbox (local only) |
 | SMS | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER` | Codes in dev mailbox locally; disabled in production |
 | AI | `GEMINI_API_KEY` (free tier) **or** `ANTHROPIC_API_KEY` **or** `OPENAI_API_KEY` | Rules engine on the same live data |
