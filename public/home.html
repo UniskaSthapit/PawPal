@@ -24,59 +24,76 @@
 <body data-layout="public" data-page="home">
 <main id="main" tabindex="-1">
 
-  <!-- ================= Hero ================= -->
-  <section class="hero" aria-labelledby="heroTitle">
-    <div class="container hero-grid">
-      <div class="hero-copy">
-        <span class="hero-eyebrow" data-hero style="--n:0"><span class="live">LIVE</span><span id="heroCount">Pets waiting for a home near you</span></span>
-        <h1 class="hero-h1" id="heroTitle" data-hero style="--n:1">Find Your Perfect <em>Companion</em></h1>
-        <p class="hero-sub" data-hero style="--n:2">Connect with shelter pets in your area — dogs, cats, birds, reptiles, fish and farm animals — and let PawPal help you find the one who belongs with you.</p>
-        <p class="hero-motto" data-hero style="--n:2">Because Every Paw Matters</p>
-
-        <form class="hero-searchbar" id="heroSearch" role="search" data-hero style="--n:3">
-          <span class="hero-searchbar-icon" data-icon="search"></span>
-          <label class="sr-only" for="heroQ">Search pets by name, breed or location, or describe what you're looking for</label>
-          <input id="heroQ" type="text" maxlength="300" autocomplete="off" placeholder="Search pets by name, breed, or location…">
-          <button class="hero-search-clear" id="heroClear" type="button" aria-label="Clear search" hidden><span data-icon="close"></span></button>
-          <button class="hero-search-btn" type="submit"><span>Search</span><span data-icon="arrowRight"></span></button>
-        </form>
-
-        <div class="hero-pills" aria-label="Quick filters" data-hero style="--n:4">
-          <span class="hero-pills-label">Filter:</span>
-          <a class="hero-pill-link" href="adopt.html?type=dog"><span data-icon="dog"></span>Dogs</a>
-          <a class="hero-pill-link" href="adopt.html?type=cat"><span data-icon="cat"></span>Cats</a>
-          <a class="hero-pill-link" href="adopt.html?type=other"><span data-icon="rabbit"></span>Other pets</a>
-          <a class="hero-pill-link" href="adopt.html?energy=3"><span data-icon="zap"></span>Active</a>
-          <a class="hero-pill-link" href="adopt.html?apartment=1"><span data-icon="building"></span>Apartment Friendly</a>
-          <a class="hero-pill-link" href="adopt.html?kids=1"><span data-icon="child"></span>Good with Kids</a>
-        </div>
-
-        <a class="hero-secondary" href="ai-matching.html" data-hero style="--n:5">
-          <span class="orb" data-icon="heart"></span>
-          <span>Not sure where to start? <b class="hero-secondary-cta">Find My Perfect Pet</b><small>Tell us about your lifestyle, home and preferences and we'll suggest pets that fit</small></span>
-          <span class="hero-secondary-arrow" data-icon="arrowRight"></span>
-        </a>
-        <div class="avatar-stack" id="avatarStack" aria-hidden="true"></div>
-      </div>
-
-      <!-- Organic photo composition — bubbles link to the real pets once data loads -->
-      <div class="hero-art" data-hero style="--n:2">
-        <span class="hero-ring" aria-hidden="true"></span>
-        <span class="hero-blob-back" aria-hidden="true"></span>
-        <a class="hero-blob" href="adopt.html" id="heroFeature" data-photo="photo-1587300003388-59208cc962cb" tabindex="-1" aria-hidden="true">
-          <img src="https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=900&h=920&fit=crop&crop=faces,entropy&auto=format&q=78" alt="" fetchpriority="high" data-fallback="images/pets/dog-a.svg">
-        </a>
-        <a class="pet-bubble b1" href="adopt.html" data-photo="photo-1574158622682-e40e69881006" tabindex="-1" aria-hidden="true"><img src="https://images.unsplash.com/photo-1574158622682-e40e69881006?w=260&h=260&fit=crop&crop=faces,entropy&auto=format&q=75" alt="" data-fallback="images/pets/cat-b.svg"><span class="bubble-name"></span></a>
-        <a class="pet-bubble b2" href="adopt.html" data-photo="photo-1452857297128-d9c29adba80b" tabindex="-1" aria-hidden="true"><img src="https://images.unsplash.com/photo-1452857297128-d9c29adba80b?w=260&h=260&fit=crop&crop=faces,entropy&auto=format&q=75" alt="" data-fallback="images/pets/rabbit-c.svg"><span class="bubble-name"></span></a>
-        <a class="pet-bubble b3" href="adopt.html" data-photo="photo-1561037404-61cd46aa615b" tabindex="-1" aria-hidden="true"><img src="https://images.unsplash.com/photo-1561037404-61cd46aa615b?w=260&h=260&fit=crop&crop=faces,entropy&auto=format&q=75" alt="" data-fallback="images/pets/dog-a.svg"><span class="bubble-name"></span></a>
-        <a class="pet-bubble b4" href="adopt.html" data-photo="photo-1514888286974-6c03e2ca1dba" tabindex="-1" aria-hidden="true"><img src="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=260&h=260&fit=crop&crop=faces,entropy&auto=format&q=75" alt="" data-fallback="images/pets/cat-b.svg"><span class="bubble-name"></span></a>
-        <a class="pet-bubble b5" href="adopt.html" data-photo="photo-1425082661705-1834bfd09dca" tabindex="-1" aria-hidden="true"><img src="https://images.unsplash.com/photo-1425082661705-1834bfd09dca?w=260&h=260&fit=crop&crop=faces,entropy&auto=format&q=75" alt="" data-fallback="images/pets/small-b.svg"><span class="bubble-name"></span></a>
-        <div class="hero-note" aria-hidden="true"><span class="ic" data-icon="checkCircle"></span><div><b>Every match explained</b><span>Shelter facts, not guesswork.</span></div></div>
-      </div>
+  <!-- Hero -->
+  <section class="ch-companion-hero" aria-labelledby="heroTitle">
+    <div class="ch-hero-hearts" aria-hidden="true">
+      <span style="top:12%;left:3%;--hs:14px;--hr:-15deg;--ho:.14"></span>
+      <span style="top:30%;left:8%;--hs:10px;--hr:10deg;--ho:.10"></span>
+      <span style="top:8%;left:16%;--hs:18px;--hr:20deg;--ho:.12"></span>
+      <span style="top:62%;left:2%;--hs:12px;--hr:-5deg;--ho:.10"></span>
+      <span style="top:84%;left:14%;--hs:16px;--hr:8deg;--ho:.10"></span>
+      <span style="top:16%;right:4%;--hs:16px;--hr:-20deg;--ho:.13"></span>
+      <span style="top:40%;right:9%;--hs:10px;--hr:15deg;--ho:.10"></span>
+      <span style="top:68%;right:3%;--hs:14px;--hr:-10deg;--ho:.12"></span>
+      <span style="top:10%;right:17%;--hs:12px;--hr:12deg;--ho:.09"></span>
     </div>
 
+    <div class="ch-hero-pets ch-hero-pets-left">
+      <a class="ch-pet-bubble" href="adopt.html" data-photo="photo-1552053831-71594a27632d" tabindex="-1" aria-hidden="true"><img src="https://images.unsplash.com/photo-1552053831-71594a27632d?w=320&h=320&fit=crop&crop=faces,entropy&auto=format&q=75" alt="" loading="eager" data-fallback="images/pets/dog-c.svg"><span class="ch-bubble-name"></span></a>
+      <a class="ch-pet-bubble" href="adopt.html" data-photo="photo-1574158622682-e40e69881006" tabindex="-1" aria-hidden="true"><img src="https://images.unsplash.com/photo-1574158622682-e40e69881006?w=320&h=320&fit=crop&crop=faces,entropy&auto=format&q=75" alt="" loading="eager" data-fallback="images/pets/cat-b.svg"><span class="ch-bubble-name"></span></a>
+      <a class="ch-pet-bubble" href="adopt.html" data-photo="photo-1452857297128-d9c29adba80b" tabindex="-1" aria-hidden="true"><img src="https://images.unsplash.com/photo-1452857297128-d9c29adba80b?w=320&h=320&fit=crop&crop=faces,entropy&auto=format&q=75" alt="" loading="eager" data-fallback="images/pets/rabbit-c.svg"><span class="ch-bubble-name"></span></a>
+      <a class="ch-pet-bubble" href="adopt.html" data-photo="photo-1561037404-61cd46aa615b" tabindex="-1" aria-hidden="true"><img src="https://images.unsplash.com/photo-1561037404-61cd46aa615b?w=320&h=320&fit=crop&crop=faces,entropy&auto=format&q=75" alt="" loading="eager" data-fallback="images/pets/dog-a.svg"><span class="ch-bubble-name"></span></a>
+    </div>
+    <div class="ch-hero-pets ch-hero-pets-right">
+      <a class="ch-pet-bubble" href="adopt.html" data-photo="photo-1587300003388-59208cc962cb" tabindex="-1" aria-hidden="true"><img src="https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=320&h=320&fit=crop&crop=faces,entropy&auto=format&q=75" alt="" loading="eager" data-fallback="images/pets/dog-a.svg"><span class="ch-bubble-name"></span></a>
+      <a class="ch-pet-bubble" href="adopt.html" data-photo="photo-1514888286974-6c03e2ca1dba" tabindex="-1" aria-hidden="true"><img src="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=320&h=320&fit=crop&crop=faces,entropy&auto=format&q=75" alt="" loading="eager" data-fallback="images/pets/cat-b.svg"><span class="ch-bubble-name"></span></a>
+      <a class="ch-pet-bubble" href="adopt.html" data-photo="photo-1585110396000-c9ffd4e4b308" tabindex="-1" aria-hidden="true"><img src="https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?w=320&h=320&fit=crop&crop=faces,entropy&auto=format&q=75" alt="" loading="eager" data-fallback="images/pets/rabbit-c.svg"><span class="ch-bubble-name"></span></a>
+      <a class="ch-pet-bubble" href="adopt.html" data-photo="photo-1425082661705-1834bfd09dca" tabindex="-1" aria-hidden="true"><img src="https://images.unsplash.com/photo-1425082661705-1834bfd09dca?w=320&h=320&fit=crop&crop=faces,entropy&auto=format&q=75" alt="" loading="eager" data-fallback="images/pets/small-b.svg"><span class="ch-bubble-name"></span></a>
+    </div>
+
+    <div class="ch-companion-hero-inner">
+      <div class="ch-avatar-stack" id="avatarStack" aria-hidden="true"></div>
+      <span class="ch-hero-eyebrow"><span data-icon="paw"></span><span id="heroCount">Pets waiting for a home near you</span></span>
+      <h1 class="ch-hero-h1" id="heroTitle">Find Your Perfect<br><em>Companion</em></h1>
+      <p class="ch-hero-sub">Connect with shelter pets in your area, and let PawPal help you find the one who belongs with you.</p>
+      <p class="ch-hero-motto">Because Every Paw Matters</p>
+
+      <form class="ch-hero-searchbar" id="heroSearch" role="search">
+        <span class="ch-hero-searchbar-icon" data-icon="paw"></span>
+        <label class="sr-only" for="heroQ">Search pets by name, breed or location</label>
+        <input id="heroQ" type="text" maxlength="300" autocomplete="off" placeholder="Search pets by name, breed, or location...">
+        <button class="ch-hero-search-clear" id="heroClear" type="button" aria-label="Clear search" hidden><span data-icon="close"></span></button>
+        <button class="ch-hero-search-btn" type="submit"><span data-icon="search"></span>Search</button>
+      </form>
+
+      <div class="ch-hero-pills" aria-label="Quick filters">
+        <span class="ch-hero-pills-label">Filter:</span>
+        <a class="ch-hero-pill-link" href="adopt.html?type=dog">Dogs</a>
+        <a class="ch-hero-pill-link" href="adopt.html?type=cat">Cats</a>
+        <a class="ch-hero-pill-link" href="adopt.html?type=other">Other pets</a>
+        <a class="ch-hero-pill-link" href="adopt.html?energy=3">Active</a>
+        <a class="ch-hero-pill-link" href="adopt.html?apartment=1">Apartment Friendly</a>
+        <a class="ch-hero-pill-link" href="adopt.html?kids=1">Good with Kids</a>
+      </div>
+    </div>
+  </section>
+
+  <div class="ch-hero-wave-divider" aria-hidden="true">
+    <svg viewBox="0 0 1440 48" preserveAspectRatio="none"><path d="M0,24 C180,48 360,0 540,24 C720,48 900,0 1080,24 C1260,48 1380,10 1440,24 L1440,48 L0,48 Z"/></svg>
+  </div>
+  <div class="ch-match-banner">
+    <div class="container ch-match-banner-inner">
+      <div class="ch-match-banner-left">
+        <span class="ch-match-banner-icon" data-icon="heart"></span>
+        <p><b>Not sure where to start?</b> <span>Tell us about your lifestyle, home and preferences and we'll suggest pets that fit.</span></p>
+      </div>
+      <a class="ch-match-banner-btn" href="ai-matching.html">Find My Perfect Pet <span data-icon="arrowRight"></span></a>
+    </div>
+  </div>
+
+  <section class="section-sm" style="padding-top:8px">
     <!-- Live numbers -->
-    <div class="container" style="margin-top:clamp(40px,6vw,72px)">
+    <div class="container">
       <div class="stat-strip" id="stats" aria-live="polite" data-reveal>
         <div><b class="skeleton"></b><span>Pets available now</span></div>
         <div><b>&nbsp;</b><span>Found their home</span></div>

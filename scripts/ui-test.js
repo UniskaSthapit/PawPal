@@ -34,7 +34,7 @@ const ok = (name, cond) => { if (cond) { pass++; console.log('  ✅ ' + name); }
   ok('Home shows featured pets from the database', (await p.$$('#featured .pet-card')).length >= 4);
   ok('Live stats rendered', /\d/.test(await p.textContent('#stats')));
   ok('Live matching example rendered', (await p.$$('#demoResults .ai-demo-result')).length === 2);
-  ok('Hero bubbles link to real pets', (await p.$$eval('.pet-bubble[href^="pet-profile.html"]', (b) => b.length)) >= 4);
+  ok('Hero bubbles link to real pets', (await p.$$eval('.ch-pet-bubble[href^="pet-profile.html"]', (b) => b.length)) >= 4);
   await p.fill('#heroQ', 'calm dog for my apartment'); await p.press('#heroQ', 'Enter');
   await p.waitForSelector('#nlResult:not([hidden])'); await p.waitForSelector('#grid .pet-card');
   ok('Natural-language search shows interpretation + results', /calm/i.test(await p.textContent('#nlResult')));
