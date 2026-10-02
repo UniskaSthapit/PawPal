@@ -27,6 +27,12 @@
       const s = await PawPalAPI.get('/system/status');
       $('#system').innerHTML = `<dl class="kv"><dt>Database</dt><dd>${esc(s.database)}</dd><dt>Email</dt><dd>${esc(s.email)}</dd><dt>SMS</dt><dd>${esc(s.sms)}</dd><dt>AI</dt><dd>${esc(s.ai)}</dd><dt>Maps</dt><dd>${esc(s.maps)}</dd>
         <dt>Records</dt><dd>${s.counts.pets} pets · ${s.counts.apps} applications · ${s.counts.users} users · ${s.counts.shelters} shelters · ${s.counts.mails} emails</dd></dl>
+        <h3 style="margin-top:22px;font-size:18px">Recent emails</h3>
+        <p class="small muted" style="margin-top:4px">The last emails PawPal tried to send. "Failed" shows the email provider's reason.</p>
+        ${s.recentEmails?.length ? `<ul class="plain stack" style="--stack:10px;margin-top:12px">${s.recentEmails.map((m) => `<li class="email-log"><div class="row-between" style="gap:10px;flex-wrap:wrap"><b>${esc(m.subject)}</b>
+          <span class="badge ${m.status === 'sent' ? 'badge-sage' : 'badge-danger'}">${m.status === 'sent' ? 'Sent' : 'Failed'}</span></div>
+          <span class="small muted">To ${esc(m.to)} · ${esc(timeAgo(m.sentAt))} · via ${esc(m.mode)}</span>${m.error ? `<code class="email-error">${esc(m.error)}</code>` : ''}</li>`).join('')}</ul>`
+          : '<p class="small muted" style="margin-top:10px">No emails have been sent yet.</p>'}
         ${s.allowDemoReset ? `<div class="alert alert-warn" style="margin-top:16px">${icons.alert}<div><b>Demo reset is enabled.</b> This wipes all data and reloads the sample data. Turn it off in production with <code>ALLOW_DEMO_RESET=false</code>. <button class="link-btn" id="resetBtn">Reset demo data</button></div></div>` : ''}`;
       $('#resetBtn')?.addEventListener('click', async () => {
         if (!(await PawPal.confirm({ title: 'Reset all data?', message: 'Every user, pet, application and message will be replaced with the sample data. This cannot be undone.', confirmText: 'Reset everything', danger: true }))) return;
