@@ -160,7 +160,7 @@ function petFacts(pet, shelterName) {
 
 
 // ---------------- What animals do we actually have? ----------------
-// Animals people might ask for. `kind` is the catalogue group used for matching; wild and farm animals are never rehomed here.
+// Animals people might ask for. `kind` is the catalogue group used for matching; wild animals are never rehomed here.
 const ANIMALS = [
   ['dog', /\b(dogs?|pupp(y|ies)|pups?|pooch(es)?|doggos?)\b/, 'dogs', (p) => p.type === 'Dog'],
   ['cat', /\b(cats?|kittens?|kitty|kitties)\b/, 'cats', (p) => p.type === 'Cat'],
@@ -172,9 +172,13 @@ const ANIMALS = [
   ['ferret', /\bferrets?\b/, 'ferrets', (p) => /ferret/i.test(p.breed)],
   ['chinchilla', /\bchinchillas?\b/, 'chinchillas', (p) => /chinchilla/i.test(p.breed)],
   ['fish', /\b(fish|fishes|goldfish|betta)\b/, 'fish', (p) => /fish|betta/i.test(p.breed)],
-  ['reptile', /\b(reptiles?|lizards?|snakes?|pythons?|geckos?|bearded dragons?|turtles?|tortoises?|skinks?)\b/, 'reptiles', (p) => /lizard|snake|python|gecko|dragon|turtle|tortoise|skink/i.test(p.breed)],
+  ['snake', /\b(snakes?|pythons?)\b/, 'snakes', (p) => /snake|python/i.test(p.breed)],
+  ['lizard', /\b(lizards?|geckos?|bearded dragons?|skinks?|blue-?tongues?)\b/, 'lizards', (p) => /lizard|gecko|dragon|skink/i.test(p.breed)],
+  ['reptile', /\b(reptiles?|turtles?|tortoises?)\b/, 'reptiles', (p) => p.type === 'Reptile' || /lizard|snake|python|gecko|dragon|turtle|tortoise|skink/i.test(p.breed)],
   ['horse', /\b(horses?|ponies|pony|donkeys?)\b/, 'horses', (p) => /horse|pony|donkey/i.test(p.breed)],
-  ['farm animal', /\b(cows?|pigs?|piglets?|goats?|sheep|lambs?|chickens?|hens?|roosters?|ducks?|geese|goose|alpacas?|llamas?)\b/, 'farm animals', (p) => /\b(cow|pig|goat|sheep|chicken|hen|duck|goose|alpaca|llama)\b/i.test(p.breed)],
+  ['goat', /\bgoats?\b/, 'goats', (p) => /\bgoat\b/i.test(p.breed)],
+  ['cow', /\b(cows?|cattle|calf|calves)\b/, 'cows', (p) => /\bcow\b/i.test(p.breed)],
+  ['farm animal', /\b(farm animals?|livestock|pigs?|piglets?|sheep|lambs?|chickens?|hens?|roosters?|ducks?|geese|goose|alpacas?|llamas?)\b/, 'farm animals', (p) => p.type === 'Farm Animal' || /\b(pig|sheep|chicken|hen|duck|goose|alpaca|llama)\b/i.test(p.breed)],
 ];
 const WILD = /\b(elephants?|lions?|tigers?|bears?|wolf|wolves|fox(es)?|monkeys?|apes?|gorillas?|chimps?|giraffes?|zebras?|hippos?|rhinos?|kangaroos?|koalas?|wombats?|possums?|echidnas?|platypus|crocodiles?|alligators?|sharks?|dolphins?|whales?|penguins?|owls?|eagles?|deer|camels?|cheetahs?|leopards?|jaguars?|pandas?|sloths?|squirrels?|bats?|dinosaurs?|dragons?|unicorns?)\b/;
 
@@ -275,7 +279,8 @@ function rulesChat({ message, profile, pets, applications, user, lastPetIds = []
   const req = animalRequest(message, pets);
   const aboutFinding = lifestyle || req.found.length || /^(yes|yeah|yep|no|nope|nah|sure|maybe|both|either|any|none|[0-9]+( hours?| hrs?)?)\b/.test(plain)
     || /\b(pets?|animals?|companion|adopt|available|have|options|more)\b/.test(t);
-  if ((hasProfile && aboutFinding) || /\b(recommend|suggest|suit|match|best|which (dogs?|cats?|pets?)|show me|looking for|want a|find me)\b/.test(t)) {
+  // Asking for a kind of animal we have ("any snakes?") is enough to show them, even before we know the person's lifestyle
+  if ((hasProfile && aboutFinding) || req.found.length || /\b(recommend|suggest|suit|match|best|which (dogs?|cats?|pets?)|show me|looking for|want a|find me)\b/.test(t)) {
     let pool = req.found.length ? [...new Set(req.found.flatMap((a) => a.pets))] : pets;
     if (profile.location) {
       const local = pool.filter((p) => p.location.toLowerCase().includes(profile.location.toLowerCase()));

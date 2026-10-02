@@ -30,7 +30,7 @@ router.get('/faq', (req, res) => res.json({ faq: FAQ.map(({ id, q, a }) => ({ id
 
 router.get('/shelters', asyncHandler(async (req, res) => {
   const shelters = await db.find('shelters');
-  res.json({ shelters: shelters.map((s) => ({ id: s.id, name: s.name, suburb: s.suburb, state: s.state, address: s.address, phone: s.phone, email: s.email, hours: s.hours })) });
+  res.json({ shelters: shelters.map((s) => ({ id: s.id, name: s.name, suburb: s.suburb, state: s.state, address: s.address, phone: s.phone, email: s.email, hours: s.hours, website: config.appUrl })) });
 }));
 
 // ================= ANALYTICS (staff, scoped to their shelter) =================
@@ -301,6 +301,7 @@ router.get('/config', (req, res) => res.json({
   aiMode: llm.llmEnabled ? llm.provider : 'rules', aiLabel: llm.providerLabel,
   emailMode, smsMode, mapsMode: maps.mapsEnabled ? 'google-places' : 'google-embed',
   mapsEmbedKey: config.mapsKey || null, defaultCountryCode: config.defaultCountryCode,
+  contactEmail: config.contactEmail, siteUrl: config.appUrl,
 }));
 
 router.get('/system/status', requireAdmin, asyncHandler(async (req, res) => {

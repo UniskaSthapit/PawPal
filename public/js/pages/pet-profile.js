@@ -40,8 +40,12 @@
   const goodWith = [
     [pet.goodWithChildren, 'child', 'Children', pet.goodWithChildren ? 'Comfortable with kids' : 'Best in an adult home'],
     [pet.goodWithOtherPets, 'paw', 'Other pets', pet.goodWithOtherPets ? 'Gets along with other animals' : 'Prefers to be the only pet'],
-    [!pet.requiresYard, 'building', 'Apartment living', pet.requiresYard ? 'Needs a secure yard' : 'No yard required'],
-    [pet.firstTimeFriendly || (energy <= 2 && !pet.specialNeeds), 'star', 'First-time owners', pet.firstTimeFriendly || energy <= 2 ? 'A good first pet' : 'Suits experienced owners'],
+    pet.type === 'Farm Animal'
+      ? [false, 'barn', 'Space', 'Needs acreage and a herd companion']
+      : [!pet.requiresYard, 'building', 'Apartment living', pet.requiresYard ? 'Needs a secure yard' : 'No yard required'],
+    pet.type === 'Farm Animal'
+      ? [false, 'star', 'First-time owners', 'Best with some livestock experience']
+      : [pet.firstTimeFriendly || (energy <= 2 && !pet.specialNeeds), 'star', 'First-time owners', pet.firstTimeFriendly || energy <= 2 ? 'A good first pet' : 'Suits experienced owners'],
   ];
 
   root.innerHTML = `
@@ -94,10 +98,22 @@
         <div class="profile-section" data-reveal>
           <h2 class="h3">Health &amp; care</h2>
           <ul class="plain reason-list pos" style="margin-top:12px">
-            ${[['vaccinated', 'Vaccinated'], ['desexed', 'Desexed'], ['microchipped', 'Microchipped']].map(([k, l]) => `<li>${pet[k] ? icons.checkCircle : icons.minus}<span>${pet[k] ? l : `Not yet ${l.toLowerCase()} — ask the shelter`}</span></li>`).join('')}
+            ${pet.healthChecks?.length
+              // Species-appropriate checks (fish, reptiles, birds, farm animals…)
+              ? pet.healthChecks.map((h) => `<li>${icons.checkCircle}<span>${esc(h)}</span></li>`).join('')
+              : [['vaccinated', 'Vaccinated'], ['desexed', 'Desexed'], ['microchipped', 'Microchipped']].map(([k, l]) => `<li>${pet[k] ? icons.checkCircle : icons.minus}<span>${pet[k] ? l : `Not yet ${l.toLowerCase()} — ask the shelter`}</span></li>`).join('')}
           </ul>
           <p class="small muted" style="margin-top:10px">Health information is provided by the shelter. Ask the team for full vet records before adopting.</p>
         </div>
+        ${pet.care ? `<div class="profile-section care-guide" data-reveal>
+          <span class="src-label src-shelter">${icons.clipboard}Care guide</span>
+          <h2 class="h3" style="margin-top:8px">Caring for ${esc(pet.name)}</h2>
+          <dl class="care-list">
+            ${[['clock', 'Lifespan', pet.care.lifespan], ['home', 'Home & setup', pet.care.home], ['gift', 'Diet', pet.care.diet], ['calendar', 'Daily routine', pet.care.routine]]
+              .filter(([, , v]) => v).map(([ic, label, v]) => `<div><dt>${icons[ic]}${label}</dt><dd>${esc(v)}</dd></div>`).join('')}
+          </dl>
+          ${pet.care.note ? `<p class="disclaimer" style="margin-top:16px">${icons.info}<span>${esc(pet.care.note)}</span></p>` : ''}
+        </div>` : ''}
       </div>
       <div class="stack" style="--stack:20px">
         ${shelter ? `<div class="card card-pad" data-reveal><div class="shelter-card"><span class="s-ic">${icons.building}</span><div>
@@ -106,7 +122,8 @@
           <dl class="kv" style="margin-top:14px">
             ${shelter.address ? `<dt>Address</dt><dd>${esc(shelter.address)}</dd>` : ''}${shelter.hours ? `<dt>Hours</dt><dd>${esc(shelter.hours)}</dd>` : ''}
             ${shelter.phone ? `<dt>Phone</dt><dd><a href="tel:${esc(shelter.phone.replace(/[^\d+]/g, ''))}">${esc(shelter.phone)}</a></dd>` : ''}
-            ${shelter.email ? `<dt>Email</dt><dd><a href="mailto:${esc(shelter.email)}">${esc(shelter.email)}</a></dd>` : ''}</dl></div></div></div>` : ''}
+            ${shelter.email ? `<dt>Email</dt><dd><a href="mailto:${esc(shelter.email)}?subject=${encodeURIComponent(`Enquiry about ${pet.name}`)}">${esc(shelter.email)}</a></dd>` : ''}
+            ${shelter.website ? `<dt>Website</dt><dd><a href="${esc(shelter.website)}" target="_blank" rel="noopener">${esc(shelter.website.replace(/^https?:\/\//, ''))}</a></dd>` : ''}</dl></div></div></div>` : ''}
         <div class="card card-pad" data-reveal>
           <h3 style="font-size:22px">Adopting ${esc(pet.name)}</h3>
           <ol class="plain reason-list pos" style="margin-top:14px">
@@ -185,7 +202,9 @@
 
   // ---------- similar pets ----------
   try {
-    const { pets } = await PawPalAPI.get('/pets', { type: ['Dog', 'Cat'].includes(pet.type) ? pet.type.toLowerCase() : 'other', available: 1 });
+    const group = { Dog: 'dog', Cat: 'cat', Bird: 'bird', Reptile: 'reptile', Fish: 'fish', 'Farm Animal': 'farm' }[pet.type] || 'small';
+    let { pets } = await PawPalAPI.get('/pets', { type: group, available: 1 });
+    if (pets.length < 3) ({ pets } = await PawPalAPI.get('/pets', { type: 'other', available: 1 })); // small groups: widen to all non-dog/cat pets
     const similar = pets.filter((p) => p.id !== pet.id).sort((a, b) => (Math.abs(a.energyLevel - energy) + (a.size === pet.size ? 0 : 1)) - (Math.abs(b.energyLevel - energy) + (b.size === pet.size ? 0 : 1))).slice(0, 8);
     if (similar.length) {
       $('#similar').innerHTML = similar.map((p, i) => petCardHTML(p, { index: i })).join('');

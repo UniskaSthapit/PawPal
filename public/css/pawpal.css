@@ -535,17 +535,18 @@ main { flex: 1; }
 .stat-strip span { display: block; margin-top: 8px; font-size: 14px; color: var(--muted); font-weight: 600; }
 @media (max-width: 760px) { .stat-strip { grid-template-columns: 1fr 1fr; } .stat-strip > div:nth-child(3)::before { display: none; } .stat-strip > div { padding: 18px; } }
 
-/* Horizontal pet rail that is driven by vertical scrolling (pinned) on large screens.
-   Without JS, on touch devices or with reduced motion it is a native swipeable rail. */
-.hscroll { position: relative; }
+/* Horizontal pet rail: glides sideways as the page scrolls past (see PawPal.hscroll), and is always
+   swipeable/draggable. Without JS or with reduced motion it is simply a native horizontal scroller. */
+.hscroll { position: relative; padding-block: clamp(56px, 7vw, 96px) clamp(24px, 3vw, 40px); }
 .hscroll-sticky { position: relative; }
 .hscroll-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; flex-wrap: wrap; margin-bottom: clamp(24px, 3vw, 40px); }
 .hscroll-head .h2 { margin-top: 12px; }
 .hscroll-progress { display: flex; align-items: center; gap: 14px; font-size: 13px; font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; }
 .hscroll-progress .bar { width: 120px; height: 3px; border-radius: 3px; background: var(--paper-3); overflow: hidden; }
 .hscroll-progress .bar i { display: block; height: 100%; width: 100%; background: var(--brand); transform-origin: left; transform: scaleX(var(--p, 0)); }
-.rail { display: flex; gap: clamp(16px, 2vw, 26px); overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: var(--gutter); padding: 14px var(--gutter) 40px;
-  margin-inline: calc(var(--gutter) * -1); scrollbar-width: none; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; }
+/* The rail bleeds to both screen edges while its first card lines up with the page content */
+.rail { display: flex; gap: clamp(16px, 2vw, 26px); overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: calc(50vw - 50% + var(--gutter));
+  padding: 14px calc(50vw - 50% + var(--gutter)) 40px; margin-inline: calc(50% - 50vw); scrollbar-width: none; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; }
 .rail::-webkit-scrollbar { display: none; }
 .rail > * { flex: 0 0 clamp(250px, 26vw, 320px); scroll-snap-align: start; }
 .rail > .rail-end { display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 18px; padding: 32px; border-radius: var(--r-xl); text-decoration: none;
@@ -554,11 +555,12 @@ main { flex: 1; }
 .rail-end b { font-family: var(--font-display); font-size: 30px; font-weight: 420; line-height: 1.1; letter-spacing: -.02em; }
 .rail-end span { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; font-size: 15px; color: var(--peach); }
 .rail-end:hover { transform: translateY(-8px); box-shadow: var(--sh-lift); color: #fff; }
-/* Pinned mode — enabled by JS (.is-pinned) */
-.hscroll.is-pinned .hscroll-sticky { position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
-.hscroll.is-pinned .rail { overflow: visible; scroll-snap-type: none; will-change: transform; margin-inline: 0; padding-inline: max(var(--gutter), calc((100vw - var(--container)) / 2 + var(--gutter))); }
-.hscroll.is-pinned .container.hscroll-inner { max-width: none; padding: 0; }
-.hscroll.is-pinned .hscroll-head { max-width: var(--container); margin-inline: auto; padding-inline: var(--gutter); width: 100%; }
+/* While page scrolling drives the rail, snapping is paused so the glide stays smooth */
+.rail.is-driven { scroll-snap-type: none; }
+@media (hover: hover) and (pointer: fine) { .rail { cursor: grab; } }
+.rail.is-dragging, .rail.is-gliding { scroll-snap-type: none; }
+.rail.is-dragging { cursor: grabbing; user-select: none; }
+.rail.is-dragging * { pointer-events: none; }
 
 /* Rail / carousel controls */
 .rail-nav { display: flex; gap: 8px; }
@@ -785,6 +787,13 @@ main { flex: 1; }
 .shelter-card .s-ic { width: 52px; height: 52px; border-radius: 16px; background: var(--sage-soft); color: var(--sage); display: grid; place-items: center; }
 .shelter-card .s-ic svg { width: 26px; height: 26px; }
 .profile-body { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: clamp(24px, 4vw, 64px); }
+/* Species care guide */
+.care-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 16px 0 0; }
+.care-list > div { background: var(--paper); border-radius: var(--r-lg); padding: 14px 16px; }
+.care-list dt { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; color: var(--brand-ink); }
+.care-list dt svg { width: 16px; height: 16px; }
+.care-list dd { margin: 6px 0 0; font-size: 14.5px; color: var(--ink-2); line-height: 1.55; }
+@media (max-width: 560px) { .care-list { grid-template-columns: 1fr; } }
 .profile-section { background: var(--card); border: 1px solid var(--line-2); border-radius: var(--r-xl); padding: clamp(22px, 3vw, 32px); box-shadow: var(--sh-1); }
 @media (max-width: 960px) { .profile-top, .profile-body { grid-template-columns: 1fr; } .profile-side { position: static; } }
 @media (max-width: 480px) { .key-facts { grid-template-columns: 1fr 1fr; } .gallery-main { border-radius: var(--r-xl); } }

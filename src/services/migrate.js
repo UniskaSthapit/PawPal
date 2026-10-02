@@ -3,18 +3,21 @@
 const db = require('../db');
 const { LEGACY_APP_STATUS, LEGACY_PET_STATUS } = require('../constants');
 const { newId, now } = require('../utils');
+const config = require('../config');
+const { EXTRA_PETS } = require('./extra-pets');
 
-const SCHEMA_VERSION = 2;
+// v3: real contact email on shelters, and reptiles, birds, fish, hamsters and farm animals added to the catalogue
+const SCHEMA_VERSION = 3;
 
 const DEFAULT_SHELTERS = [
   { key: 'VIC', name: 'PawPal Melbourne Rescue Centre', suburb: 'Footscray', state: 'VIC', address: '14 Hopkins Street, Footscray VIC 3011',
-    phone: '(03) 9000 4120', email: 'melbourne@pawpal.app', hours: 'Tue–Sun 10am–5pm', about: 'Our largest centre, caring for dogs, cats and small animals from across Melbourne\'s west.' },
+    phone: '(03) 9000 4120', email: config.contactEmail, hours: 'Tue–Sun 10am–5pm', about: 'Our largest centre, caring for dogs, cats and small animals from across Melbourne\'s west.' },
   { key: 'NSW', name: 'PawPal Sydney Adoption Centre', suburb: 'Parramatta', state: 'NSW', address: '80 Church Street, Parramatta NSW 2150',
-    phone: '(02) 9000 7730', email: 'sydney@pawpal.app', hours: 'Wed–Sun 10am–4pm', about: 'A foster-based centre working with volunteer carers across Greater Sydney.' },
+    phone: '(02) 9000 7730', email: config.contactEmail, hours: 'Wed–Sun 10am–4pm', about: 'A foster-based centre working with volunteer carers across Greater Sydney.' },
   { key: 'QLD', name: 'PawPal Brisbane Haven', suburb: 'Woolloongabba', state: 'QLD', address: '22 Logan Road, Woolloongabba QLD 4102',
-    phone: '(07) 3000 2285', email: 'brisbane@pawpal.app', hours: 'Tue–Sat 9am–4pm', about: 'Specialising in cats, kittens and senior pets looking for quiet homes.' },
+    phone: '(07) 3000 2285', email: config.contactEmail, hours: 'Tue–Sat 9am–4pm', about: 'Specialising in cats, kittens and senior pets looking for quiet homes.' },
   { key: 'WA', name: 'PawPal Perth Rehoming Centre', suburb: 'Osborne Park', state: 'WA', address: '5 Hutton Street, Osborne Park WA 6017',
-    phone: '(08) 9000 6641', email: 'perth@pawpal.app', hours: 'Thu–Sun 10am–4pm', about: 'A small team rehoming dogs and rabbits across Perth.' },
+    phone: '(08) 9000 6641', email: config.contactEmail, hours: 'Thu–Sun 10am–4pm', about: 'A small team rehoming dogs and rabbits across Perth.' },
 ];
 
 async function ensureShelters() {
@@ -77,9 +80,31 @@ async function migrate() {
     if (!u.shelterId) await db.update('users', u.id, { shelterId: shelters[0].id });
   }
 
+  // v3 — the original demo shelter addresses (@pawpal.app) can't receive mail; point them at the real contact address
+  for (const s of shelters) {
+    if (/@pawpal\.app$/i.test(s.email || '')) await db.update('shelters', s.id, { email: config.contactEmail });
+  }
+  await addExtraPets(shelters);
+
   if (meta) await db.update('meta', 'schema', { version: SCHEMA_VERSION, at: now() });
   else await db.insert('meta', { id: 'schema', version: SCHEMA_VERSION, at: now() });
   return true;
 }
 
-module.exports = { migrate, DEFAULT_SHELTERS, SCHEMA_VERSION, ensureShelters, shelterFor };
+// Adds any of the new species that aren't in the catalogue yet (matched by name + breed, so it never duplicates)
+async function addExtraPets(shelters, { createdBy = null } = {}) {
+  const existing = new Set((await db.find('pets')).map((p) => `${p.name}|${p.breed}`.toLowerCase()));
+  const { templateDescription } = require('./ai');
+  let added = 0;
+  for (const [i, p] of EXTRA_PETS.entries()) {
+    if (existing.has(`${p.name}|${p.breed}`.toLowerCase())) continue;
+    const at = new Date(Date.now() - (i + 1) * 36e5 * 20).toISOString(); // spread over recent days
+    await db.insert('pets', { id: newId('pet'), ...p, description: p.description || templateDescription(p), status: 'Available',
+      shelterId: shelterFor(p.location, shelters).id, medicalHistory: 'Health check completed on intake. See care notes.', rescueBackground: 'Surrendered to the shelter.',
+      internalNotes: '', createdBy, createdAt: at, updatedAt: at });
+    added++;
+  }
+  return added;
+}
+
+module.exports = { migrate, addExtraPets, DEFAULT_SHELTERS, SCHEMA_VERSION, ensureShelters, shelterFor };
