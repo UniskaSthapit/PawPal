@@ -22,6 +22,12 @@ services:
         sync: false   # the owner's email — becomes the administrator and default sender
       - key: CONTACT_EMAIL
         sync: false   # public contact address (defaults to ADMIN_EMAIL)
+      - key: GMAIL_CLIENT_ID
+        sync: false   # Gmail API email (used first when all three GMAIL_ values are set) — see DEPLOY.md
+      - key: GMAIL_CLIENT_SECRET
+        sync: false
+      - key: GMAIL_REFRESH_TOKEN
+        sync: false
       - key: BREVO_API_KEY
         sync: false   # email over HTTPS from a verified single sender (works with a Gmail address)
       - key: RESEND_API_KEY
