@@ -45,13 +45,13 @@
   if (petsRes.status === 'fulfilled') {
     const pets = petsRes.value.pets;
     // Each photo links to the real pet pictured (while they're still available) and shows their name on hover
-    $$('.pet-bubble, #heroFeature').forEach((b) => {
+    $$('.ch-pet-bubble, .pet-bubble, #heroFeature').forEach((b) => {
       const pet = pets.find((p) => (p.photos || []).some((u) => u.includes(b.dataset.photo)));
       if (!pet) return;
       b.href = `pet-profile.html?id=${encodeURIComponent(pet.id)}`;
       b.removeAttribute('aria-hidden'); b.removeAttribute('tabindex');
       b.setAttribute('aria-label', `Meet ${pet.name}, ${pet.breed}`);
-      const name = b.querySelector('.bubble-name'); if (name) name.textContent = pet.name;
+      const name = b.querySelector('.ch-bubble-name, .bubble-name'); if (name) name.textContent = pet.name;
       b.querySelector('img').alt = `${pet.name}, ${pet.breed}`;
     });
     // Phones: a row of overlapping pet photos under the hero copy
