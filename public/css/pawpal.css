@@ -1226,3 +1226,7 @@ body.side-open::after, body.filters-open::after { content: ''; position: fixed; 
 .thread-msg.staff { background: var(--sky-soft); border-color: transparent; }
 .thread-msg .who { font-size: 12.5px; font-weight: 800; color: var(--muted); margin-bottom: 4px; display: flex; justify-content: space-between; gap: 10px; }
 .thread-msg p { white-space: pre-wrap; }
+
+/* Admin settings: recent email log */
+.email-log { padding: 12px 14px; border: 1px solid var(--line-2); border-radius: var(--r); background: var(--card); min-width: 0; }
+.email-error { display: block; margin-top: 8px; padding: 8px 10px; border-radius: 8px; background: var(--danger-soft); color: var(--danger); font-size: 12.5px; white-space: pre-wrap; overflow-wrap: anywhere; }
