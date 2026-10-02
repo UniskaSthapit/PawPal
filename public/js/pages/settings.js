@@ -30,7 +30,7 @@
         <h3 style="margin-top:22px;font-size:18px">Recent emails</h3>
         <p class="small muted" style="margin-top:4px">The last emails PawPal tried to send. "Failed" shows the email provider's reason.</p>
         ${s.recentEmails?.length ? `<ul class="plain stack" style="--stack:10px;margin-top:12px">${s.recentEmails.map((m) => `<li class="email-log"><div class="row-between" style="gap:10px;flex-wrap:wrap"><b>${esc(m.subject)}</b>
-          <span class="badge ${m.status === 'sent' ? 'badge-sage' : 'badge-danger'}">${m.status === 'sent' ? 'Sent' : 'Failed'}</span></div>
+          <span class="badge ${m.status === 'sent' ? 'badge-sage' : m.status === 'skipped' ? '' : 'badge-danger'}">${m.status === 'sent' ? 'Sent' : m.status === 'skipped' ? 'Skipped' : 'Failed'}</span></div>
           <span class="small muted">To ${esc(m.to)} · ${esc(timeAgo(m.sentAt))} · via ${esc(m.mode)}</span>${m.error ? `<code class="email-error">${esc(m.error)}</code>` : ''}</li>`).join('')}</ul>`
           : '<p class="small muted" style="margin-top:10px">No emails have been sent yet.</p>'}
         ${s.allowDemoReset ? `<div class="alert alert-warn" style="margin-top:16px">${icons.alert}<div><b>Demo reset is enabled.</b> This wipes all data and reloads the sample data. Turn it off in production with <code>ALLOW_DEMO_RESET=false</code>. <button class="link-btn" id="resetBtn">Reset demo data</button></div></div>` : ''}`;

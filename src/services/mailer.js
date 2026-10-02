@@ -79,10 +79,18 @@ function layout({ heading, body, buttonText, buttonUrl }) {
   </td></tr></table></body></html>`;
 }
 
+// Addresses that can never receive mail: reserved test domains (example.com, .test, .invalid…) and the made-up
+// addresses on the demo data. Sending to them only produces bounces, and repeated bounces can get the
+// sending account suspended by the email provider, so they are skipped with a note in the log.
+const UNDELIVERABLE = /@((.+\.)?example(\.(com|net|org))?|.+\.(test|invalid|localhost|local)|(.+\.)?pawpal\.(com|app))$/i;
+
 async function sendMail({ to, subject, heading, body, buttonText, buttonUrl, type = 'general' }) {
   const html = layout({ heading: heading || subject, body, buttonText, buttonUrl });
   const record = { id: newId('mail'), to, subject, type, html, link: buttonUrl || null, mode: emailMode, status: 'sent', sentAt: now() };
-  if (emailMode === 'dev') {
+  if (emailMode !== 'dev' && UNDELIVERABLE.test(String(to || '').trim())) {
+    record.status = 'skipped';
+    record.error = 'Not sent: this is a demo or test address that cannot receive email.';
+  } else if (emailMode === 'dev') {
     console.log(`✉️  [dev mailbox] To: ${to} | ${subject}${buttonUrl ? ' | ' + buttonUrl : ''}`);
   } else {
     try {
@@ -195,4 +203,4 @@ const emails = {
   }),
 };
 
-module.exports = { sendMail, emails, smtpEnabled, resendEnabled, emailMode, parseFrom };
+module.exports = { UNDELIVERABLE, sendMail, emails, smtpEnabled, resendEnabled, emailMode, parseFrom };
