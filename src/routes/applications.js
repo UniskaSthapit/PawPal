@@ -21,7 +21,9 @@ const forApplicant = (a) => ({ id: a.id, petId: a.petId, petName: a.petName, pet
   appointmentAt: a.appointmentAt || null, submittedAt: a.submittedAt, updatedAt: a.updatedAt,
   booking: a.bookingInvite && !APP_CLOSED.includes(a.status) ? { invited: true, message: a.bookingInvite.message || '', slotId: a.slotId || null,
     canChange: !a.slotId || new Date(a.appointmentAt).getTime() - Date.now() > CHANGE_CUTOFF_MS } : null,
-  carePlanReady: Boolean(a.carePlan), shelterId: a.shelterId || null, answers: { livingType: a.livingType, ownership: a.ownership, activityLevel: a.activityLevel, hoursAlone: a.hoursAlone,
+  carePlanReady: Boolean(a.carePlan),
+  payment: a.status === 'Adopted' && Number.isFinite(a.feeDue) && a.feeDue > 0 ? { amount: a.feeDue, status: a.paymentStatus || 'due', paymentId: a.paymentId || null } : null,
+  shelterId: a.shelterId || null, answers: { livingType: a.livingType, ownership: a.ownership, activityLevel: a.activityLevel, hoursAlone: a.hoursAlone,
     hasChildren: a.hasChildren, hasOtherPets: a.hasOtherPets, experience: a.experience, motivation: a.motivation } });
 
 // Emails the applicant at the address on their application and, if different, their account email,
@@ -328,6 +330,11 @@ router.patch('/:id/status', requireStaff, asyncHandler(async (req, res) => {
     patch.slotId = null;
   }
   if (note) patch.messages = [...(app.messages || []), { id: newId('msg'), from: 'staff', name: req.user.name, text: note, at }];
+  // The adoption fee is fixed when the adoption completes; the adopter pays it online (simulation) or at the shelter
+  if (status === 'Adopted') {
+    patch.feeDue = Math.max(0, Number(pet?.adoptionFee) || 0);
+    patch.paymentStatus = patch.feeDue > 0 ? 'due' : 'no_fee';
+  }
   const updated = await db.update('applications', app.id, patch);
   // Approved (or later, if a step was skipped): prepare the adopter's "first 30 days" care plan in the background
   if (CARE_PLAN_STATUSES.includes(status) && !app.carePlan) {

@@ -36,6 +36,8 @@ function createMongoStore(uri, dbName) {
         col('events').createIndex({ type: 1, at: -1 }),
         col('emails').createIndex({ to: 1, type: 1, appId: 1 }),
         col('translations').createIndex({ id: 1 }, { unique: true }),
+        col('payments').createIndex({ id: 1 }, { unique: true }),
+        col('payments').createIndex({ applicationId: 1 }),
         col('translations').createIndex({ petId: 1 }),
         col('emails').createIndex({ sentAt: -1 }),
         col('mailStats').createIndex({ id: 1 }, { unique: true }),

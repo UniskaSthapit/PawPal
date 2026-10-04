@@ -79,6 +79,13 @@
         <form id="replyForm" style="margin-top:12px"><label class="sr-only" for="replyText">Your reply</label><textarea class="textarea" id="replyText" maxlength="2000" placeholder="Type your reply to the shelter…" required></textarea>
           <button class="btn btn-primary" style="margin-top:10px" type="submit">${icons.send}Send reply</button></form></div>` : ''}
 
+      ${a.payment ? (a.payment.status === 'paid' ? `<div class="card card-pad fee-card fee-paid" id="feeCard"><span class="src-label">${icons.checkCircle}Adoption fee paid</span>
+        <p class="small" style="margin-top:6px">Thank you — the $${esc(a.payment.amount)} adoption fee for ${esc(a.petName)} is paid.</p>
+        <a class="btn btn-sm" style="margin-top:10px" href="receipt.html?id=${encodeURIComponent(a.payment.paymentId || '')}">${icons.file}View receipt</a></div>`
+        : `<div class="card card-pad fee-card" id="feeCard"><span class="src-label" style="color:var(--honey-ink)">${icons.alert}Adoption fee due: $${esc(a.payment.amount)}</span>
+        <p class="small muted" style="margin-top:6px">${a.payment.status === 'pay_in_person' ? 'You chose to pay at the shelter. You can also pay online now.' : 'Pay online (payment simulation — no real money is taken), or choose to pay at the shelter.'}</p>
+        <a class="btn btn-primary btn-sm" style="margin-top:10px" id="payFeeBtn" href="checkout.html?app=${encodeURIComponent(a.id)}">${icons.checkCircle}Pay adoption fee</a></div>`) : ''}
+
       ${a.carePlanReady ? `<div class="card card-pad care-cta" id="carePlanCard"><span class="src-label src-ai">${icons.clipboard}Your first 30 days</span>
         <h3 style="font-size:20px;margin-top:6px">A care plan to help ${esc(a.petName)} settle in</h3>
         <p class="small muted" style="margin-top:4px">What to prepare, the first few days, feeding, exercise, the vet and warning signs — ready to print.</p>

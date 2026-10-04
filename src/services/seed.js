@@ -128,7 +128,7 @@ const KEYWORDS = ['golden retriever', 'puppy', 'cat', 'apartment', 'small dog', 
 async function seedIfEmpty({ force = false } = {}) {
   if (!force && (await db.count('users')) > 0) return false;
   for (const c of ['users', 'pets', 'applications', 'searches', 'events', 'notifications', 'emails', 'shelters', 'favourites', 'enquiries',
-    'conversations', 'matches', 'phoneCodes', 'sms', 'images', 'messages', 'meta', 'settings', 'mailStats', 'slots']) await db.clear(c);
+    'conversations', 'matches', 'phoneCodes', 'sms', 'images', 'messages', 'meta', 'settings', 'mailStats', 'slots', 'translations', 'payments']) await db.clear(c);
   require('./settings').resetSettingsCache();
 
   const shelters = [];
@@ -171,8 +171,19 @@ async function seedIfEmpty({ force = false } = {}) {
       ...(st === 'Declined' ? { note: 'Luna needs a very experienced home with no long days alone. We\'d love to help you find a better match.' } : {}) }));
     const needsDate = ['Interview', 'Meet & Greet', 'Adoption Scheduled'].includes(status);
     const messages = history.filter((h) => h.note).map((h) => ({ id: newId('msg'), from: 'staff', name: staff.name, text: h.note, at: h.at }));
+    const appId = newId('app');
+    // Adoption fee: the demo adopter's is still due (try the checkout); the others were paid at the time
+    let fee = {};
+    if (status === 'Adopted' && pet.adoptionFee > 0) {
+      fee = { feeDue: pet.adoptionFee, paymentStatus: isDemo ? 'due' : 'paid' };
+      if (!isDemo) {
+        fee.paymentId = newId('pay');
+        await db.insert('payments', { id: fee.paymentId, applicationId: appId, userId: null, amount: pet.adoptionFee, brand: 'Visa', last4: '4242',
+          status: 'succeeded', receiptNo: `PP-${history[history.length - 1].at.slice(0, 10).replace(/-/g, '')}-SEED${i}`, paidAt: history[history.length - 1].at });
+      }
+    }
     await db.insert('applications', {
-      id: newId('app'), petId: pet.id, petName: pet.name, petBreed: pet.breed, petPhoto: pet.photos[0], shelterId: pet.shelterId,
+      id: appId, petId: pet.id, petName: pet.name, petBreed: pet.breed, petPhoto: pet.photos[0], shelterId: pet.shelterId,
       userId: isDemo ? demo.id : null, name: applicant, email, phone: isDemo ? demo.phone : '04' + String(10000000 + i * 7654321).slice(0, 8),
       address: isDemo ? '12 Wattle Street, Footscray VIC 3011' : i % 3 === 0 ? '' : 'Melbourne VIC', ownership, landlordPermission: ownership === 'Rent' ? i % 2 === 0 : '',
       householdAdults: 1 + (i % 3), workSchedule: i % 4 === 0 ? '' : 'Office three days a week, home two days.',
@@ -182,6 +193,7 @@ async function seedIfEmpty({ force = false } = {}) {
       appointmentAt: needsDate ? daysAgo(-(2 + (i % 4)), 11) : null,
       submittedAt: daysAgo(ago, 9), updatedAt: history[history.length - 1].at,
       // Approved and later: the "first 30 days" care plan (rules templates; no AI call while seeding)
+      ...fee,
       ...(['Approved', 'Adoption Scheduled', 'Adopted'].includes(status) ? { carePlan: { ...rulesPlan(pet, form), petType: pet.type, source: 'rules', disclaimer: DISCLAIMER,
         generatedAt: history.find((h) => h.status === 'Approved')?.at || history[history.length - 1].at } } : {}),
     });

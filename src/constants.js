@@ -5,6 +5,8 @@ const ROLES = ['user', 'staff', 'admin'];
 const ROLE_LABELS = { user: 'Adopter', staff: 'Shelter staff', admin: 'Administrator' };
 
 const PET_TYPES = ['Dog', 'Cat', 'Rabbit', 'Guinea Pig', 'Hamster', 'Bird', 'Reptile', 'Fish', 'Farm Animal', 'Other'];
+// Suggested adoption fees (AUD) by species — staff can change each pet's fee on the pet form
+const DEFAULT_FEES = { Dog: 400, Cat: 180, Rabbit: 90, 'Guinea Pig': 50, Hamster: 25, Bird: 70, Reptile: 130, Fish: 20, 'Farm Animal': 300, Other: 50 };
 // Groups used by the species filters (?type=small etc.). Any other value matches a single type, e.g. ?type=reptile.
 const TYPE_GROUPS = { small: ['Rabbit', 'Guinea Pig', 'Hamster', 'Other'], farm: ['Farm Animal'] };
 const PET_SIZES = ['Small', 'Medium', 'Large'];
@@ -38,5 +40,5 @@ const APP_STATUS_INFO = {
 const LEGACY_APP_STATUS = { Pending: 'Submitted', Shortlisted: 'Under Review', 'Visit Scheduled': 'Meet & Greet', Rejected: 'Declined' };
 const LEGACY_PET_STATUS = { 'Pending Adoption': 'On Hold' };
 
-module.exports = { ROLES, ROLE_LABELS, PET_TYPES, TYPE_GROUPS, PET_SIZES, PET_STATUSES, PUBLIC_PET_STATUSES, APP_FLOW, APP_STATUSES,
+module.exports = { ROLES, ROLE_LABELS, PET_TYPES, DEFAULT_FEES, TYPE_GROUPS, PET_SIZES, PET_STATUSES, PUBLIC_PET_STATUSES, APP_FLOW, APP_STATUSES,
   APP_CLOSED, APP_NEEDS_DATE, APP_HOLDS_PET, APP_STATUS_INFO, LEGACY_APP_STATUS, LEGACY_PET_STATUS };

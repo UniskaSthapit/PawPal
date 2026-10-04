@@ -22,6 +22,10 @@
       ['message', s.enquiries, 'Enquiries', delta(s.enquiriesChange)], ['eye', s.views, 'Profile views', delta(s.viewsChange)], ['heart', s.favourites, 'Favourites saved', ''],
       ['home', s.adoptions, 'Adoptions', delta(s.adoptionsChange)], ['clock', s.avgDaysToFirstAction ?? '—', 'Avg days to first review', ''], ['checkCircle', s.completionRate === null ? '—' : `${s.completionRate}%`, 'Complete applications', '']]
       .map(([ic, n, l, d]) => `<div class="kpi"><div class="k-top"><span class="k-ic">${icons[ic]}</span>${d}</div><b>${n}</b><span>${l}</span></div>`).join('');
+    const f = a.fees; const aud = (n) => `$${Number(n || 0).toLocaleString('en-AU')}`;
+    $('#fees').innerHTML = `<div><b id="feesCollected">${aud(f.collected)}</b><span>Collected in this period · ${f.payments} payment${f.payments === 1 ? '' : 's'}</span></div>
+      <div><b>${aud(f.outstanding)}</b><span>Still owed on ${f.outstandingCount} adoption${f.outstandingCount === 1 ? '' : 's'}${f.payAtShelter ? ` (${f.payAtShelter} paying at the shelter)` : ''}</span></div>
+      <div><b>${aud(f.collectedAllTime)}</b><span>Collected all-time</span></div>`;
     const fmax = Math.max(1, ...a.funnel.map((f) => f.count));
     $('#funnel').innerHTML = a.funnel.map((f) => `<div class="funnel-row"><span class="small">${esc(f.stage)}</span><div><div class="f-bar" style="width:${Math.min(100, Math.max(2, (f.count / fmax) * 100))}%"></div></div><b>${f.count}</b></div>`).join('');
     bars($('#byAge'), a.byAge); bars($('#byType'), a.byType); bars($('#bySize'), a.bySize);
