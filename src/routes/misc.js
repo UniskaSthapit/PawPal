@@ -7,7 +7,7 @@ const config = require('../config');
 const ai = require('../services/ai');
 const llm = require('../services/llm');
 const maps = require('../services/maps');
-const { sendMail, emailMode } = require('../services/mailer');
+const { sendMail, emailMode, mailHealth } = require('../services/mailer');
 const { smsMode } = require('../services/sms');
 const { seedIfEmpty } = require('../services/seed');
 const { sanitizeProfile, describeProfile, emptyProfile, AGE_BAND } = require('../services/matching');
@@ -316,13 +316,18 @@ router.get('/config', (req, res) => res.json({
   contactEmail: config.contactEmail, siteUrl: config.appUrl,
 }));
 
+// Email health for the admin banner: provider, today's count against the daily limit, sign-in problems
+router.get('/system/mail-health', requireAdmin, asyncHandler(async (req, res) => {
+  res.json(await mailHealth());
+}));
+
 router.get('/system/status', requireAdmin, asyncHandler(async (req, res) => {
   const [pets, apps, users, mails, shelters] = await Promise.all([db.count('pets'), db.count('applications'), db.count('users'), db.count('emails'), db.count('shelters')]);
   res.json({ database: db.name,
     email: { gmail: `Gmail API (from ${config.gmail.sender})`, resend: `Resend API (from ${config.mailFrom})`, brevo: `Brevo API (from ${config.mailFrom})`, smtp: `SMTP (${config.smtp.host})`, dev: 'Dev mailbox (no email provider configured)' }[emailMode],
     sms: { twilio: 'Twilio', dev: 'Dev SMS log (no SMS provider configured)', disabled: 'Not configured' }[smsMode],
     ai: llm.providerLabel, maps: maps.mapsEnabled ? 'Google Places API' : 'Keyless Google Maps embed',
-    counts: { pets, apps, users, mails, shelters }, allowDemoReset: config.allowDemoReset,
+    counts: { pets, apps, users, mails, shelters }, allowDemoReset: config.allowDemoReset, mail: await mailHealth(),
     // The last emails PawPal tried to send, so delivery problems can be seen without the server logs
     recentEmails: (await db.find('emails')).sort((a, b) => new Date(b.sentAt) - new Date(a.sentAt)).slice(0, 20)
       .map((m) => ({ to: m.to, type: m.type, subject: m.subject, status: m.status, error: m.error || null, mode: m.mode, retried: !!m.retried, sentAt: m.sentAt })) });

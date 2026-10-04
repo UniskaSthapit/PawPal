@@ -412,6 +412,19 @@ const PawPal = (() => {
   const STAFF_SIDE = [['index.html', 'grid', 'Overview'], ['pets.html', 'paw', 'Pets'], ['applications.html', 'file', 'Applications', 'apps'], ['enquiries.html', 'message', 'Enquiries', 'enq'],
     ['analytics.html', 'chart', 'Analytics'], ['assistant.html', 'sparkle', 'AI assistant'], ['notifications.html', 'bell', 'Notifications'], ['settings.html', 'gear', 'Settings']];
 
+  // Administrators see a banner on every portal page when email needs attention (Gmail sign-in expired, daily limit reached)
+  function mailBanner(main) {
+    PawPalAPI.get('/system/mail-health').then((h) => {
+      if (!h.problems?.length) return;
+      const box = document.createElement('div');
+      box.className = 'alert alert-warn mail-banner';
+      box.setAttribute('role', 'alert');
+      box.innerHTML = `${icons.mail}<div>${h.problems.map((p) => `<b>${p.code === 'auth' ? 'Email is not being sent.' : 'Email paused for today.'}</b> ${esc(p.message)}`).join('<br>')}
+        <a href="settings.html#systemCard">Email status</a></div>`;
+      main.prepend(box);
+    }).catch(() => {});
+  }
+
   function renderShell(u) {
     const main = $('#main');
     if (!main) return;
@@ -436,6 +449,7 @@ const PawPal = (() => {
         const s = shelters.find((x) => x.id === u?.shelterId);
         $('#sideShelter').innerHTML = s ? `<b>${esc(s.name)}</b><span class="muted">${esc(s.suburb)}, ${esc(s.state)}</span>` : `<b>All shelters</b><span class="muted">${u?.role === 'admin' ? 'Administrator view' : 'No shelter assigned'}</span>`;
       }).catch(() => {});
+      if (u?.role === 'admin') mailBanner(main);
       Promise.all([PawPalAPI.get('/applications', { status: 'Submitted', limit: 1 }), PawPalAPI.get('/enquiries', { status: 'Open' })]).then(([a, e]) => {
         const set = (key, n) => { const el = $(`[data-count="${key}"]`); if (el && n) { el.hidden = false; el.textContent = n > 99 ? '99+' : n; } };
         set('apps', a.total); set('enq', e.open);
