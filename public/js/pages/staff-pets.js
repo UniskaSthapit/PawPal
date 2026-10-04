@@ -16,6 +16,7 @@
       <td data-label="Details"><span class="small">${esc(p.type)} · ${esc(p.size)} · ${esc(p.location || '—')}</span></td>
       <td data-label="Listed"><span class="small muted">${esc(fmtDate(p.createdAt))}</span></td>
       <td data-label="Actions"><div class="row" style="gap:4px;flex-wrap:nowrap"><a class="btn btn-sm" href="add-pet.html?id=${encodeURIComponent(p.id)}">${icons.edit}Edit</a>
+        <a class="btn btn-sm" href="flyer.html?id=${encodeURIComponent(p.id)}" aria-label="Print a flyer for ${esc(p.name)}">${icons.download}Flyer</a>
         ${['Available', 'On Hold', 'Adopted'].includes(p.status) ? `<a class="btn btn-sm btn-ghost btn-icon" href="pet-profile.html?id=${encodeURIComponent(p.id)}" target="_blank" aria-label="View ${esc(p.name)}'s public profile">${icons.external}</a>` : ''}</div></td></tr>`).join('')
       : `<tr><td colspan="5">${emptyHTML({ icon: 'paw', title: 'No pets here', text: 'Try another tab or search, or add a new pet.', action: '<a class="btn btn-primary" href="add-pet.html">Add a pet</a>' })}</td></tr>`;
   };

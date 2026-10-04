@@ -403,6 +403,18 @@ const mailFor = async (anon, email, type) => (await anon('GET', `/api/dev/emails
   check('Upgrade adds missing species without duplicating any', (await db.count('pets')) === petsBefore && (await db.find('pets')).filter((p) => p.breed === 'Pygmy Goat').length === 1);
   check('Upgrade replaces placeholder shelter emails', !/@pawpal\.app$/.test((await db.findOne('shelters', { id: shelter.id })).email));
 
+  console.log('\nPrintable flyers');
+  r = await anon('GET', '/flyer.html');
+  check('Flyer page is for staff only (visitors are sent to log in)', r.status === 302 && /login\.html\?role=staff/.test(r.headers.get('location')));
+  r = await adopter('GET', '/flyer.html');
+  check('Adopters cannot open the flyer page', r.status === 302);
+  const flyerPet = (await db.find('pets')).find((x) => x.medicalHistory && x.status === 'Available');
+  r = await admin('GET', `/api/pets/${flyerPet.id}?public=1`);
+  check('Flyers get only public pet fields, even for staff', r.status === 200 && r.body.pet.name === flyerPet.name
+    && !('medicalHistory' in r.body.pet) && !('rescueBackground' in r.body.pet) && !('internalNotes' in r.body.pet) && r.body.shelter?.name);
+  r = await admin('GET', `/api/pets/${flyerPet.id}`);
+  check('The normal staff view still includes internal fields', 'medicalHistory' in r.body.pet);
+
   console.log('\nTwo-factor authentication (staff)');
   const totp = require('../src/services/totp');
   await adopter('POST', '/api/auth/login', { email, password: 'NewPaws567', role: 'user' }); // logged out by the account-security checks

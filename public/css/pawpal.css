@@ -1259,3 +1259,42 @@ body.side-open::after, body.filters-open::after { content: ''; position: fixed; 
 .tf-off summary { list-style: none; display: inline; }
 .tf-off summary::-webkit-details-marker { display: none; }
 .mail-banner { margin-bottom: 18px; }
+
+/* ---------- Printable A4 pet flyer ---------- */
+.flyer-stage { display: flex; justify-content: center; padding: 8px 0 32px; overflow-x: auto; }
+.flyer { width: 210mm; min-height: 297mm; max-width: 100%; padding: 14mm 14mm 12mm; background: #fff; color: #1E140E; box-shadow: var(--sh-2);
+  border-radius: 6px; display: flex; flex-direction: column; gap: 6mm; }
+.flyer-head { display: flex; align-items: center; gap: 10px; }
+.flyer-brand { font-family: var(--font-display); font-size: 26px; font-weight: 600; }
+.flyer-brand em { color: #C2553A; }
+.flyer-tag { margin-left: auto; padding: 6px 16px; border-radius: 999px; background: #C2553A; color: #fff; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; font-size: 14px; }
+.flyer-photo { aspect-ratio: 4 / 3; border-radius: 18px; overflow: hidden; background: #F4EADF; }
+.flyer-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.flyer-name { font-family: var(--font-display); font-size: 44px; line-height: 1.05; margin: 0; color: #1E140E; }
+.flyer-facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 0; }
+.flyer-facts div { padding: 8px 10px; border-radius: 10px; background: #FBF4EC; }
+.flyer-facts dt { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: #6E5A4A; font-weight: 700; }
+.flyer-facts dd { margin: 2px 0 0; font-weight: 700; font-size: 15px; }
+.flyer-badges { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.flyer-badges li { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 999px; border: 1px solid #CFE3D6; background: #EEF6F0; color: #24543F; font-weight: 600; font-size: 13px; }
+.flyer-badges svg { width: 14px; height: 14px; }
+.flyer-desc { font-size: 15px; line-height: 1.6; margin: 0; color: #3A2A20; }
+.flyer-foot { margin-top: auto; display: flex; align-items: flex-end; justify-content: space-between; gap: 8mm; padding-top: 6mm; border-top: 2px dashed #E7D6C4; }
+.flyer-contact { display: grid; gap: 3px; font-size: 13.5px; color: #3A2A20; min-width: 0; }
+.flyer-contact b { font-size: 16px; color: #1E140E; }
+.flyer-url { font-weight: 700; color: #A2402A; overflow-wrap: anywhere; }
+.flyer-qr { display: grid; justify-items: center; gap: 4px; flex: none; }
+.flyer-qr .qr { width: 42mm; height: 42mm; display: block; }
+.flyer-qr span { font-weight: 800; font-size: 14px; color: #C2553A; }
+@media (max-width: 760px) { .flyer { padding: 18px; min-height: 0; } .flyer-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); } .flyer-name { font-size: 32px; }
+  .flyer-qr .qr { width: 120px; height: 120px; } }
+@media print {
+  @page { size: A4; margin: 0; }
+  html, body { background: #fff !important; margin: 0 !important; padding: 0 !important; }
+  /* Only the flyer: hide every other part of the page (header, sidebar, chat, toasts…) */
+  body > *:not(.app-shell):not(main), .app-shell > *:not(main), main > *:not(.flyer-stage) { display: none !important; }
+  .app-shell, .app-main, main, .flyer-stage { display: block !important; padding: 0 !important; margin: 0 !important; max-width: none !important; width: auto !important;
+    border: 0 !important; box-shadow: none !important; background: none !important; overflow: visible !important; }
+  .flyer { width: 210mm; height: 297mm; min-height: 0; max-width: none; box-shadow: none; border-radius: 0; margin: 0; overflow: hidden; break-inside: avoid;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}

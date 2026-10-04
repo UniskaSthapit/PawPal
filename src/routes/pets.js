@@ -182,6 +182,8 @@ router.get('/:id', asyncHandler(async (req, res) => {
     throw new HttpError(404, 'This pet could not be found. They may have found their home already.');
   }
   const shelter = pet.shelterId ? await db.findOne('shelters', { id: pet.shelterId }) : null;
+  // Staff asking for the public view (e.g. printable flyers, social posts): same fields the website shows, any status
+  if (staff && req.query.public === '1') return res.json({ pet: toPublic(pet), shelter: publicShelter(shelter) });
   if (staff) {
     const [apps, enquiries, favs] = await Promise.all([db.find('applications', { petId: pet.id }),
       db.find('enquiries', { petId: pet.id }), db.count('favourites', { petId: pet.id })]);
