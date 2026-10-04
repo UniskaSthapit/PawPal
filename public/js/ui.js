@@ -283,8 +283,71 @@ const PawPal = (() => {
     if (Number(pet.energyLevel) === 1) tags.push('Calm');
     return tags.slice(0, 3);
   }
-  // `index` staggers the entrance animation when cards are rendered as a group
-  function petCardHTML(pet, { match, reason, index = 0 } = {}) {
+  // ---------- compare (up to 3 pets, remembered in this browser) ----------
+  const COMPARE_KEY = 'pp_compare';
+  const COMPARE_MAX = 3;
+  let compareList = [];
+  try {
+    const saved = JSON.parse(localStorage.getItem(COMPARE_KEY) || '[]');
+    compareList = (Array.isArray(saved) ? saved : []).filter((x) => x && typeof x.id === 'string' && /^[\w-]{1,40}$/.test(x.id)).slice(0, COMPARE_MAX);
+  } catch { compareList = []; }
+  const compareURL = () => `compare.html?ids=${compareList.map((x) => encodeURIComponent(x.id)).join(',')}`;
+  function saveCompare() {
+    try { localStorage.setItem(COMPARE_KEY, JSON.stringify(compareList)); } catch { /* private mode: keep for this page only */ }
+    $$('input[data-compare]').forEach((cb) => { cb.checked = compare.has(cb.dataset.compare); });
+    renderCompareBar();
+  }
+  const compare = {
+    max: COMPARE_MAX,
+    has: (id) => compareList.some((x) => x.id === id),
+    list: () => compareList.map((x) => ({ ...x })),
+    url: compareURL,
+    add(item) {
+      if (compare.has(item.id)) return true;
+      if (compareList.length >= COMPARE_MAX) return false;
+      compareList.push({ id: String(item.id), name: String(item.name || '').slice(0, 40), img: String(item.img || '').slice(0, 400) });
+      saveCompare();
+      return true;
+    },
+    remove(id) { compareList = compareList.filter((x) => x.id !== id); saveCompare(); },
+    set(items) { compareList = items.slice(0, COMPARE_MAX); saveCompare(); },
+    clear() { compareList = []; saveCompare(); },
+  };
+  const compareToggleHTML = (pet) => `<label class="compare-toggle"><input type="checkbox" data-compare="${esc(pet.id)}" data-name="${esc(pet.name)}" data-img="${esc(sized(photo(pet), 200))}" ${compare.has(pet.id) ? 'checked' : ''}><span>Compare</span></label>`;
+  document.addEventListener('change', (e) => {
+    const cb = e.target.closest?.('input[data-compare]');
+    if (!cb) return;
+    if (!cb.checked) return compare.remove(cb.dataset.compare);
+    if (!compare.add({ id: cb.dataset.compare, name: cb.dataset.name, img: cb.dataset.img })) {
+      cb.checked = false;
+      toast(`You can compare up to ${COMPARE_MAX} pets. Remove one from the compare bar first.`, 'info');
+    }
+  });
+  function renderCompareBar() {
+    let bar = $('#compareBar');
+    if (!compareList.length || page === 'compare.html' || !['public', 'account'].includes(layout)) { if (bar) bar.remove(); document.body.classList.remove('has-compare'); return; }
+    if (!bar) {
+      bar = document.createElement('div');
+      bar.id = 'compareBar'; bar.className = 'compare-bar'; bar.setAttribute('role', 'region'); bar.setAttribute('aria-label', 'Pets to compare');
+      bar.addEventListener('click', (e) => {
+        const rm = e.target.closest('[data-compare-remove]');
+        if (rm) compare.remove(rm.dataset.compareRemove);
+        if (e.target.closest('[data-compare-clear]')) compare.clear();
+      });
+      document.body.appendChild(bar);
+    }
+    document.body.classList.add('has-compare');
+    const n = compareList.length;
+    bar.innerHTML = `<div class="compare-bar-pets">${compareList.map((x) => `<span class="compare-chip">
+        <img src="${esc(x.img || PLACEHOLDER)}" alt="" data-fallback="${PLACEHOLDER}"><span>${esc(x.name)}</span>
+        <button type="button" data-compare-remove="${esc(x.id)}" aria-label="Remove ${esc(x.name)} from compare">${icons.close}</button></span>`).join('')}
+        ${Array.from({ length: COMPARE_MAX - n }, () => '<span class="compare-chip compare-empty" aria-hidden="true">Add a pet</span>').join('')}</div>
+      <div class="compare-bar-actions"><button type="button" class="link-btn small" data-compare-clear>Clear</button>
+        ${n >= 2 ? `<a class="btn btn-primary btn-sm" id="compareGo" href="${compareURL()}">Compare ${n} pets</a>` : '<span class="small muted">Pick at least 2 to compare</span>'}</div>`;
+  }
+
+  // `index` staggers the entrance animation when cards are rendered as a group; `compare` adds the compare checkbox
+  function petCardHTML(pet, { match, reason, index = 0, compare: withCompare = false } = {}) {
     const fav = favIds.has(pet.id);
     const staff = isStaffUser(user);
     const img = photo(pet);
@@ -303,6 +366,7 @@ const PawPal = (() => {
         ${pet.location ? `<div class="pet-card-loc">${icons.pin}${esc(pet.location)}</div>` : ''}
         ${reason ? `<div class="pet-card-reason">${esc(reason)}</div>` : ''}
         <div class="pet-card-tags">${petTags(pet).map((t) => `<span class="tag">${esc(t)}</span>`).join('')}</div>
+        ${withCompare && !staff ? compareToggleHTML(pet) : ''}
       </div>
       <span class="pet-card-go" aria-hidden="true">${icons.arrowRight}</span>
     </article>`;
@@ -734,6 +798,7 @@ const PawPal = (() => {
     if (u) loadBell(false);
     fillContactLinks();
     if (layout === 'public') cookieNotice();
+    renderCompareBar();
     try {
       if (!sessionStorage.getItem('pp_visit') && layout === 'public') { sessionStorage.setItem('pp_visit', '1'); PawPalAPI.post('/events', { type: 'visit' }).catch(() => {}); }
     } catch { /* ignore */ }
@@ -742,6 +807,6 @@ const PawPal = (() => {
 
   return { $, $$, params, page, layout, esc, fmtDate, fmtDateTime, timeAgo, initials, ageText, ageLong, energyText, money, photo, sized, srcset, icons, icon, aiLabel,
     FALLBACK, PLACEHOLDER, statusBadge, statusClass, scoreBadge, toast, modal, confirm: confirmDialog, setBusy, errorHTML, emptyHTML, skeletonCards,
-    favs, petCardHTML, petTags, ready, booted, emailToastType, get user() { return user; }, isStaffUser, logout, loadBell, noteHTML, hydrateIcons, reveal, reduceMotion,
+    favs, compare, compareToggleHTML, petCardHTML, petTags, ready, booted, emailToastType, get user() { return user; }, isStaffUser, logout, loadBell, noteHTML, hydrateIcons, reveal, reduceMotion,
     finePointer, countUp, carousel, hscroll, accordion, siteConfig, fillContactLinks };
 })();

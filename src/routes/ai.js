@@ -252,3 +252,25 @@ router.post('/promote', requireStaff, asyncHandler(async (req, res) => {
   const post = await ai.promotePost(toPublic(pet), { platform, tone, link });
   res.json({ ...post, link, platform, tone });
 }));
+
+// ---- Compare up to 3 public pets side by side (adopters and visitors) ----
+const COMPARE_MAX = 3;
+router.post('/compare', asyncHandler(async (req, res) => {
+  const raw = req.body?.ids;
+  if (!Array.isArray(raw) || raw.some((x) => typeof x !== 'string')) throw new HttpError(400, 'Choose the pets to compare.');
+  const ids = [...new Set(raw.map((x) => clean(x, 40)).filter(Boolean))];
+  if (ids.length > COMPARE_MAX) throw new HttpError(400, `You can compare up to ${COMPARE_MAX} pets at a time.`);
+  if (ids.length < 2) throw new HttpError(400, 'Choose at least 2 pets to compare.');
+  const pets = await Promise.all(ids.map((id) => db.findOne('pets', { id })));
+  const missing = pets.findIndex((p) => !p || !['Available', 'On Hold'].includes(p.status));
+  if (missing >= 0) throw new HttpError(404, 'One of these pets is no longer listed for adoption. Remove it and try again.');
+  const publicList = pets.map(toPublic);
+  const profile = req.user?.role === 'user' ? req.user.preferences : null;
+  const hasProfile = Boolean(profile && !profileIsEmpty(profile));
+  const scores = hasProfile ? Object.fromEntries(pets.map((p) => [p.id, evaluateMatch(p, profile)])) : null;
+  const result = await ai.comparePets(publicList, scores);
+  const shelters = Object.fromEntries((await db.find('shelters')).map((s) => [s.id, s.name]));
+  await db.insert('events', { id: newId('evt'), type: 'ai_compare', at: now() });
+  res.json({ pets: publicList.map((p) => ({ ...p, shelterName: shelters[p.shelterId] || null })), scores, hasProfile,
+    understood: hasProfile ? describeProfile(profile) : [], ...result });
+}));

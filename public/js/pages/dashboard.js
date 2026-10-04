@@ -59,7 +59,7 @@
   // Favourites (kept in sync when hearts are toggled)
   const renderFavs = (list) => {
     $('#favCount').textContent = list.length ? `${list.length} saved` : '';
-    $('#favs').innerHTML = list.length ? list.map((p) => petCardHTML(p)).join('')
+    $('#favs').innerHTML = list.length ? list.map((p) => petCardHTML(p, { compare: true })).join('')
       : `<div style="grid-column:1/-1">${emptyHTML({ icon: 'heart', title: 'No favourites yet', text: 'Tap the heart on any pet to save them here. We\'ll let you know if they\'re adopted.', action: '<a class="btn" href="adopt.html">Browse pets</a>' })}</div>`;
   };
   let favList = favs;

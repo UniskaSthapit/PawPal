@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Compare pets — PawPal</title>
+  <meta name="description" content="Compare up to three rescue pets side by side: size, energy, who they get along with, the home they need and how they fit your lifestyle.">
+  <meta name="theme-color" content="#FBF6EE">
+  <meta name="robots" content="noindex">
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
+  <link rel="preload" href="fonts/fraunces-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/plus-jakarta-sans-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/pawpal.css?v=6">
+  <script src="js/api.js?v=6" defer></script>
+  <script src="js/ui.js?v=6" defer></script>
+  <script src="js/chat.js?v=6" defer></script>
+  <script src="js/pages/compare.js?v=6" defer></script>
+</head>
+<body data-layout="public" data-page="compare">
+<main id="main" tabindex="-1">
+  <section class="page-hero">
+    <div class="container">
+      <nav class="breadcrumbs" aria-label="Breadcrumb"><a href="home.html">Home</a><span aria-hidden="true">/</span><a href="adopt.html">Adopt a pet</a><span aria-hidden="true">/</span><span>Compare</span></nav>
+      <h1 class="h1">Compare <em>side by side</em></h1>
+      <p class="lead">Shelter facts for each pet next to each other, with a short explanation of the differences.</p>
+    </div>
+  </section>
+  <section class="section-sm">
+    <div class="container" id="compare" aria-live="polite"><div class="skeleton" style="height:420px;border-radius:24px"></div></div>
+  </section>
+</main>
+</body>
+</html>
