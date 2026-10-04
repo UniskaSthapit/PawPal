@@ -41,9 +41,25 @@ const ok = (name, cond) => { if (cond) { pass++; console.log('  ✅ ' + name); }
   await p.goto(BASE + 'adopt.html'); await p.waitForSelector('#grid .pet-card');
   await p.click('[data-f="type"][data-v="cat"]'); await p.waitForTimeout(400);
   ok('Species filter chip filters to cats and updates the URL', p.url().includes('type=cat') && /pet/.test(await p.textContent('#resultCount')));
+  await p.goto(BASE + 'adopt.html'); await p.waitForSelector('#grid .pet-card input[data-compare]');
+  for (let i = 0; i < 3; i++) await p.check(`#grid .pet-card >> nth=${i} >> input[data-compare]`);
+  await p.waitForSelector('#compareGo');
+  ok('Ticking Compare on 3 cards fills the compare bar', (await p.$$('#compareBar .compare-chip:not(.compare-empty)')).length === 3 && /Compare 3 pets/.test(await p.textContent('#compareGo')));
+  await p.click('#grid .pet-card >> nth=3 >> .compare-toggle'); await p.waitForSelector('#toastWrap >> text=up to 3');
+  ok('A 4th pet is refused with a message', !(await p.isChecked('#grid .pet-card >> nth=3 >> input[data-compare]')));
+  await p.click('#compareGo'); await p.waitForSelector('#compareTable');
+  ok('Compare page shows 3 pets side by side with an explanation', (await p.$$('#compareTable thead th')).length === 3 && (await p.textContent('#compareSummary')).length > 20
+    && /Energy/.test(await p.textContent('#compareTable')) && !(await p.$('#compareBar')));
+  await p.click('#compareTable [data-remove] >> nth=0'); await p.waitForFunction(() => document.querySelectorAll('#compareTable thead th').length === 2);
+  ok('Removing a pet re-compares the other 2', (await p.$$('#compareTable thead th')).length === 2 && /ids=[^,]+,[^,]+$/.test(p.url()));
+  await p.goto(BASE + 'adopt.html'); await p.waitForSelector('#compareBar');
+  ok('The compare list is remembered across pages', (await p.$$('#compareBar .compare-chip:not(.compare-empty)')).length === 2);
+  await p.click('#compareBar [data-compare-clear]');
+  ok('Clear empties the compare bar', !(await p.$('#compareBar')));
   await p.goto(BASE + 'ai-matching.html'); await p.fill('#about', 'I work 9 to 5, live in an apartment, never owned a dog and want a friendly dog that does not need loads of exercise');
   await p.click('#matchBtn'); await p.waitForSelector('.match-card');
   ok('Find My PawPal returns explained matches', (await p.$$('.match-card')).length >= 3 && /Why/.test(await p.textContent('.match-card')));
+  ok('Find My PawPal results can be added to compare', (await p.$$('.match-card input[data-compare]')).length >= 3);
   await p.click('.chat-launcher'); await p.click('[data-suggest="What happens after I apply?"]');
   await p.waitForFunction(() => document.querySelectorAll('.chat-body .msg-meta').length >= 1, null, { timeout: 15000 });
   ok('Chat assistant answers a process question', /Under Review/.test(await p.textContent('.chat-body')));

@@ -521,6 +521,28 @@ const mailFor = async (anon, email, type) => (await anon('GET', `/api/dev/emails
   r = await anon('GET', `/p/${promoPet.id}`);
   check('Short profile links redirect to the pet profile', r.status === 302 && r.headers.get('location') === `/pet-profile.html?id=${promoPet.id}`);
 
+  console.log('\nCompare pets');
+  const listed = (await db.find('pets')).filter((x) => ['Available', 'On Hold'].includes(x.status));
+  const [c1, c2, c3, c4] = listed;
+  r = await anon('POST', '/api/ai/compare', { ids: [c1.id] });
+  check('Compare needs at least 2 pets', r.status === 400);
+  r = await anon('POST', '/api/ai/compare', { ids: [c1.id, c2.id, c3.id, c4.id] });
+  check('Compare rejects more than 3 pets', r.status === 400 && /up to 3/.test(r.body.error));
+  r = await anon('POST', '/api/ai/compare', { ids: 'abc' });
+  check('Compare validates the ids', r.status === 400);
+  r = await anon('POST', '/api/ai/compare', { ids: [c1.id, 'pet_doesnotexist'] });
+  check('Compare rejects unknown pets', r.status === 404);
+  r = await anon('POST', '/api/ai/compare', { ids: [c1.id, adoptedPet.id] });
+  check('Compare rejects pets that are not public', r.status === 404);
+  r = await anon('POST', '/api/ai/compare', { ids: [c1.id, c2.id, c3.id] });
+  const leaks = ['medicalHistory', 'rescueBackground', 'internalNotes', 'createdBy'];
+  check('Visitors can compare 3 pets (public fields only, rules explanation, no scores)', r.status === 200 && r.body.pets.length === 3
+    && r.body.pets.every((x) => leaks.every((k) => !(k in x))) && r.body.scores === null && r.body.summary.length > 20
+    && r.body.highlights.length === 3 && r.body.source === 'rules', JSON.stringify(r.body).slice(0, 300));
+  r = await adopter('POST', '/api/ai/compare', { ids: [c1.id, c2.id] });
+  check('Adopters with a saved lifestyle get a match score per pet', r.status === 200 && r.body.hasProfile
+    && [c1.id, c2.id].every((id) => Number.isInteger(r.body.scores[id].score)) && /\d+%/.test(r.body.summary), JSON.stringify(r.body).slice(0, 300));
+
   console.log('\nTwo-factor authentication (staff)');
   const totp = require('../src/services/totp');
   r = await anon('GET', '/api/auth/2fa/status');

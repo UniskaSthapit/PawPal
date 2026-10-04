@@ -104,6 +104,69 @@ Return {"caption": string (no hashtags in it), "hashtags": string[] (6–10, wit
   }
 }
 
+// ---------------- Compare pets (adopters) ----------------
+const listNames = (names) => (names.length > 1 ? `${names.slice(0, -1).join(', ')} and ${names.slice(-1)}` : names[0] || '');
+// Rules explanation built from shelter facts and (when the adopter has a saved lifestyle) the match scores
+function templateCompare(pets, scores = null) {
+  const lines = [];
+  const highlights = {};
+  const note = (pet, text) => { (highlights[pet.id] = highlights[pet.id] || []).push(text); };
+  if (scores) {
+    const ranked = [...pets].sort((a, b) => scores[b.id].score - scores[a.id].score);
+    const [top, next] = ranked;
+    const gap = scores[top.id].score - scores[next.id].score;
+    lines.push(gap >= 5
+      ? `For the lifestyle you've told us about, ${top.name} is the closest fit (${scores[top.id].score}% vs ${scores[next.id].score}% for ${next.name}).`
+      : `${listNames(ranked.map((p) => p.name))} are a similarly good fit for your lifestyle (${ranked.map((p) => `${scores[p.id].score}%`).join(', ')}).`);
+    ranked.forEach((p) => {
+      if (scores[p.id].reasons[0]) note(p, scores[p.id].reasons[0]);
+      if (scores[p.id].considerations[0]) note(p, `Worth considering: ${scores[p.id].considerations[0].charAt(0).toLowerCase()}${scores[p.id].considerations[0].slice(1)}`);
+    });
+  }
+  const byEnergy = [...pets].sort((a, b) => (Number(a.energyLevel) || 2) - (Number(b.energyLevel) || 2));
+  if ((Number(byEnergy[0].energyLevel) || 2) !== (Number(byEnergy.at(-1).energyLevel) || 2)) {
+    lines.push(`${byEnergy[0].name} is the calmest; ${byEnergy.at(-1).name} has the most energy and will need the most exercise.`);
+  }
+  const kids = pets.filter((p) => p.goodWithChildren).map((p) => p.name);
+  if (kids.length && kids.length < pets.length) lines.push(`The shelter says ${listNames(kids)} ${kids.length > 1 ? 'are' : 'is'} good with children.`);
+  const yard = pets.filter((p) => p.requiresYard).map((p) => p.name);
+  if (yard.length && yard.length < pets.length) lines.push(`${listNames(yard)} need${yard.length > 1 ? '' : 's'} a secure yard.`);
+  const others = pets.filter((p) => !p.goodWithOtherPets).map((p) => p.name);
+  if (others.length && others.length < pets.length) lines.push(`${listNames(others)} would prefer to be the only pet.`);
+  pets.forEach((p) => {
+    const traits = (p.traits || []).slice(0, 2).map((t) => t.toLowerCase());
+    if (traits.length) note(p, `Described by the shelter as ${traits.join(' and ')}`);
+    if (p.status === 'On Hold') note(p, 'Currently on hold for another adopter');
+  });
+  if (!lines.length) lines.push(`${listNames(pets.map((p) => p.name))} have a lot in common — meeting them is the best way to decide.`);
+  lines.push('Compatibility is guidance only; the shelter team will help you decide.');
+  return { summary: lines.join(' '), highlights: pets.map((p) => ({ petId: p.id, points: (highlights[p.id] || []).slice(0, 3) })) };
+}
+
+async function comparePets(pets, scores = null) {
+  const fallback = templateCompare(pets, scores);
+  if (!llm.llmEnabled) return { ...fallback, source: 'rules' };
+  try {
+    const raw = await llm.complete({ json: true, maxTokens: 700,
+      system: `You help someone choose between rescue pets they are comparing. ${GUARDRAILS}
+Compare the pets side by side in 60–120 words: who suits what kind of home, energy and care differences, and anything to ask the shelter.
+${scores ? 'Each pet has a compatibility score with the adopter\'s lifestyle — refer to it, but do not change it.' : 'There is no adopter profile — do not guess one.'}
+Return {"summary": string, "highlights": [{"petId": string, "points": string[] (1–3 short points, max 16 words each)}]}.`,
+      messages: [{ role: 'user', content: JSON.stringify({ pets: pets.map((p) => ({ ...promptPet(p), ...(scores ? { compatibility: scores[p.id] } : {}) })) }) }] });
+    const summary = typeof raw.summary === 'string' ? raw.summary.trim().slice(0, 1500) : '';
+    if (summary.length < 40 || !pets.some((p) => summary.includes(p.name))) return { ...fallback, source: 'rules' };
+    const ids = new Set(pets.map((p) => p.id));
+    const given = new Map((Array.isArray(raw.highlights) ? raw.highlights : [])
+      .filter((h) => h && ids.has(h.petId) && Array.isArray(h.points))
+      .map((h) => [h.petId, h.points.filter((x) => typeof x === 'string' && x.trim()).map((x) => x.trim().slice(0, 160)).slice(0, 3)]));
+    const highlights = fallback.highlights.map((h) => ({ petId: h.petId, points: given.get(h.petId)?.length ? given.get(h.petId) : h.points }));
+    return { summary, highlights, source: llm.provider };
+  } catch (err) {
+    if (!err.quiet) console.warn('AI compare fallback:', err.message.split('\n')[0].slice(0, 160));
+    return { ...fallback, source: 'rules' };
+  }
+}
+
 // ---------------- Lifestyle understanding ----------------
 async function understandLifestyle(text, prev = {}, locations = []) {
   const ruled = parseProfile(text, prev, locations);
@@ -504,5 +567,5 @@ async function insights(facts, ruleSentences) {
   }
 }
 
-module.exports = { promotePost, templatePost, PLATFORMS, TONES, describePet, templateDescription, understandLifestyle, explainMatches, profileToFilters, describeFilters,
+module.exports = { comparePets, templateCompare, promotePost, templatePost, PLATFORMS, TONES, describePet, templateDescription, understandLifestyle, explainMatches, profileToFilters, describeFilters,
   chat, explainQuestion, shelterAssistant, summarizeApplication, insights, promptPet, SOURCE };
