@@ -89,3 +89,22 @@ If several keys are set, the order is Anthropic → OpenAI → Gemini. The start
 - Keep `ALLOW_DEMO_RESET=false` in production.
 - Have the privacy policy and terms reviewed and add your organisation's legal details.
 - Free Render instances sleep when idle — the first request can take ~50 seconds.
+
+## 7. Extras: what to know when deploying
+Nothing new is required: the extras use the same keys as above. The existing database is upgraded automatically on
+the next start (schema v4 gives every pet an adoption fee if it had none; new collections and indexes are created).
+
+- **Email settings (optional):** `MAIL_DAILY_LIMIT` (default 300) and `MAIL_RETRY_DELAY_MS` (default 3000) — see
+  *Keeping Gmail healthy* above. They are already in `render.yaml`.
+- **Two-factor login:** staff and admins can turn it on under *Settings → Two-factor authentication*. To make it
+  mandatory, an administrator turns it on for themselves first, then switches on *Users & shelters → Security →
+  Require two-factor login for staff*. 2FA secrets are encrypted with a key derived from `JWT_SECRET`, so **don't
+  change `JWT_SECRET`** once people use 2FA (if you must, reset their 2FA from *Users & shelters*).
+- **AI features** (social posts, compare, translation, care plans) use the same AI key. Without one, captions,
+  comparisons and care plans come from PawPal's templates, and translation shows the page in English with a notice.
+  Translations are cached in the database, so each text uses the AI only once per language.
+- **Adoption fee payments are a simulation.** No payment provider is connected and no real money is taken; only the
+  published test cards work. Every checkout page and receipt says so. Set each pet's real fee on the pet form.
+- **Flyers and short links** use `APP_URL` for the QR code and `/p/<petId>` links — make sure it is your real URL.
+- **Meet & greet times** are entered in the browser's local time; set your shelters' availability under
+  *Availability* after deploying (the demo times only exist in the demo data).
