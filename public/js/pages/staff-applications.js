@@ -58,6 +58,13 @@
       <div class="card"><div class="card-head"><div><span class="src-label src-ai">${icons.sparkle}AI summary</span><h3>Summary for review</h3></div><button class="btn btn-sm" id="sumBtn">${icons.sparkle}Summarise</button></div>
         <div class="card-body" id="sumBody"><p class="small muted">Get a concise summary of this application and what to check at interview. The applicant's own answers are used — never your private notes.</p></div></div>
 
+      ${['Submitted', 'Under Review', 'Info Requested', 'Interview', 'Meet & Greet'].includes(a.status) ? `<div class="card" id="bookingCard"><div class="card-head"><h3>Meet &amp; greet booking</h3><a class="small" href="availability.html">Availability</a></div><div class="card-body stack" style="--stack:10px">
+        ${a.slotId ? `<p>${icons.calendar} <b>Booked by ${esc(a.name.split(' ')[0])}</b> for ${esc(fmtDateTime(a.appointmentAt))}. They can change it until 24 hours before.</p>`
+          : a.bookingInvite ? `<p class="small">Invited ${esc(timeAgo(a.bookingInvite.at))} by ${esc(a.bookingInvite.by)} — waiting for ${esc(a.name.split(' ')[0])} to choose a time.</p>`
+          : `<p class="small muted">Let ${esc(a.name.split(' ')[0])} pick from your free times instead of arranging a time by message.</p>`}
+        ${a.slotId ? '' : `<div><button class="btn ${a.bookingInvite ? '' : 'btn-primary'}" type="button" id="inviteBtn">${icons.calendar}${a.bookingInvite ? 'Send the invite again' : 'Invite to book a meet & greet'}</button></div>`}
+      </div></div>` : ''}
+
       ${closed ? '' : `<form class="card" id="statusForm"><div class="card-head"><h3>Update status</h3></div><div class="card-body stack" style="--stack:12px">
         <div class="field"><label for="newStatus">Move to</label><select class="select" id="newStatus">${next.map((s) => `<option>${esc(s)}</option>`).join('')}<option disabled>──────────</option>${statuses.filter((s) => !next.includes(s) && s !== a.status && s !== 'Withdrawn').map((s) => `<option>${esc(s)}</option>`).join('')}</select></div>
         <div class="field" id="dateField" hidden><label for="apptAt">Appointment date &amp; time</label><input class="input" type="datetime-local" id="apptAt"></div>
@@ -113,6 +120,14 @@
       } catch (err) { toast(err.message, 'error'); }
       setBusy(btn, false);
     });
+    $('#inviteBtn')?.addEventListener('click', () => PawPal.modal({ title: `Invite ${a.name.split(' ')[0]} to book a meet & greet`,
+      body: `<div class="stack"><p class="small muted">They'll get an email and a notification with a link to choose one of your free times for ${esc(a.petName)}.</p>
+        <div class="field"><label for="inviteMsg">Message (optional)</label><textarea class="textarea" id="inviteMsg" maxlength="1000" placeholder="e.g. Bring your other dog along if you can!"></textarea></div><div id="inviteErr"></div></div>`,
+      actions: [{ label: 'Cancel', value: false }, { label: 'Send invite', variant: 'btn-primary', onClick: async (m, btn) => {
+        setBusy(btn, true, 'Sending…');
+        try { const r = await PawPalAPI.post(`/applications/${encodeURIComponent(a.id)}/invite-booking`, { message: $('#inviteMsg', m).value.trim() }); toast(r.message, PawPal.emailToastType(r)); renderDetail(a.id); return true; }
+        catch (err) { setBusy(btn, false); $('#inviteErr', m).innerHTML = errorHTML(err.message); return false; }
+      } }] }));
     $('#msgForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const text = $('#msgText').value.trim(); if (text.length < 2) return;

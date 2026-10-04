@@ -127,6 +127,31 @@ const ok = (name, cond) => { if (cond) { pass++; console.log('  ✅ ' + name); }
   ok('Notification bell lists the status change', /Meet & Greet/.test(await p.textContent('#bellList')));
   await ctx.close();
 
+  console.log('Meet & greet booking');
+  const uiApp = (await db.find('applications')).find((x) => x.email === email && !['Declined', 'Withdrawn', 'Adopted'].includes(x.status));
+  ctx = await mk(); p = await ctx.newPage(); watch(p);
+  await p.goto(BASE + 'login.html?role=staff'); await p.fill('#lEmail', 'admin@pawpal.com'); await p.fill('#lPassword', 'Admin@123');
+  await p.click('#loginBtn'); await p.waitForURL(/index\.html/);
+  await p.goto(BASE + 'availability.html'); await p.waitForSelector('#slotShelter option', { state: 'attached' });
+  await p.selectOption('#slotShelter', uiApp.shelterId); await p.selectOption('#slotWeeks', '2');
+  ok('Availability previews how many times will be added', /Adds 16 times/.test(await p.textContent('#slotPreview')));
+  await p.click('#slotBtn'); await p.waitForSelector('.slot-list .slot');
+  ok('Staff add repeating meet & greet times (alongside the demo times)', (await p.$$('.slot-list .slot')).length >= 16 && /added/.test(await p.textContent('#toastWrap')));
+  await p.goto(BASE + `applications.html?id=${uiApp.id}`); await p.waitForSelector('#inviteBtn');
+  await p.click('#inviteBtn'); await p.fill('#inviteMsg', 'Looking forward to meeting you!'); await p.click('.modal .btn-primary');
+  await p.waitForSelector('#bookingCard >> text=waiting for');
+  ok('Staff invite the applicant to book', /waiting for/.test(await p.textContent('#bookingCard')));
+  await ctx.close();
+  ctx = await mk(390); p = await ctx.newPage(); watch(p);
+  await p.goto(BASE + 'login.html'); await p.fill('#lEmail', email); await p.fill('#lPassword', 'Paws12345'); await p.click('#loginBtn'); await p.waitForURL(/dashboard/);
+  await p.goto(BASE + `my-applications.html?id=${uiApp.id}#booking`); await p.waitForSelector('#slotPicker .slot-choice');
+  ok('The adopter sees the free times grouped by day', (await p.$$('#slotPicker .slot-choice')).length >= 16 && (await p.$$('#slotPicker h4')).length >= 2 && /Looking forward/.test(await p.textContent('#booking')));
+  await p.click('#slotPicker .slot-choice >> nth=2'); await p.click('#bookBtn');
+  await p.waitForSelector('#booking [data-booking="change"]');
+  ok('Booking shows the confirmed time with change and cancel options', /booked to meet/.test(await p.textContent('#booking')) && await p.isVisible('[data-booking="cancel"]'));
+  ok('…and the Add to calendar file is still offered', (await p.$$('a[download$=".ics"]')).length === 1);
+  await ctx.close();
+
   console.log('Printable flyer');
   ctx = await mk(); p = await ctx.newPage(); watch(p);
   await p.goto(BASE + 'login.html?role=staff'); await p.fill('#lEmail', 'admin@pawpal.com'); await p.fill('#lPassword', 'Admin@123');

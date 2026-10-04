@@ -44,6 +44,14 @@ function createJsonStore() {
       persist();
       return copy(d);
     },
+    // Updates the first document matching the whole filter, or returns null — used for "only if still free" checks
+    async updateWhere(name, filter, patch) {
+      const d = coll(name).find((x) => matches(x, filter));
+      if (!d) return null;
+      Object.assign(d, copy(patch));
+      persist();
+      return copy(d);
+    },
     async remove(name, id) {
       const list = coll(name);
       const i = list.findIndex((x) => x.id === id);

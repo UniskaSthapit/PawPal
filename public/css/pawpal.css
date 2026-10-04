@@ -1298,3 +1298,24 @@ body.side-open::after, body.filters-open::after { content: ''; position: fixed; 
   .flyer { width: 210mm; height: 297mm; min-height: 0; max-width: none; box-shadow: none; border-radius: 0; margin: 0; overflow: hidden; break-inside: avoid;
     -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
+
+/* Meet & greet availability and booking */
+.avail-grid { grid-template-columns: minmax(0, 380px) minmax(0, 1fr); align-items: start; }
+@media (max-width: 900px) { .avail-grid { grid-template-columns: minmax(0, 1fr); } }
+.slot-day + .slot-day { margin-top: 18px; }
+.slot-day h3 { font-size: 16px; margin-bottom: 8px; }
+.slot-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
+.slot { display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 4px 6px 4px 12px; border: 1px solid var(--line-2); border-radius: 12px; background: var(--card); }
+.slot .slot-time { font-weight: 700; min-width: 74px; font-variant-numeric: tabular-nums; }
+.slot .btn { margin-left: auto; }
+.slot.booked { background: var(--sage-soft); border-color: transparent; }
+.slot.booked a { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; overflow-wrap: anywhere; }
+.slot.booked svg { width: 16px; height: 16px; flex: none; }
+.slot-picker { display: grid; gap: 14px; }
+.slot-picker h4 { font-size: 14.5px; margin-bottom: 6px; }
+.slot-choices { display: flex; flex-wrap: wrap; gap: 8px; }
+.slot-choice { min-height: 44px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--line); background: var(--card); font-weight: 600; cursor: pointer;
+  font-variant-numeric: tabular-nums; transition: background-color var(--t-fast), border-color var(--t-fast), color var(--t-fast); }
+.slot-choice:hover { border-color: var(--brand); color: var(--brand-ink); }
+.slot-choice:focus-visible { outline: none; box-shadow: var(--ring); border-color: var(--brand); }
+.slot-choice[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: #fff; }
