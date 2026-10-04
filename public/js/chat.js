@@ -10,6 +10,7 @@ const PawPalChat = (() => {
   const SESSION_KEY = 'pp_chat';
   let state = { messages: [], profile: null, conversationId: null, lastPetIds: [] };
   let panel; let launcher; let busy = false; let loadedFromServer = false;
+  let chatLang = PawPal.lang.get(); let mtNotice = '';
 
   const save = () => { try { sessionStorage.setItem(SESSION_KEY, JSON.stringify({ ...state, messages: state.messages.slice(-30) })); } catch { /* ignore */ } };
   try { Object.assign(state, JSON.parse(sessionStorage.getItem(SESSION_KEY)) || {}); } catch { /* ignore */ }
@@ -24,17 +25,20 @@ const PawPalChat = (() => {
       ${p.match !== undefined ? `<span class="score-pill" title="Compatibility with what you've told PawPal">${p.match}%</span>` : ''}</a>`).join('')}</div>`;
   }
 
+  const translated = (m) => (chatLang !== 'en' && m.tr?.lang === chatLang ? m.tr.text : null);
   function messageHTML(m) {
     if (m.role === 'user') return `<div class="msg msg-user">${esc(m.content)}</div>`;
-    return `<div class="msg msg-bot">${esc(m.content)}</div>${petsHTML(m.picks)}
+    const tr = translated(m);
+    return `<div class="msg msg-bot"${tr ? ` lang="${PawPal.lang.html(chatLang)}"` : ''}>${esc(tr || m.content)}</div>${petsHTML(m.picks)}
       ${m.actions?.length ? `<div class="chat-actions">${m.actions.map((a) => `<a class="btn btn-sm" href="${esc(a.href)}">${esc(a.label)}</a>`).join('')}</div>` : ''}
-      ${m.source ? `<div class="msg-meta">${icons.sparkle}${esc(sourceLabel(m.source))}${m.picks?.length ? ' · match % is guidance, not a guarantee' : ''}</div>` : ''}`;
+      ${m.source || tr ? `<div class="msg-meta">${icons.sparkle}${esc([m.source && sourceLabel(m.source), tr && 'Machine translated', m.picks?.length && 'match % is guidance, not a guarantee'].filter(Boolean).join(' · '))}</div>` : ''}`;
   }
 
   function render() {
     const body = panel.querySelector('.chat-body');
     const greeting = `<div class="msg msg-bot">Hi${PawPal.user?.role === 'user' ? ` ${esc(PawPal.user.name.split(' ')[0])}` : ''}! I'm PawPal's adoption assistant. Tell me about your home and routine and I'll suggest pets that could suit you — or ask about a pet, the adoption process, or your application.</div>`;
     body.innerHTML = greeting + state.messages.map(messageHTML).join('') +
+      (mtNotice && chatLang !== 'en' ? `<div class="mt-note mt-warn chat-mt">${icons.info}<span>${esc(mtNotice)}</span></div>` : '') +
       (state.messages.length ? '' : `<div class="chat-suggest" aria-label="Suggested questions">${SUGGESTIONS.map((s) => `<button type="button" data-suggest="${esc(s)}">${esc(s)}</button>`).join('')}</div>`);
     body.scrollTop = body.scrollHeight;
   }
@@ -56,6 +60,19 @@ const PawPalChat = (() => {
     });
   }
 
+  // Machine-translate PawPal's replies into the chosen language (cached on the server; English if unavailable)
+  async function translateMessages(list) {
+    const todo = list.filter((m) => m.role === 'assistant' && m.source && m.content && m.tr?.lang !== chatLang).slice(-10);
+    if (chatLang === 'en' || !todo.length) return;
+    try {
+      const r = await PawPalAPI.post('/ai/translate', { lang: chatLang, texts: todo.map((m) => m.content.slice(0, 2000)) });
+      if (r.translated) { todo.forEach((m, i) => { m.tr = { lang: r.lang, text: r.texts[i] }; }); mtNotice = ''; }
+      else mtNotice = r.notice || 'Translation isn\'t available right now, so replies are shown in English.';
+    } catch (err) {
+      mtNotice = err.status === 429 ? err.message : 'Translation isn\'t available right now, so replies are shown in English.';
+    }
+  }
+
   async function send(text) {
     const message = String(text || '').trim();
     if (!message || busy) return;
@@ -75,12 +92,15 @@ const PawPalChat = (() => {
       state.profile = res.profile;
       if (res.conversationId) { state.conversationId = res.conversationId; try { localStorage.setItem('pp_convo', res.conversationId); } catch { /* ignore */ } }
       if (res.picks.length) state.lastPetIds = res.picks.map((p) => p.pet.id);
+      const reply = { role: 'assistant', content: res.reply, picks: res.picks, actions: res.actions, source: res.source };
+      await translateMessages([reply]);
       body.querySelector('.typing')?.remove();
       const bubble = document.createElement('div');
       bubble.className = 'msg msg-bot';
+      if (translated(reply)) bubble.lang = PawPal.lang.html(chatLang);
       body.appendChild(bubble);
-      await typeInto(bubble, res.reply);
-      state.messages.push({ role: 'assistant', content: res.reply, picks: res.picks, actions: res.actions, source: res.source });
+      await typeInto(bubble, translated(reply) || res.reply);
+      state.messages.push(reply);
       render();
     } catch (err) {
       body.querySelector('.typing')?.remove();
@@ -119,6 +139,7 @@ const PawPalChat = (() => {
     panel.innerHTML = `
       <div class="chat-head"><span class="ai-orb" style="width:36px;height:36px;border-radius:50%;background:radial-gradient(circle at 30% 30%,#FFD48A,#E49B2F 45%,#C4452A);display:grid;place-items:center">${icons.sparkle}</span>
         <div><b>PawPal assistant</b><small>Answers from live PawPal data</small></div>
+        <label class="chat-lang"><span class="sr-only">Reply language</span>${PawPal.langSelectHTML('chatLang', chatLang, 'select-sm')}</label>
         <button class="icon-btn" data-chat-new aria-label="Start a new conversation" title="New conversation">${icons.refresh}</button>
         <button class="icon-btn" data-chat-close aria-label="Close assistant">${icons.close}</button></div>
       <div class="chat-body" aria-live="polite"></div>
@@ -143,6 +164,12 @@ const PawPalChat = (() => {
       }
     });
     panel.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+    panel.querySelector('#chatLang').addEventListener('change', async (e) => {
+      chatLang = e.target.value; PawPal.lang.set(chatLang); mtNotice = '';
+      render();
+      await translateMessages(state.messages);
+      save(); render();
+    });
 
     launcher = document.createElement('button');
     launcher.className = 'chat-launcher';
@@ -154,8 +181,10 @@ const PawPalChat = (() => {
 
   async function open(prefill, autoSend = false) {
     panel.hidden = false; launcher.hidden = true;
+    chatLang = PawPal.lang.get(); panel.querySelector('#chatLang').value = chatLang; // may have changed on the pet profile
     render();
     await restoreFromServer();
+    if (chatLang !== 'en') translateMessages(state.messages).then(() => { save(); render(); });
     const ta = panel.querySelector('textarea');
     if (prefill && autoSend) send(prefill);
     else if (prefill) { ta.value = prefill; autosize(ta); }

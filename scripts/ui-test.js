@@ -68,6 +68,36 @@ const ok = (name, cond) => { if (cond) { pass++; console.log('  ✅ ' + name); }
   ok('Chat assistant returns real pet cards with links', (await p.getAttribute('.chat-body .mini-pet', 'href')).startsWith('pet-profile.html?id=pet_'));
   await ctx.close();
 
+  console.log('Machine translation');
+  const llm = require('../src/services/llm');
+  const realLlm = { llmEnabled: llm.llmEnabled, provider: llm.provider, complete: llm.complete };
+  ctx = await mk(); p = await ctx.newPage(); watch(p);
+  const trPet = (await db.find('pets')).find((x) => x.status === 'Available' && x.description && x.traits?.length);
+  await p.goto(BASE + `pet-profile.html?id=${trPet.id}`); await p.waitForSelector('#langSelect');
+  await p.selectOption('#langSelect', 'es'); await p.waitForSelector('#mtNote.mt-warn');
+  ok('Without AI the profile stays in English with a small notice', /English/.test(await p.textContent('#mtNote')) && (await p.textContent('#petAbout')).includes(trPet.description.slice(0, 30)));
+  Object.assign(llm, { llmEnabled: true, provider: 'gemini', complete: async ({ system, messages }) => {
+    if (!/^Translate text/.test(system)) throw new Error('chat uses the rules engine in tests');
+    const b = JSON.parse(messages[0].content);
+    return b.texts ? { translations: b.texts.map((t) => `[hi] ${t}`) } : { description: `[hi] ${b.description}`, idealHome: b.idealHome && `[hi] ${b.idealHome}`, traits: b.traits.map((t) => `[hi] ${t}`) };
+  } });
+  try {
+    await p.selectOption('#langSelect', 'hi'); await p.waitForSelector('#showOriginal');
+    ok('Choosing Hindi shows the translated profile labelled "Machine translated"', /Machine translated/.test(await p.textContent('#mtNote'))
+      && (await p.textContent('#petAbout')).startsWith('[hi]') && await p.getAttribute('#petAbout', 'lang') === 'hi');
+    await p.click('#showOriginal');
+    ok('Show original switches back to English', (await p.textContent('#petAbout')).includes(trPet.description.slice(0, 30)) && await p.inputValue('#langSelect') === 'en');
+    await p.selectOption('#langSelect', 'hi'); await p.waitForSelector('#showOriginal');
+    await p.click('.chat-launcher');
+    ok('The chat picks up the chosen language', await p.inputValue('#chatLang') === 'hi');
+    await p.fill('#chatInput', 'What happens after I apply?'); await p.press('#chatInput', 'Enter');
+    await p.waitForFunction(() => document.querySelectorAll('.chat-body .msg-meta').length >= 1, null, { timeout: 15000 });
+    ok('Chat replies are machine translated and labelled', (await p.textContent('.chat-body .msg-bot[lang="hi"]')).startsWith('[hi]') && /Machine translated/.test(await p.textContent('.chat-body .msg-meta')));
+    await p.selectOption('#chatLang', 'en');
+    ok('Switching the chat back to English shows the original reply', !(await p.$('.chat-body .msg-bot[lang="hi"]')) && /Under Review/.test(await p.textContent('.chat-body')));
+  } finally { Object.assign(llm, realLlm); }
+  await ctx.close();
+
   console.log('Adopter sign-up → verify → apply');
   ctx = await mk(); p = await ctx.newPage(); watch(p);
   const email = `journey${Date.now()}@example.com`;

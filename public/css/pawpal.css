@@ -1381,3 +1381,25 @@ body.side-open::after, body.filters-open::after { content: ''; position: fixed; 
 .cmp-points li { padding-left: 14px; position: relative; }
 .cmp-points li::before { content: ''; position: absolute; left: 0; top: .55em; width: 6px; height: 6px; border-radius: 50%; background: var(--honey); }
 @media print { .compare-bar { display: none; } }
+
+/* ---------- Machine translation ---------- */
+.lang-pick { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); }
+.lang-pick svg { width: 18px; height: 18px; }
+.lang-pick .select { width: auto; min-height: 40px; padding: 6px 38px 6px 14px; border-radius: var(--r-pill); font-size: 14px; font-weight: 600; }
+.mt-note { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 8px; margin-top: 12px; padding: 8px 12px; border-radius: var(--r-sm); background: var(--sky-soft); color: #1F4260; font-size: 13px; }
+.mt-note[hidden] { display: none; }
+.mt-note svg { width: 15px; height: 15px; flex: none; }
+.mt-note .spinner { width: 13px; height: 13px; }
+.mt-note.mt-warn { background: var(--honey-soft); color: var(--honey-ink); }
+.chat-head .chat-lang { margin-left: auto; }
+.chat-head .chat-lang + .icon-btn { margin-left: 0; }
+.chat-head .select-sm { width: 108px; min-height: 34px; padding: 4px 28px 4px 10px; font-size: 12.5px; font-weight: 600; border-radius: var(--r-pill);
+  background-color: rgba(255, 255, 255, .1); border-color: rgba(255, 255, 255, .25); color: #fff; background-position: right 8px center; }
+.chat-head .select-sm option { color: var(--ink); }
+.chat-head .select-sm:focus { background-color: rgba(255, 255, 255, .16); }
+.chat-mt { margin: 4px 0 0; }
+@media (max-width: 480px) {
+  .chat-head { gap: 8px; }
+  .chat-head small { display: none; }
+  .chat-head .select-sm { width: 96px; }
+}

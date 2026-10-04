@@ -244,6 +244,7 @@ router.delete('/:id', requireStaff, asyncHandler(async (req, res) => {
   if (apps > 0) throw new HttpError(409, `${pet.name} has adoption applications on record, so the profile can't be deleted. Archive it instead.`);
   await db.remove('pets', pet.id);
   await db.removeWhere('favourites', { petId: pet.id });
+  await db.removeWhere('translations', { petId: pet.id });
   res.json({ message: `${pet.name} was deleted.` });
 }));
 

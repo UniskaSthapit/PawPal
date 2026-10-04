@@ -543,6 +543,56 @@ const mailFor = async (anon, email, type) => (await anon('GET', `/api/dev/emails
   check('Adopters with a saved lifestyle get a match score per pet', r.status === 200 && r.body.hasProfile
     && [c1.id, c2.id].every((id) => Number.isInteger(r.body.scores[id].score)) && /\d+%/.test(r.body.summary), JSON.stringify(r.body).slice(0, 300));
 
+  console.log('\nTranslation');
+  const trPet = (await db.find('pets')).find((x) => x.status === 'Available' && x.medicalHistory && x.traits?.length && x.description);
+  r = await anon('POST', '/api/ai/translate', { petId: trPet.id, lang: 'fr' });
+  check('Translate validates the language', r.status === 400);
+  r = await anon('POST', '/api/ai/translate', { lang: 'es' });
+  check('Translate needs a pet or text', r.status === 400);
+  r = await anon('POST', '/api/ai/translate', { petId: 'pet_nope', lang: 'es' });
+  check('Translate rejects unknown pets', r.status === 404);
+  r = await anon('POST', '/api/ai/translate', { texts: Array(11).fill('hello'), lang: 'es' });
+  check('Translate limits how much text is sent', r.status === 400);
+  r = await anon('POST', '/api/ai/translate', { petId: trPet.id, lang: 'es' });
+  check('Without an AI key the profile stays in English with a notice', r.status === 200 && r.body.translated === false && /English/.test(r.body.notice)
+    && r.body.fields.description === trPet.description);
+  // Simulate a language model to check caching and validation
+  const llm = require('../src/services/llm');
+  const realLlm = { llmEnabled: llm.llmEnabled, provider: llm.provider, complete: llm.complete };
+  const prompts = [];
+  let reply = null;
+  Object.assign(llm, { llmEnabled: true, provider: 'gemini', complete: async ({ messages }) => { prompts.push(messages[0].content); return typeof reply === 'function' ? reply(JSON.parse(messages[0].content)) : reply; } });
+  try {
+    reply = (f) => ({ description: `ES: ${f.description}`, idealHome: f.idealHome ? `ES: ${f.idealHome}` : '', traits: f.traits.map((t) => `es-${t}`) });
+    r = await anon('POST', '/api/ai/translate', { petId: trPet.id, lang: 'es' });
+    check('Pet profile is machine translated and labelled', r.status === 200 && r.body.translated && r.body.label === 'Machine translated'
+      && r.body.fields.description.startsWith('ES: ') && r.body.fields.traits.length === trPet.traits.length && r.body.cached === false, JSON.stringify([r.status, r.body]).slice(0, 300));
+    check('Only public fields are sent for translation', prompts.length === 1 && !prompts[0].includes(trPet.medicalHistory.slice(0, 20))
+      && Object.keys(JSON.parse(prompts[0])).sort().join() === 'description,idealHome,traits');
+    r = await anon('POST', '/api/ai/translate', { petId: trPet.id, lang: 'es' });
+    check('Each text is translated once (served from the cache)', r.body.translated && r.body.cached === true && prompts.length === 1);
+    check('Translations are stored by pet, language and content hash', (await db.find('translations', { petId: trPet.id })).some((t) => t.lang === 'es' && /^[0-9a-f]{64}$/.test(t.hash)));
+    reply = (f) => ({ description: 'x', idealHome: '', traits: ['only one'] });
+    r = await anon('POST', '/api/ai/translate', { petId: trPet.id, lang: 'hi' });
+    check('Invalid AI output is rejected and the page stays in English', r.status === 200 && r.body.translated === false && r.body.fields.description === trPet.description);
+    reply = () => { throw new Error('model down'); };
+    r = await anon('POST', '/api/ai/translate', { petId: trPet.id, lang: 'ne' });
+    check('AI errors fall back to English instead of failing', r.status === 200 && r.body.translated === false && r.body.notice);
+    reply = (b) => ({ translations: b.texts.map((t) => `中文 ${t}`) });
+    r = await anon('POST', '/api/ai/translate', { texts: ['Hello there', 'What happens after I apply?'], lang: 'zh' });
+    check('Chat replies are translated in one batch', r.status === 200 && r.body.translated && r.body.texts[1] === '中文 What happens after I apply?');
+    const before = prompts.length;
+    r = await anon('POST', '/api/ai/translate', { texts: ['Hello there', 'A new reply'], lang: 'zh' });
+    check('…and only uncached replies are sent again', r.body.translated && prompts.length === before + 1 && JSON.parse(prompts.at(-1)).texts.length === 1
+      && r.body.texts[0] === '中文 Hello there');
+  } finally { Object.assign(llm, realLlm); }
+  let limited = null;
+  for (let i = 0; i < 70 && !limited; i++) {
+    const t = await anon('POST', '/api/ai/translate', { texts: ['hi'], lang: 'en' });
+    if (t.status === 429) limited = t;
+  }
+  check('Translation is rate limited', limited && /translations/.test(limited.body.error));
+
   console.log('\nTwo-factor authentication (staff)');
   const totp = require('../src/services/totp');
   r = await anon('GET', '/api/auth/2fa/status');
