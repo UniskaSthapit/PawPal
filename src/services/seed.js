@@ -111,7 +111,8 @@ const KEYWORDS = ['golden retriever', 'puppy', 'cat', 'apartment', 'small dog', 
 async function seedIfEmpty({ force = false } = {}) {
   if (!force && (await db.count('users')) > 0) return false;
   for (const c of ['users', 'pets', 'applications', 'searches', 'events', 'notifications', 'emails', 'shelters', 'favourites', 'enquiries',
-    'conversations', 'matches', 'phoneCodes', 'sms', 'images', 'messages', 'meta']) await db.clear(c);
+    'conversations', 'matches', 'phoneCodes', 'sms', 'images', 'messages', 'meta', 'settings', 'mailStats']) await db.clear(c);
+  require('./settings').resetSettingsCache();
 
   const shelters = [];
   for (const { key, ...s } of DEFAULT_SHELTERS) {

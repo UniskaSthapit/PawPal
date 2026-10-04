@@ -9,8 +9,27 @@ const { ROLES, ROLE_LABELS } = require('../constants');
 const config = require('../config');
 const { newId, now, asyncHandler, clean, isEmail, toBool, HttpError, randomToken, hashToken } = require('../utils');
 
+const { getSettings, updateSettings } = require('../services/settings');
+const { notify } = require('../services/notify');
+
 const router = express.Router();
 router.use(requireAdmin);
+
+// ---- Site security settings ----
+router.get('/settings', asyncHandler(async (req, res) => {
+  const s = await getSettings();
+  res.json({ settings: { requireStaff2fa: !!s.requireStaff2fa } });
+}));
+
+router.put('/settings', asyncHandler(async (req, res) => {
+  const value = req.body?.requireStaff2fa;
+  if (typeof value !== 'boolean') throw new HttpError(400, 'requireStaff2fa must be true or false.');
+  // Turning the requirement on while your own account has no 2FA would lock you out of the admin pages
+  if (value && !req.user.twoFactor?.enabled) throw new HttpError(400, 'Turn on two-factor authentication for your own account first (Settings → Two-factor authentication).');
+  const s = await updateSettings({ requireStaff2fa: value }, req.user.id);
+  res.json({ settings: { requireStaff2fa: s.requireStaff2fa },
+    message: value ? 'Two-factor authentication is now required for all staff and administrators.' : 'Two-factor authentication is now optional.' });
+}));
 
 // Emails a single-use "choose your password" link (valid 7 days). Returns the send result so failures are shown to the admin.
 async function sendInvite(user) {
@@ -49,6 +68,18 @@ router.post('/users', asyncHandler(async (req, res) => {
   await db.insert('users', user);
   const r = await sendInvite(user);
   res.status(201).json({ user: publicUser(user), emailSent: r.sent, message: inviteMessage(name, r) });
+}));
+
+// Resets a team member's 2FA (lost phone). They sign in with their password and can set it up again.
+router.post('/users/:id/2fa/reset', asyncHandler(async (req, res) => {
+  const user = await db.findOne('users', { id: req.params.id });
+  if (!user) throw new HttpError(404, 'User not found.');
+  if (user.id === req.user.id) throw new HttpError(400, 'Use Settings → Two-factor authentication to change your own.');
+  if (!user.twoFactor?.enabled) throw new HttpError(400, `${user.name} doesn't have two-factor authentication turned on.`);
+  await db.update('users', user.id, { twoFactor: null, twoFactorPending: null, tokenVersion: (user.tokenVersion || 0) + 1 });
+  await notify(user.id, { type: 'account', title: 'Two-factor authentication was reset',
+    message: `An administrator (${req.user.name}) reset two-factor authentication on your account. Set it up again in Settings.`, link: 'settings.html#twofactor' });
+  res.json({ message: `Two-factor authentication was reset for ${user.name}. They have been signed out everywhere.` });
 }));
 
 // Re-sends the "verify your email" link to an adopter who hasn't verified yet

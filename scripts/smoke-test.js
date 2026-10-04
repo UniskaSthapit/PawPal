@@ -20,15 +20,19 @@ const check = (name, cond, extra = '') => {
   if (cond) { passed++; console.log(`  ✅ ${name}`); } else { failures.push(name); console.log(`  ❌ ${name} ${extra}`); }
 };
 
-// Tiny HTTP client that remembers its login cookie
+// Tiny HTTP client with a cookie jar (login cookie, and the short-lived 2FA pending cookie)
 function client() {
-  let cookie = '';
+  const jar = new Map();
   return async (method, url, body) => {
+    const cookie = [...jar].map(([k, v]) => `${k}=${v}`).join('; ');
     const res = await fetch(base + url, { method, redirect: 'manual',
       headers: { ...(body ? { 'Content-Type': 'application/json' } : {}), ...(cookie ? { Cookie: cookie } : {}) },
       body: body ? JSON.stringify(body) : undefined });
-    const set = res.headers.get('set-cookie');
-    if (set) cookie = set.split(';')[0].endsWith('=') ? '' : set.split(';')[0];
+    for (const set of res.headers.getSetCookie()) {
+      const [pair] = set.split(';'); const i = pair.indexOf('=');
+      const name = pair.slice(0, i); const value = pair.slice(i + 1);
+      if (!value || /expires=Thu, 01 Jan 1970/i.test(set)) jar.delete(name); else jar.set(name, value);
+    }
     const text = await res.text();
     let json; try { json = JSON.parse(text); } catch { json = text; }
     return { status: res.status, body: json, headers: res.headers };
@@ -398,6 +402,91 @@ const mailFor = async (anon, email, type) => (await anon('GET', `/api/dev/emails
   await migrate();
   check('Upgrade adds missing species without duplicating any', (await db.count('pets')) === petsBefore && (await db.find('pets')).filter((p) => p.breed === 'Pygmy Goat').length === 1);
   check('Upgrade replaces placeholder shelter emails', !/@pawpal\.app$/.test((await db.findOne('shelters', { id: shelter.id })).email));
+
+  console.log('\nTwo-factor authentication (staff)');
+  const totp = require('../src/services/totp');
+  await adopter('POST', '/api/auth/login', { email, password: 'NewPaws567', role: 'user' }); // logged out by the account-security checks
+  r = await anon('GET', '/api/auth/2fa/status');
+  check('2FA status needs a login', r.status === 401);
+  r = await adopter('POST', '/api/auth/2fa/setup');
+  check('Adopters cannot turn on 2FA', r.status === 403, JSON.stringify([r.status, r.body]));
+  r = await staff('POST', '/api/auth/login', { email: 'staff@pawpal.com', password: 'Staff@123', role: 'staff' });
+  r = await staff('POST', '/api/auth/2fa/setup');
+  check('Staff can start 2FA setup (secret + otpauth link for the QR code)', r.status === 200 && /^[A-Z2-7]{32}$/.test(r.body.secret) && /^otpauth:\/\/totp\/PawPal%3Astaff%40pawpal\.com\?secret=/.test(r.body.otpauthUrl));
+  const tfSecret = r.body.secret;
+  r = await staff('POST', '/api/auth/2fa/enable', { code: '000000' });
+  check('A wrong code does not turn 2FA on', r.status === 400);
+  r = await staff('POST', '/api/auth/2fa/enable', { code: totp.totp(tfSecret) });
+  const backupCodes = r.body.backupCodes || [];
+  check('Confirming with a code turns 2FA on and shows 8 backup codes once', r.status === 200 && backupCodes.length === 8 && backupCodes.every((c) => /^[0-9a-f]{5}-[0-9a-f]{5}$/.test(c)));
+  const storedUser = await db.findOne('users', { email: 'staff@pawpal.com' });
+  check('The secret is stored encrypted and backup codes only as hashes', /^v1:/.test(storedUser.twoFactor.secret) && !JSON.stringify(storedUser).includes(tfSecret)
+    && storedUser.twoFactor.backupCodes.every((h) => /^\$2[aby]\$/.test(h)));
+  r = await staff('GET', '/api/auth/2fa/status');
+  check('2FA status never returns the secret', r.status === 200 && r.body.enabled === true && r.body.backupCodesLeft === 8 && !JSON.stringify(r.body).includes(tfSecret));
+  const tfLogin = client();
+  r = await tfLogin('POST', '/api/auth/login', { email: 'staff@pawpal.com', password: 'Staff@123', role: 'staff' });
+  check('Password alone only asks for the code (no login cookie)', r.status === 200 && r.body.twoFactorRequired === true && !r.body.user
+    && /pawpal_2fa=/.test(r.headers.get('set-cookie') || '') && !/pawpal_token=[^;]/.test(r.headers.get('set-cookie') || ''));
+  r = await tfLogin('GET', '/api/auth/me');
+  check('Not logged in until the code is entered', r.body.user === null);
+  r = await tfLogin('POST', '/api/auth/2fa/verify', { code: '123456' });
+  check('A wrong code is rejected', r.status === 400);
+  r = await client()('POST', '/api/auth/2fa/verify', { code: totp.totp(tfSecret) });
+  check('A code without the pending sign-in is rejected', r.status === 401);
+  r = await tfLogin('POST', '/api/auth/2fa/verify', { code: totp.totp(tfSecret, Date.now() + 30000) });
+  check('The right code finishes the login', r.status === 200 && r.body.user?.email === 'staff@pawpal.com' && r.body.redirect === 'index.html');
+  r = await tfLogin('GET', '/api/applications');
+  check('…and the staff portal works', r.status === 200, JSON.stringify([r.status, r.body]).slice(0, 200));
+  const tfBackup = client();
+  await tfBackup('POST', '/api/auth/login', { email: 'staff@pawpal.com', password: 'Staff@123', role: 'staff' });
+  r = await tfBackup('POST', '/api/auth/2fa/verify', { code: backupCodes[0].toUpperCase() });
+  check('A backup code works instead of the app code', r.status === 200 && r.body.user?.email === 'staff@pawpal.com');
+  const tfReuse = client();
+  await tfReuse('POST', '/api/auth/login', { email: 'staff@pawpal.com', password: 'Staff@123', role: 'staff' });
+  r = await tfReuse('POST', '/api/auth/2fa/verify', { code: backupCodes[0] });
+  check('Each backup code works only once', r.status === 400);
+  r = await staff('GET', '/api/auth/2fa/status');
+  check('Used backup codes are counted', r.body.backupCodesLeft === 7);
+
+  r = await staff('PUT', '/api/admin/settings', { requireStaff2fa: true });
+  check('Only administrators can require 2FA', r.status === 403);
+  r = await admin('PUT', '/api/admin/settings', { requireStaff2fa: 'yes' });
+  check('Require-2FA setting is validated', r.status === 400);
+  r = await admin('PUT', '/api/admin/settings', { requireStaff2fa: true });
+  check('An admin without 2FA cannot require it (would lock themselves out)', r.status === 400);
+  r = await admin('POST', '/api/auth/2fa/setup');
+  const adminSecret = r.body.secret;
+  await admin('POST', '/api/auth/2fa/enable', { code: totp.totp(adminSecret) });
+  r = await admin('PUT', '/api/admin/settings', { requireStaff2fa: true });
+  check('Admin can require 2FA for staff', r.status === 200 && r.body.settings.requireStaff2fa === true);
+  const noTf = client();
+  r = await noTf('POST', '/api/auth/login', { email: staffEmail, password: 'StaffPaws88', role: 'staff' });
+  check('Staff without 2FA are sent to set it up', r.status === 200 && r.body.twoFactorSetupRequired === true && r.body.redirect === 'settings.html#twofactor');
+  r = await noTf('GET', '/api/applications');
+  check('…and can\'t use the portal until they do', r.status === 403 && r.body.code === 'TWO_FACTOR_SETUP_REQUIRED');
+  r = await noTf('GET', '/api/auth/2fa/status');
+  check('…but can still reach the 2FA setup', r.status === 200 && r.body.required === true && r.body.enabled === false);
+  r = await staff('POST', '/api/auth/2fa/disable', { password: 'Staff@123', code: totp.totp(tfSecret, Date.now() + 30000) });
+  check('2FA cannot be turned off while it is required', r.status === 403);
+  r = await adopter('GET', '/api/applications/mine');
+  check('Adopters are not affected by the staff requirement', r.status === 200, JSON.stringify([r.status, r.body]).slice(0, 200));
+  r = await admin('PUT', '/api/admin/settings', { requireStaff2fa: false });
+  check('Admin can make 2FA optional again', r.status === 200 && r.body.settings.requireStaff2fa === false);
+
+  const staffId = (await db.findOne('users', { email: 'staff@pawpal.com' })).id;
+  r = await staff('POST', '/api/auth/2fa/disable', { password: 'wrong-password1', code: totp.totp(tfSecret, Date.now() + 30000) });
+  check('Turning 2FA off needs the password', r.status === 400);
+  r = await staff('POST', `/api/admin/users/${staffId}/2fa/reset`);
+  check('Only administrators can reset someone\'s 2FA', r.status === 403);
+  r = await admin('POST', `/api/admin/users/${staffId}/2fa/reset`);
+  check('Admin can reset a staff member\'s 2FA (lost phone)', r.status === 200);
+  r = await staff('GET', '/api/auth/me');
+  check('Reset signs them out everywhere', r.body.user === null);
+  r = await staff('POST', '/api/auth/login', { email: 'staff@pawpal.com', password: 'Staff@123', role: 'staff' });
+  check('After a reset they sign in with just their password', r.status === 200 && !r.body.twoFactorRequired && r.body.user.twoFactorEnabled === false);
+  r = await admin('POST', '/api/auth/2fa/disable', { password: 'Admin@123', code: totp.totp(adminSecret, Date.now() + 30000) });
+  check('Password + current code turns 2FA off', r.status === 200 && r.body.enabled === false);
 
   console.log('\nOwner administrator & production safeguards');
   const config = require('../src/config');

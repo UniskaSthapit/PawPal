@@ -1244,3 +1244,18 @@ body.side-open::after, body.filters-open::after { content: ''; position: fixed; 
 .switch:focus-visible { outline: none; box-shadow: var(--ring, 0 0 0 3px rgba(194, 85, 58, .35)); }
 .switch:disabled { opacity: .6; cursor: progress; }
 @media (prefers-reduced-motion: reduce) { .switch, .switch::after { transition: none; } }
+
+/* Two-factor authentication */
+.otp-input { font-variant-numeric: tabular-nums; letter-spacing: .18em; font-size: 18px; }
+.tf-steps { display: grid; gap: 18px; padding-left: 20px; margin: 0; }
+.tf-steps > li::marker { font-weight: 700; color: var(--brand-ink); }
+.tf-setup { display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap; margin-top: 12px; }
+.tf-qr { width: 190px; max-width: 100%; padding: 10px; background: #fff; border: 1px solid var(--line); border-radius: var(--r-sm, 10px); flex: none; }
+.tf-qr .qr { display: block; width: 100%; height: auto; }
+.tf-setup > .small { flex: 1 1 220px; min-width: 0; }
+.tf-secret code { display: inline-block; padding: 8px 12px; border-radius: 8px; background: var(--paper-2); font-size: 15px; letter-spacing: .08em; overflow-wrap: anywhere; }
+.tf-codes { list-style: none; padding: 0; margin: 4px 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+.tf-codes code { display: block; text-align: center; padding: 8px; border-radius: 8px; background: var(--paper-2); font-size: 15px; letter-spacing: .06em; }
+.tf-off summary { list-style: none; display: inline; }
+.tf-off summary::-webkit-details-marker { display: none; }
+.mail-banner { margin-bottom: 18px; }
