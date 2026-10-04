@@ -66,7 +66,7 @@ app.use('/api', require('./src/routes/misc'));
 app.use('/api', (req, res) => res.status(404).json({ error: 'Not found.' }));
 
 // ---------- Page protection (server-side, so protected pages never flash) ----------
-const STAFF_PAGES = ['index.html', 'pets.html', 'add-pet.html', 'applications.html', 'analytics.html', 'settings.html', 'enquiries.html', 'assistant.html'];
+const STAFF_PAGES = ['index.html', 'pets.html', 'add-pet.html', 'applications.html', 'analytics.html', 'settings.html', 'enquiries.html', 'assistant.html', 'flyer.html'];
 const ADMIN_PAGES = ['admin.html'];
 const ADOPTER_PAGES = ['dashboard.html', 'my-applications.html', 'inquiry-form.html'];
 const ACCOUNT_PAGES = ['profile.html', 'notifications.html'];

@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pet flyer — PawPal shelter portal</title>
+  <meta name="description" content="Printable A4 adoption flyer with a QR code to the pet's profile.">
+  <meta name="theme-color" content="#FBF6EE">
+  <meta name="robots" content="noindex">
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
+  <link rel="preload" href="fonts/fraunces-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/plus-jakarta-sans-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/pawpal.css?v=6">
+  <script src="js/api.js?v=6" defer></script>
+  <script src="js/ui.js?v=6" defer></script>
+  <script src="vendor/qrcode-generator.js?v=6" defer></script>
+  <script src="js/qr.js?v=6" defer></script>
+  <script src="js/pages/flyer.js?v=6" defer></script>
+</head>
+<body data-layout="staff" data-page="flyer">
+<main id="main" tabindex="-1">
+<div class="app-head no-print"><div><nav class="breadcrumbs" aria-label="Breadcrumb"><a href="pets.html">Pets</a><span aria-hidden="true">/</span><span id="crumb">Flyer</span></nav>
+  <h1 style="margin-top:6px">Printable flyer</h1><p>A4, ready for a noticeboard, vet clinic or event. Only public details are included.</p></div>
+  <div class="row"><a class="btn" id="editLink" href="pets.html"><span data-icon="edit"></span>Edit pet</a><button class="btn btn-primary" id="printBtn" type="button" disabled><span data-icon="download"></span>Print or save as PDF</button></div></div>
+<div class="flyer-stage"><article class="flyer" id="flyer" aria-live="polite"><div class="skeleton" style="height:100%"></div></article></div>
+</main>
+</body>
+</html>

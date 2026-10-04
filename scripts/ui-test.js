@@ -127,6 +127,17 @@ const ok = (name, cond) => { if (cond) { pass++; console.log('  ✅ ' + name); }
   ok('Notification bell lists the status change', /Meet & Greet/.test(await p.textContent('#bellList')));
   await ctx.close();
 
+  console.log('Printable flyer');
+  ctx = await mk(); p = await ctx.newPage(); watch(p);
+  await p.goto(BASE + 'login.html?role=staff'); await p.fill('#lEmail', 'admin@pawpal.com'); await p.fill('#lPassword', 'Admin@123');
+  await p.click('#loginBtn'); await p.waitForURL(/index\.html/);
+  await p.goto(BASE + 'pets.html'); await p.waitForSelector('#petRows a[href^="flyer.html"]');
+  await p.click('#petRows a[href^="flyer.html"]'); await p.waitForSelector('.flyer-qr svg.qr');
+  ok('Flyer shows the pet, public facts and a QR code to their profile', /Hi, I'm/.test(await p.textContent('.flyer-name'))
+    && (await p.$$('.flyer-facts div')).length >= 3 && /pet-profile\.html\?id=/.test(await p.textContent('.flyer-url')));
+  ok('Flyer has a print button', !(await p.isDisabled('#printBtn')));
+  await ctx.close();
+
   console.log('Two-factor authentication');
   const totp = require('../src/services/totp');
   ctx = await mk(); p = await ctx.newPage(); watch(p);
