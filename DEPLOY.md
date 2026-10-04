@@ -32,6 +32,24 @@ Google sends the mail itself, so it passes Gmail's checks and lands in inboxes. 
 If emails start failing with `invalid_grant`, the token was revoked (e.g. the Google password changed) — repeat
 step 5 and update `GMAIL_REFRESH_TOKEN`.
 
+### Keeping Gmail healthy
+Google can rate-limit or lock a Gmail account that sends too much, bounces a lot or looks automated. PawPal protects
+`pawpaladmin@gmail.com` like this — and you should do the same:
+- **Publish the OAuth app** (Google Auth Platform → Audience → *Publish app*). Apps left in *Testing* get refresh
+  tokens that expire after 7 days, and then every email fails with `invalid_grant`. If that happens, every admin page
+  shows *"Gmail sign-in expired — create a new refresh token"*: repeat step 5 above and update `GMAIL_REFRESH_TOKEN`.
+- **Daily limit:** PawPal sends at most `MAIL_DAILY_LIMIT` emails a day (default 300; Google's own limit for a normal
+  Gmail account is about 500). Further emails that day are logged as *deferred*, in-app notifications still arrive, and
+  admins see a banner. The counter resets at midnight Melbourne time. *Settings → System status* shows "sent today".
+- **Only real addresses on the live site.** Demo and test addresses (`example.com`, `*.test`, `*.invalid`, the demo
+  `pawpal.com` accounts) and obvious typos (`gmial.com`, `gmail.con` …) are never sent to — bounces are the fastest way
+  to get an account blocked. Use your own real addresses when you test on the live site.
+- **Never run the automated tests against production.** `npm test` and `npm run test:ui` use their own throwaway
+  database and the dev mailbox; don't point them at the live `MONGODB_URI` or give them the Gmail keys.
+- Duplicate emails (the same email about the same application within 2 minutes, e.g. a double click) are sent once.
+  Temporary failures are retried once after 3 seconds; permanent ones (4xx) never are.
+- Every email has a plain-text part as well as HTML, and `Reply-To` is your `MAIL_FROM` address. No attachments are sent.
+
 ### Option B — Brevo
 1. Create a free account at https://www.brevo.com (300 emails/day).
 2. **Senders & IPs → Senders → Add a sender** → `pawpaladmin@gmail.com` → click the confirmation email Brevo sends.

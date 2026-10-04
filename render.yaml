@@ -28,6 +28,8 @@ services:
         sync: false
       - key: GMAIL_REFRESH_TOKEN
         sync: false
+      - key: MAIL_DAILY_LIMIT
+        value: "300"   # most emails per day (protects the Gmail account)
       - key: BREVO_API_KEY
         sync: false   # email over HTTPS from a verified single sender (works with a Gmail address)
       - key: RESEND_API_KEY

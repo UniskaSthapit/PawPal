@@ -34,6 +34,10 @@ function createMongoStore(uri, dbName) {
         col('images').createIndex({ id: 1 }, { unique: true }),
         col('phoneCodes').createIndex({ userId: 1 }),
         col('events').createIndex({ type: 1, at: -1 }),
+        col('emails').createIndex({ to: 1, type: 1, appId: 1 }),
+        col('emails').createIndex({ sentAt: -1 }),
+        col('mailStats').createIndex({ id: 1 }, { unique: true }),
+        col('meta').createIndex({ id: 1 }, { unique: true }),
       ]);
     },
     async find(name, filter = {}) { return col(name).find(filter, noMongoId).toArray(); },

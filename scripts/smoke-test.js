@@ -323,6 +323,15 @@ const mailFor = async (anon, email, type) => (await anon('GET', `/api/dev/emails
   console.log('\nAdministration');
   r = await staff('GET', '/api/admin/users');
   check('Staff cannot reach admin API', r.status === 403);
+  r = await anon('GET', '/api/system/mail-health');
+  check('Email health needs a login', r.status === 401);
+  r = await staff('GET', '/api/system/mail-health');
+  check('Email health is for administrators only', r.status === 403);
+  r = await admin('GET', '/api/system/mail-health');
+  check('Email health shows provider and today\'s count against the daily limit', r.status === 200 && r.body.provider === 'dev'
+    && Number.isInteger(r.body.sentToday) && r.body.dailyLimit === 300 && Array.isArray(r.body.problems));
+  r = await admin('GET', '/api/system/status');
+  check('System status includes email health and the last 20 emails', r.status === 200 && r.body.mail?.dailyLimit === 300 && r.body.recentEmails.length <= 20);
   r = await admin('GET', '/api/admin/users');
   check('Admin can list users', r.status === 200 && r.body.users.length >= 4);
   r = await admin('GET', '/api/admin/shelters');

@@ -34,8 +34,9 @@
     $('#manageUsers').hidden = false; $('#systemCard').hidden = false;
     try {
       const s = await PawPalAPI.get('/system/status');
-      $('#system').innerHTML = `<dl class="kv"><dt>Database</dt><dd>${esc(s.database)}</dd><dt>Email</dt><dd>${esc(s.email)}</dd><dt>SMS</dt><dd>${esc(s.sms)}</dd><dt>AI</dt><dd>${esc(s.ai)}</dd><dt>Maps</dt><dd>${esc(s.maps)}</dd>
+      $('#system').innerHTML = `<dl class="kv"><dt>Database</dt><dd>${esc(s.database)}</dd><dt>Email</dt><dd>${esc(s.email)}</dd><dt>Sent today</dt><dd>${s.mail.sentToday} of ${s.mail.dailyLimit} (daily limit, Melbourne time)${s.mail.deferredToday ? ` · ${s.mail.deferredToday} deferred` : ''}${s.mail.failedToday ? ` · ${s.mail.failedToday} failed` : ''}</dd><dt>SMS</dt><dd>${esc(s.sms)}</dd><dt>AI</dt><dd>${esc(s.ai)}</dd><dt>Maps</dt><dd>${esc(s.maps)}</dd>
         <dt>Records</dt><dd>${s.counts.pets} pets · ${s.counts.apps} applications · ${s.counts.users} users · ${s.counts.shelters} shelters · ${s.counts.mails} emails</dd></dl>
+        ${s.mail.problems.map((p) => `<div class="alert alert-warn" style="margin-top:16px">${icons.mail}<div>${esc(p.message)}</div></div>`).join('')}
         <h3 style="margin-top:22px;font-size:18px">Recent emails</h3>
         <p class="small muted" style="margin-top:4px">The last 20 emails PawPal tried to send. Skipped, deferred and failed emails show the reason.</p>
         ${s.recentEmails?.length ? `<ul class="plain stack" style="--stack:10px;margin-top:12px">${s.recentEmails.map((m) => `<li class="email-log"><div class="row-between" style="gap:10px;flex-wrap:wrap"><b>${esc(m.subject)}</b>
