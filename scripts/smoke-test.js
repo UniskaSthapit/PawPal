@@ -325,6 +325,89 @@ const mailFor = async (anon, email, type) => (await anon('GET', `/api/dev/emails
     } finally { Object.assign(llm, real); }
   }
 
+  console.log('\nAdoption fee (payment simulation)');
+  const logged = [];
+  const origLog = { log: console.log, warn: console.warn, error: console.error, info: console.info };
+  for (const k of Object.keys(origLog)) console[k] = (...a) => { logged.push(a.map((x) => (typeof x === 'string' ? x : require('util').inspect(x, { depth: 5 }))).join(' ')); origLog[k](...a); };
+  const card = (number, extra = {}) => ({ applicationId: appId, card: { name: 'Test Adopter', number, expiry: '12/39', cvc: '123', ...extra } });
+  try {
+    r = await anon('GET', `/api/payments/application/${appId}`);
+    check('Checkout needs a login', r.status === 401);
+    r = await adopter('GET', `/api/payments/application/${appId}`);
+    check('Adopted application shows the adoption fee due', r.status === 200 && r.body.amount === max.adoptionFee && r.body.paymentStatus === 'due' && r.body.simulation === true && r.body.testCards.length === 3);
+    r = await adopter('GET', '/api/applications/mine');
+    check('My Applications shows "Adoption fee due"', r.body.applications.find((a) => a.id === appId).payment?.status === 'due');
+    r = await anon('POST', '/api/payments/checkout', card('4242424242424242'));
+    check('Paying needs a login', r.status === 401);
+    r = await admin('POST', '/api/payments/checkout', card('4242424242424242'));
+    check('Only adopters pay', r.status === 403);
+    for (const [label, body, field, re] of [
+      ['name', card('4242424242424242', { name: '' }), 'name', /name/],
+      ['Luhn check', card('4242424242424241'), 'number', /isn't valid/],
+      ['test cards only', card('4111111111111111'), 'number', /Use a test card/],
+      ['expiry in the future', card('4242424242424242', { expiry: '01/20' }), 'expiry', /expired/],
+      ['expiry format', card('4242424242424242', { expiry: '13/30' }), 'expiry', /month/],
+      ['3-digit CVC', card('4242424242424242', { cvc: '12' }), 'cvc', /CVC/],
+    ]) {
+      r = await adopter('POST', '/api/payments/checkout', body);
+      check(`Card validation: ${label}`, r.status === 400 && r.body.field === field && re.test(r.body.error), JSON.stringify(r.body));
+    }
+    r = await adopter('POST', '/api/payments/checkout', card('4000 0000 0000 0002'));
+    check('Test card 4000…0002 is declined', r.status === 402 && r.body.code === 'declined');
+    r = await adopter('POST', '/api/payments/checkout', card('4000000000009995'));
+    check('Test card 4000…9995 has insufficient funds', r.status === 402 && r.body.code === 'insufficient_funds');
+    r = await adopter('GET', `/api/payments/application/${appId}`);
+    check('A failed payment leaves the fee due', r.body.paymentStatus === 'due');
+    r = await adopter('POST', '/api/payments/pay-in-person', { applicationId: appId });
+    check('Adopter can choose to pay at the shelter', r.status === 200 && r.body.paymentStatus === 'pay_in_person');
+    r = await adopter('POST', '/api/payments/pay-in-person', { applicationId: appId });
+    check('Choosing it again is harmless', r.status === 200);
+    const [p1, p2] = await Promise.all([adopter('POST', '/api/payments/checkout', card('4242424242424242')), adopter('POST', '/api/payments/checkout', card('4242424242424242'))]);
+    const okPay = [p1, p2].find((x) => x.status === 201);
+    check('Two clicks at once charge only once', okPay && [p1, p2].filter((x) => x.status === 201).length === 1 && [p1, p2].some((x) => x.status === 409), JSON.stringify([p1.status, p2.status]));
+    const receipt = okPay.body.payment;
+    check('Test card 4242… succeeds with a receipt (brand + last 4 only)', /^PP-\d{8}-[0-9A-F]{6}$/.test(receipt.receiptNo) && receipt.brand === 'Visa' && receipt.last4 === '4242'
+      && Object.keys(receipt).sort().join() === 'amount,applicationId,brand,id,last4,paidAt,receiptNo,status,userId');
+    r = await adopter('POST', '/api/payments/checkout', card('4242424242424242'));
+    check('A paid adoption cannot be charged again', r.status === 409 && r.body.payment.id === receipt.id);
+    check('Exactly one successful payment is stored', (await db.find('payments', { applicationId: appId })).filter((x) => x.status === 'succeeded').length === 1);
+    r = await adopter('GET', `/api/payments/${receipt.id}`);
+    check('Adopter can open the receipt', r.status === 200 && r.body.payment.receiptNo === receipt.receiptNo && r.body.simulation === true);
+    r = await anon('GET', `/api/payments/${receipt.id}`);
+    check('Receipts need a login', r.status === 401);
+    r = await admin('GET', `/api/payments/${receipt.id}`);
+    check('Staff can open the receipt', r.status === 200);
+    r = await adopter('GET', '/api/notifications');
+    check('In-app notification for the payment', r.body.notifications.some((n) => n.type === 'payment' && n.link === `receipt.html?id=${receipt.id}`));
+    await new Promise((ok) => setTimeout(ok, 100));
+    r = await anon('GET', `/api/dev/emails?to=${encodeURIComponent(email)}`);
+    check('Receipt email sent', r.body.emails.some((m) => m.type === 'receipt' && m.subject.includes(receipt.receiptNo)));
+
+    // The demo adopter's seeded adoption: staff record a payment taken at the shelter
+    const demoUser = client();
+    await demoUser('POST', '/api/auth/login', { email: 'user@pawpal.com', password: 'User@123' });
+    const demoApp = (await db.find('applications')).find((x) => x.email === 'user@pawpal.com' && x.status === 'Adopted');
+    r = await demoUser('GET', `/api/payments/application/${appId}`);
+    check('Adopters cannot see someone else\'s checkout', r.status === 404);
+    r = await demoUser('GET', `/api/payments/${receipt.id}`);
+    check('…or receipt', r.status === 404);
+    r = await demoUser('GET', `/api/payments/application/${demoApp.id}`);
+    check('Seeded demo adoption has a fee due', r.status === 200 && r.body.paymentStatus === 'due' && r.body.amount > 0);
+    r = await demoUser('POST', `/api/payments/application/${demoApp.id}/record`);
+    check('Only staff record in-person payments', r.status === 403);
+    r = await admin('POST', `/api/payments/application/${demoApp.id}/record`);
+    check('Staff record a payment taken at the shelter', r.status === 201 && r.body.payment.brand === 'Paid at the shelter' && r.body.payment.last4 === null);
+    r = await demoUser('POST', '/api/payments/checkout', { applicationId: demoApp.id, card: { name: 'Jordan', number: '4242424242424242', expiry: '12/39', cvc: '123' } });
+    check('…after which it cannot be paid again', r.status === 409);
+    r = await admin('GET', '/api/analytics');
+    check('Analytics shows adoption fees collected', r.status === 200 && r.body.fees.collected >= receipt.amount + demoApp.feeDue && r.body.fees.collectedAllTime >= r.body.fees.collected);
+    r = await admin('GET', `/api/applications/${appId}`);
+    check('Staff see the payment status on the application', r.body.application.paymentStatus === 'paid' && r.body.application.paymentId === receipt.id);
+  } finally { Object.assign(console, origLog); }
+  const everything = JSON.stringify(await Promise.all(['payments', 'applications', 'events', 'notifications', 'emails'].map((c) => db.find(c))));
+  check('Full card numbers and CVCs are never stored', !/4242424242424242|4000000000000002|4000000000009995|4242 4242 4242 4242/.test(everything) && !/"cvc"/.test(everything));
+  check('…or logged', !logged.some((l) => /4242424242424242|4000000000000002|4000000000009995|4242424242424241|4111111111111111|"cvc"/.test(l)));
+
   r = await anon('GET', `/api/dev/emails?to=${encodeURIComponent(email)}`);
   check('Adopter received emails for each step', r.body.emails.filter((m) => ['status-update', 'closure', 'application', 'message'].includes(m.type)).length >= 7);
   r = await adopter('GET', '/api/notifications');

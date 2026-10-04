@@ -16,6 +16,16 @@
     } catch { /* ignore */ }
   }
 
+  // New pets start with the suggested fee for their species (same values as DEFAULT_FEES in src/constants.js) until staff change it
+  const SUGGESTED_FEES = { Dog: 400, Cat: 180, Rabbit: 90, 'Guinea Pig': 50, Hamster: 25, Bird: 70, Reptile: 130, Fish: 20, 'Farm Animal': 300, Other: 50 };
+  if (!editId) {
+    let feeTouched = false;
+    const suggest = () => { if (!feeTouched && SUGGESTED_FEES[$('#type').value] !== undefined) $('#adoptionFee').value = SUGGESTED_FEES[$('#type').value]; };
+    $('#adoptionFee').addEventListener('input', () => { feeTouched = true; });
+    $('#type').addEventListener('change', suggest);
+    suggest();
+  }
+
   if (editId) {
     try {
       const res = await PawPalAPI.get(`/pets/${encodeURIComponent(editId)}`);

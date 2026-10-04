@@ -364,8 +364,19 @@ const emails = {
     ...appMeta(app), to: app.email, type: 'closure', subject: `Congratulations on adopting ${app.petName}!`,
     heading: `Welcome home, ${app.petName}!`,
     body: p(`Congratulations ${first(app.name)}! Your adoption of <b>${escapeHtml(app.petName)}</b> is complete.`) +
-      p('A first vet check-up within two weeks is a great start. PawPal\'s vet finder can show clinics near you.'),
+      p('A first vet check-up within two weeks is a great start. PawPal\'s vet finder can show clinics near you.') +
+      (app.feeDue > 0 ? p(`The adoption fee of <b>$${Number(app.feeDue).toFixed(2)}</b> can be paid online from <a href="${config.appUrl}/my-applications.html?id=${app.id}">My applications</a> or at the shelter.`) : ''),
     buttonText: 'Find a nearby vet', buttonUrl: `${config.appUrl}/vet-finder.html`,
+  }),
+  // Receipt for the simulated adoption-fee payment (only brand + last 4 digits are ever known)
+  paymentReceipt: (user, payment, app) => sendMail({
+    to: user.email, type: 'receipt', userId: user.id, appId: app.id, subject: `Receipt ${payment.receiptNo}: adoption fee for ${app.petName}`,
+    heading: 'Thank you — adoption fee received',
+    body: p(`Hi ${first(user.name)}, thank you for paying the adoption fee for <b>${escapeHtml(app.petName)}</b>.`)
+      + p(`<b>Amount:</b> $${Number(payment.amount).toFixed(2)} AUD<br><b>Paid with:</b> ${escapeHtml(payment.last4 ? `${payment.brand} ending ${payment.last4}` : payment.brand)}<br>`
+        + `<b>Receipt number:</b> ${escapeHtml(payment.receiptNo)}<br><b>Date:</b> ${escapeHtml(new Date(payment.paidAt).toLocaleString('en-AU', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Australia/Melbourne' }))}`)
+      + p('<i>PawPal payment simulation — no real money was taken.</i>'),
+    buttonText: 'View receipt', buttonUrl: `${config.appUrl}/receipt.html?id=${payment.id}`,
   }),
   shelterMessage: (app, text) => sendMail({
     ...appMeta(app), to: app.email, type: 'message', subject: `New message about your application for ${app.petName}`,

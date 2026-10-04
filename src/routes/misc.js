@@ -46,12 +46,13 @@ const adoptedAt = (a) => a.history?.find((h) => h.status === 'Adopted')?.at;
 async function scopedData(req) {
   const scope = shelterScope(req);
   const within = (list) => (scope ? list.filter((x) => x.shelterId === scope) : list);
-  const [pets, apps, enquiries, favs, events, searches, mails] = await Promise.all([db.find('pets'), db.find('applications'),
-    db.find('enquiries'), db.find('favourites'), db.find('events'), db.find('searches'), db.find('emails')]);
+  const [pets, apps, enquiries, favs, events, searches, mails, payments] = await Promise.all([db.find('pets'), db.find('applications'),
+    db.find('enquiries'), db.find('favourites'), db.find('events'), db.find('searches'), db.find('emails'), db.find('payments')]);
   const myPets = within(pets);
   const petIds = new Set(myPets.map((p) => p.id));
   return { pets: myPets, apps: within(apps), enquiries: within(enquiries), favs: favs.filter((f) => petIds.has(f.petId)),
-    views: events.filter((e) => e.type === 'pet_view' && petIds.has(e.petId)), events, searches, mails };
+    views: events.filter((e) => e.type === 'pet_view' && petIds.has(e.petId)), events, searches, mails,
+    payments: (() => { const appIds = new Set(within(apps).map((a) => a.id)); return payments.filter((p) => appIds.has(p.applicationId)); })() };
 }
 
 router.get('/analytics/dashboard', requireStaff, asyncHandler(async (req, res) => {
@@ -85,7 +86,7 @@ router.get('/analytics/dashboard', requireStaff, asyncHandler(async (req, res) =
 }));
 
 function buildAnalytics(data, from, to) {
-  const { pets, apps, enquiries, favs, views, events, searches } = data;
+  const { pets, apps, enquiries, favs, views, events, searches, payments = [] } = data;
   const span = to - from;
   const R = (list, key) => list.filter((x) => inRange(x[key], from, to));
   const P = (list, key) => list.filter((x) => inRange(x[key], from - span, from - 1));
@@ -149,7 +150,13 @@ function buildAnalytics(data, from, to) {
     avgDaysToFirstAction: avg(firstAction), avgDaysToDecision: avg(toDecision),
     averageScore: appsIn.length ? Math.round(appsIn.reduce((t, a) => t + (a.score || 0), 0) / appsIn.length) : null,
   };
-  return { stats, funnel, byAge, byType, bySize, trend,
+  // Adoption fees (simulated payments): collected in the period, and what is still owed on completed adoptions
+  const paidIn = payments.filter((p) => p.status === 'succeeded' && inRange(p.paidAt, from, to));
+  const owed = apps.filter((a) => a.status === 'Adopted' && a.feeDue > 0 && ['due', 'pay_in_person'].includes(a.paymentStatus));
+  const fees = { collected: paidIn.reduce((t, p) => t + Number(p.amount || 0), 0), payments: paidIn.length,
+    collectedAllTime: payments.filter((p) => p.status === 'succeeded').reduce((t, p) => t + Number(p.amount || 0), 0),
+    outstanding: owed.reduce((t, a) => t + a.feeDue, 0), outstandingCount: owed.length, payAtShelter: owed.filter((a) => a.paymentStatus === 'pay_in_person').length };
+  return { stats, fees, funnel, byAge, byType, bySize, trend,
     topKeywords: Object.entries(kw).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([keyword, n]) => ({ keyword, count: n })),
     zeroResultKeywords: Object.entries(zero).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([keyword, n]) => ({ keyword, count: n })),
     statusCounts: APP_STATUSES.map((s) => ({ status: s, count: appsIn.filter((a) => a.status === s).length })) };

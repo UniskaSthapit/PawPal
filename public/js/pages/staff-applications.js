@@ -65,6 +65,13 @@
         ${a.slotId ? '' : `<div><button class="btn ${a.bookingInvite ? '' : 'btn-primary'}" type="button" id="inviteBtn">${icons.calendar}${a.bookingInvite ? 'Send the invite again' : 'Invite to book a meet & greet'}</button></div>`}
       </div></div>` : ''}
 
+      ${a.status === 'Adopted' && a.feeDue > 0 ? `<div class="card" id="payCard"><div class="card-head"><div><span class="src-label src-shelter">${icons.checkCircle}Simulated payment</span><h3>Adoption fee</h3></div>
+        <b>$${esc(a.feeDue)}</b></div><div class="card-body stack" style="--stack:10px">
+        ${a.paymentStatus === 'paid' ? `<p class="small"><span class="badge badge-sage">Paid</span> <a href="receipt.html?id=${encodeURIComponent(a.paymentId || '')}">View receipt</a></p>`
+          : `<p class="small">${a.paymentStatus === 'pay_in_person' ? `<span class="badge badge-honey">Paying at the shelter</span> ${esc(a.name.split(' ')[0])} will pay in person.` : '<span class="badge badge-honey">Due</span> Not paid yet.'}</p>
+        <div><button class="btn btn-sm" type="button" id="recordPayBtn">${icons.checkCircle}Record payment taken at the shelter</button></div>`}
+      </div></div>` : ''}
+
       ${['Approved', 'Adoption Scheduled', 'Adopted'].includes(a.status) ? `<div class="card" id="careCard"><div class="card-head"><div><span class="src-label src-ai">${icons.clipboard}First 30 days</span><h3>Care plan</h3></div>
         ${a.carePlan ? `<a class="btn btn-sm" id="viewCare" href="care-plan.html?id=${encodeURIComponent(a.id)}">${icons.file}View</a>` : ''}</div>
         <div class="card-body stack" style="--stack:10px">
@@ -136,6 +143,12 @@
         try { const r = await PawPalAPI.post(`/applications/${encodeURIComponent(a.id)}/invite-booking`, { message: $('#inviteMsg', m).value.trim() }); toast(r.message, PawPal.emailToastType(r)); renderDetail(a.id); return true; }
         catch (err) { setBusy(btn, false); $('#inviteErr', m).innerHTML = errorHTML(err.message); return false; }
       } }] }));
+    $('#recordPayBtn')?.addEventListener('click', async () => {
+      if (!(await PawPal.confirm({ title: `Record the $${a.feeDue} adoption fee as paid?`, message: `Use this when ${a.name.split(' ')[0]} paid at the shelter. A receipt is emailed to them.`, confirmText: 'Record payment' }))) return;
+      const btn = $('#recordPayBtn'); setBusy(btn, true, 'Recording…');
+      try { const r = await PawPalAPI.post(`/payments/application/${encodeURIComponent(a.id)}/record`); toast(r.message); renderDetail(a.id); }
+      catch (err) { setBusy(btn, false); toast(err.message, 'error'); }
+    });
     $('#careBtn')?.addEventListener('click', async () => {
       if (a.carePlan && !(await PawPal.confirm({ title: 'Regenerate the care plan?', message: `This replaces the current plan and lets ${a.name.split(' ')[0]} know it was updated.`, confirmText: 'Regenerate' }))) return;
       const btn = $('#careBtn'); setBusy(btn, true, 'Preparing…');
