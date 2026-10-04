@@ -99,7 +99,7 @@
       if (NEEDS_DATE.includes(status)) { if (!$('#apptAt').value) return toast('Choose a date and time for the appointment.', 'error'); body.appointmentAt = new Date($('#apptAt').value).toISOString(); }
       if (status === 'Adopted' && !(await PawPal.confirm({ title: `Complete ${a.petName}'s adoption?`, message: `${a.petName} will be marked adopted and every other open application for ${a.petName} will be closed and notified.`, confirmText: 'Complete adoption' }))) return;
       const btn = $('#statusBtn'); setBusy(btn, true, 'Updating…');
-      try { const r = await PawPalAPI.patch(`/applications/${encodeURIComponent(a.id)}/status`, body); toast(r.message, r.emailSent === false ? 'error' : undefined); load(); }
+      try { const r = await PawPalAPI.patch(`/applications/${encodeURIComponent(a.id)}/status`, body); toast(r.message, PawPal.emailToastType(r)); load(); }
       catch (err) { setBusy(btn, false); toast(err.message, 'error'); }
     });
     $('#sumBtn').addEventListener('click', async () => {
@@ -116,7 +116,7 @@
     $('#msgForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const text = $('#msgText').value.trim(); if (text.length < 2) return;
-      try { const r = await PawPalAPI.post(`/applications/${encodeURIComponent(a.id)}/messages`, { text }); toast(r.message, r.emailSent === false ? 'error' : undefined); renderDetail(a.id); } catch (err) { toast(err.message, 'error'); }
+      try { const r = await PawPalAPI.post(`/applications/${encodeURIComponent(a.id)}/messages`, { text }); toast(r.message, PawPal.emailToastType(r)); renderDetail(a.id); } catch (err) { toast(err.message, 'error'); }
     });
     $('#notesBtn').addEventListener('click', async () => {
       try { const r = await PawPalAPI.patch(`/applications/${encodeURIComponent(a.id)}/notes`, { staffNotes: $('#staffNotes').value }); toast(r.message); } catch (err) { toast(err.message, 'error'); }

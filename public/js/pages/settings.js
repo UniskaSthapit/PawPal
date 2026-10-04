@@ -5,6 +5,14 @@
   const ok = (m) => `<div class="alert alert-success">${icons.checkCircle}<div>${esc(m)}</div></div>`;
   $('#sName').value = u.name; $('#sEmail').value = u.email;
   $('#roleBadge').innerHTML = `<span class="badge badge-sage">${u.role === 'admin' ? 'Administrator' : 'Shelter staff'}</span>`;
+  const activity = $('#prefActivity');
+  activity.checked = u.emailPrefs?.activity !== false;
+  activity.addEventListener('change', async () => {
+    activity.disabled = true;
+    try { await PawPalAPI.patch('/users/me', { emailPrefs: { activity: activity.checked } }); toast(activity.checked ? 'Shelter activity emails on' : 'Shelter activity emails off — notifications still appear in PawPal', activity.checked ? 'success' : 'info'); }
+    catch (err) { activity.checked = !activity.checked; toast(err.message, 'error'); }
+    activity.disabled = false;
+  });
   $('#acctForm').addEventListener('submit', async (e) => { e.preventDefault(); const b = $('#acctBtn'); setBusy(b, true, 'Saving…');
     try { const r = await PawPalAPI.patch('/users/me', { name: $('#sName').value }); $('#acctMsg').innerHTML = ok(r.message); } catch (err) { $('#acctMsg').innerHTML = errorHTML(err.message); } setBusy(b, false); });
   $('#pwForm').addEventListener('submit', async (e) => { e.preventDefault(); const b = $('#pwBtn'); setBusy(b, true, 'Updating…');
@@ -21,6 +29,7 @@
     $('#team').innerHTML = staff.map((m) => `<div class="list-row"><span class="avatar">${esc(PawPal.initials(m.name))}</span><div class="grow"><b>${esc(m.name)}</b><span class="sub">${esc(m.email)} · ${m.role === 'admin' ? 'Administrator' : 'Staff'} · ${m.lastLoginAt ? `last seen ${esc(timeAgo(m.lastLoginAt))}` : 'never logged in'}</span></div>${m.active ? '' : '<span class="badge">Deactivated</span>'}</div>`).join('')
       + `<div class="card-foot small muted">${adopterCount} adopter accounts on PawPal</div>`;
   } catch (err) { $('#team').innerHTML = `<div class="card-body">${errorHTML(err.message)}</div>`; }
+  const EMAIL_BADGE = { sent: ['Sent', 'badge-sage'], skipped: ['Skipped', ''], deferred: ['Deferred', 'badge-honey'], failed: ['Failed', 'badge-danger'] };
   if (u.role === 'admin') {
     $('#manageUsers').hidden = false; $('#systemCard').hidden = false;
     try {
@@ -28,10 +37,10 @@
       $('#system').innerHTML = `<dl class="kv"><dt>Database</dt><dd>${esc(s.database)}</dd><dt>Email</dt><dd>${esc(s.email)}</dd><dt>SMS</dt><dd>${esc(s.sms)}</dd><dt>AI</dt><dd>${esc(s.ai)}</dd><dt>Maps</dt><dd>${esc(s.maps)}</dd>
         <dt>Records</dt><dd>${s.counts.pets} pets · ${s.counts.apps} applications · ${s.counts.users} users · ${s.counts.shelters} shelters · ${s.counts.mails} emails</dd></dl>
         <h3 style="margin-top:22px;font-size:18px">Recent emails</h3>
-        <p class="small muted" style="margin-top:4px">The last emails PawPal tried to send. "Failed" shows the email provider's reason.</p>
+        <p class="small muted" style="margin-top:4px">The last 20 emails PawPal tried to send. Skipped, deferred and failed emails show the reason.</p>
         ${s.recentEmails?.length ? `<ul class="plain stack" style="--stack:10px;margin-top:12px">${s.recentEmails.map((m) => `<li class="email-log"><div class="row-between" style="gap:10px;flex-wrap:wrap"><b>${esc(m.subject)}</b>
-          <span class="badge ${m.status === 'sent' ? 'badge-sage' : m.status === 'skipped' ? '' : 'badge-danger'}">${m.status === 'sent' ? 'Sent' : m.status === 'skipped' ? 'Skipped' : 'Failed'}</span></div>
-          <span class="small muted">To ${esc(m.to)} · ${esc(timeAgo(m.sentAt))} · via ${esc(m.mode)}</span>${m.error ? `<code class="email-error">${esc(m.error)}</code>` : ''}</li>`).join('')}</ul>`
+          <span class="badge ${EMAIL_BADGE[m.status]?.[1] ?? 'badge-danger'}">${EMAIL_BADGE[m.status]?.[0] || 'Failed'}</span></div>
+          <span class="small muted">To ${esc(m.to)} · ${esc(timeAgo(m.sentAt))} · via ${esc(m.mode)}${m.retried ? ' · sent on retry' : ''}</span>${m.error ? `<code class="email-error">${esc(m.error)}</code>` : ''}</li>`).join('')}</ul>`
           : '<p class="small muted" style="margin-top:10px">No emails have been sent yet.</p>'}
         ${s.allowDemoReset ? `<div class="alert alert-warn" style="margin-top:16px">${icons.alert}<div><b>Demo reset is enabled.</b> This wipes all data and reloads the sample data. Turn it off in production with <code>ALLOW_DEMO_RESET=false</code>. <button class="link-btn" id="resetBtn">Reset demo data</button></div></div>` : ''}`;
       $('#resetBtn')?.addEventListener('click', async () => {

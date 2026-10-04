@@ -67,7 +67,8 @@ const inScope = (req, doc) => { const s = shelterScope(req); return s === null |
 // Safe version of a user for sending to the browser
 const publicUser = (u) => u && ({ id: u.id, name: u.name, email: u.email, role: u.role, phone: u.phone || '',
   phoneVerified: !!u.phoneVerified, emailVerified: !!u.emailVerified, shelterId: u.shelterId || null,
-  preferences: u.preferences || null, createdAt: u.createdAt });
+  preferences: u.preferences || null, emailPrefs: { applications: u.emailPrefs?.applications !== false, activity: u.emailPrefs?.activity !== false },
+  createdAt: u.createdAt });
 
 module.exports = { setAuthCookie, clearAuthCookie, loadUser, requireAuth, requireAdopter, requireStaff, requireAdmin,
   isStaff, isAdmin, isStaffRole, shelterScope, inScope, publicUser };

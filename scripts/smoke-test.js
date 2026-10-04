@@ -185,6 +185,10 @@ const mailFor = async (anon, email, type) => (await anon('GET', `/api/dev/emails
   r = await adopter('POST', '/api/enquiries', { petId: max.id, message: 'Is Max okay with being alone for a few hours?' });
   check('Adopter can ask the shelter about a pet', r.status === 201);
   const enqId = r.body.enquiry.id;
+  await new Promise((resolve) => { setTimeout(resolve, 150); }); // notification emails are sent in the background
+  r = await anon('GET', '/api/dev/emails?to=admin%40pawpal.com');
+  check('Staff in-app notifications are emailed too', r.body.emails.some((m) => m.type === 'notification' && /New question about Max/.test(m.subject)));
+
 
   console.log('\nAdoption application');
   r = await adopter('POST', '/api/applications', { petId: max.id, name: 'Test Adopter', email, motivation: 'too short' });
@@ -223,6 +227,23 @@ const mailFor = async (anon, email, type) => (await anon('GET', `/api/dev/emails
   r = await admin('PATCH', `/api/applications/${appId}/status`, { status: 'Under Review' });
   check('Status → Under Review', r.status === 200 && r.body.application.status === 'Under Review');
   check('Status change is emailed and reported to staff', r.body.emailSent === true && /We emailed/.test(r.body.message) && Boolean(await mailFor(anon, email, 'status-update')));
+  // Email settings: adopters can turn application emails off; the in-app notification still happens
+  r = await anon('PATCH', '/api/users/me', { emailPrefs: { applications: false } });
+  check('Email settings need a login', r.status === 401);
+  r = await adopter('PATCH', '/api/users/me', { emailPrefs: 'off' });
+  check('Email settings are validated', r.status === 400);
+  r = await adopter('PATCH', '/api/users/me', { emailPrefs: { applications: 'no' } });
+  check('Email settings must be on/off values', r.status === 400);
+  r = await adopter('PATCH', '/api/users/me', { emailPrefs: { applications: false } });
+  check('Adopter can turn off application emails', r.status === 200 && r.body.user.emailPrefs.applications === false && r.body.user.emailPrefs.activity === true);
+  r = await admin('PATCH', `/api/applications/${appId}/status`, { status: 'Interview', appointmentAt: new Date(Date.now() + 86400000).toISOString() });
+  const skippedMail = (await anon('GET', `/api/dev/emails?to=${encodeURIComponent(email)}`)).body.emails.find((m) => /Interview/.test(m.subject));
+  const interviewNote = (await adopter('GET', '/api/notifications')).body.notifications.find((n) => /Interview/.test(n.title));
+  check('Opted-out adopter: email skipped with a reason, staff told, in-app notification kept',
+    r.status === 200 && r.body.emailStatus === 'skipped' && /turned off application emails/.test(r.body.message)
+    && skippedMail?.status === 'skipped' && /turned off/.test(skippedMail.error) && Boolean(interviewNote));
+  r = await adopter('PATCH', '/api/users/me', { emailPrefs: { applications: true } });
+  check('Adopter can turn application emails back on', r.body.user.emailPrefs.applications === true);
   r = await admin('PATCH', `/api/applications/${appId}/status`, { status: 'Info Requested' });
   check('Info request needs a message', r.status === 400);
   r = await admin('PATCH', `/api/applications/${appId}/status`, { status: 'Info Requested', message: 'Please send your landlord approval.' });
@@ -246,7 +267,7 @@ const mailFor = async (anon, email, type) => (await anon('GET', `/api/dev/emails
   check('Completed adoptions cannot be changed', r.status === 400);
   r = await adopter('GET', '/api/applications/mine');
   const mine = r.body.applications.find((a) => a.id === appId);
-  check('Adopter timeline shows full status history', mine?.status === 'Adopted' && mine.history.length === 8 && mine.messages.length >= 2);
+  check('Adopter timeline shows full status history', mine?.status === 'Adopted' && mine.history.length === 9 /* 8 journey steps + the Interview used by the email-settings test */ && mine.messages.length >= 2);
   r = await anon('GET', `/api/dev/emails?to=${encodeURIComponent(email)}`);
   check('Adopter received emails for each step', r.body.emails.filter((m) => ['status-update', 'closure', 'application', 'message'].includes(m.type)).length >= 7);
   r = await adopter('GET', '/api/notifications');

@@ -140,6 +140,9 @@ const PawPal = (() => {
   };
   const icon = (name) => icons[name] || '';
 
+  // Toast colour for a response that reports an email: sent → success, skipped (demo address / turned off) → info, failed → error
+  const emailToastType = (r) => ({ failed: 'error', skipped: 'info' }[r?.emailStatus] || 'success');
+
   // ---------- toasts ----------
   function toast(message, type = 'success') {
     let wrap = $('#toastWrap');
@@ -725,6 +728,6 @@ const PawPal = (() => {
 
   return { $, $$, params, page, layout, esc, fmtDate, fmtDateTime, timeAgo, initials, ageText, ageLong, energyText, money, photo, sized, srcset, icons, icon, aiLabel,
     FALLBACK, PLACEHOLDER, statusBadge, statusClass, scoreBadge, toast, modal, confirm: confirmDialog, setBusy, errorHTML, emptyHTML, skeletonCards,
-    favs, petCardHTML, petTags, ready, booted, get user() { return user; }, isStaffUser, logout, loadBell, noteHTML, hydrateIcons, reveal, reduceMotion,
+    favs, petCardHTML, petTags, ready, booted, emailToastType, get user() { return user; }, isStaffUser, logout, loadBell, noteHTML, hydrateIcons, reveal, reduceMotion,
     finePointer, countUp, carousel, hscroll, accordion, siteConfig, fillContactLinks };
 })();

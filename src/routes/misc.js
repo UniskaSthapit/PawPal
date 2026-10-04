@@ -236,6 +236,18 @@ router.patch('/users/me', requireAuth, asyncHandler(async (req, res) => {
   }
   if (req.body.address !== undefined) patch.address = clean(req.body.address, 160);
   if (req.body.preferences !== undefined) patch.preferences = req.body.preferences ? sanitizeProfile(req.body.preferences, emptyProfile()) : null;
+  // Email settings: adopters choose application emails, staff choose shelter-activity emails (in-app notifications always happen)
+  if (req.body.emailPrefs !== undefined) {
+    const ep = req.body.emailPrefs;
+    if (!ep || typeof ep !== 'object' || Array.isArray(ep)) throw new HttpError(400, 'Email settings are invalid.');
+    const current = { applications: req.user.emailPrefs?.applications !== false, activity: req.user.emailPrefs?.activity !== false };
+    for (const key of ['applications', 'activity']) {
+      if (ep[key] === undefined) continue;
+      if (typeof ep[key] !== 'boolean') throw new HttpError(400, 'Email settings must be on or off.');
+      current[key] = ep[key];
+    }
+    patch.emailPrefs = current;
+  }
   const user = await db.update('users', req.user.id, patch);
   res.json({ user: { ...publicUser(user), address: user.address || '' }, understood: user.preferences ? describeProfile(user.preferences) : [], message: 'Profile saved.' });
 }));
@@ -312,8 +324,8 @@ router.get('/system/status', requireAdmin, asyncHandler(async (req, res) => {
     ai: llm.providerLabel, maps: maps.mapsEnabled ? 'Google Places API' : 'Keyless Google Maps embed',
     counts: { pets, apps, users, mails, shelters }, allowDemoReset: config.allowDemoReset,
     // The last emails PawPal tried to send, so delivery problems can be seen without the server logs
-    recentEmails: (await db.find('emails')).sort((a, b) => new Date(b.sentAt) - new Date(a.sentAt)).slice(0, 15)
-      .map((m) => ({ to: m.to, type: m.type, subject: m.subject, status: m.status, error: m.error || null, mode: m.mode, sentAt: m.sentAt })) });
+    recentEmails: (await db.find('emails')).sort((a, b) => new Date(b.sentAt) - new Date(a.sentAt)).slice(0, 20)
+      .map((m) => ({ to: m.to, type: m.type, subject: m.subject, status: m.status, error: m.error || null, mode: m.mode, retried: !!m.retried, sentAt: m.sentAt })) });
 }));
 
 router.post('/system/reset', requireAdmin, asyncHandler(async (req, res) => {

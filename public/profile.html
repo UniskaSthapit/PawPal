@@ -55,6 +55,14 @@
     <div class="card-body" id="prefBody"><div class="skeleton" style="height:60px"></div></div>
   </section>
 
+  <section class="card" id="emailSettings" aria-labelledby="emailSetTitle">
+    <div class="card-head"><h2 id="emailSetTitle">Email notifications</h2></div>
+    <div class="card-body stack">
+      <label class="switch-row" for="prefAppEmails"><span><b>Email me about my applications</b><span class="hint">Status changes, messages from the shelter, bookings and your care plan. You'll always see these in your PawPal notifications.</span></span>
+        <input type="checkbox" class="switch" id="prefAppEmails" role="switch"></label>
+      <div id="emailSetMsg"></div>
+    </div>
+  </section>
   <form class="card" id="pwForm" novalidate>
     <div class="card-head"><h2>Change password</h2></div>
     <div class="card-body stack">

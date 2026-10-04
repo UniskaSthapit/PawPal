@@ -3,7 +3,7 @@
 const express = require('express');
 const db = require('../db');
 const { emails } = require('../services/mailer');
-const { notify, notifyStaff } = require('../services/notify');
+const { notify, notifyStaff, emailPrefs } = require('../services/notify');
 const { calculateSuitabilityScore, LIVING_TYPES, EXPERIENCE } = require('../services/scoring');
 const { requireAuth, requireAdopter, requireStaff, isStaff, shelterScope, inScope } = require('../middleware/auth');
 const { APP_STATUSES, APP_CLOSED, APP_NEEDS_DATE, APP_HOLDS_PET, APP_FLOW, APP_STATUS_INFO } = require('../constants');
@@ -25,14 +25,27 @@ const forApplicant = (a) => ({ id: a.id, petId: a.petId, petName: a.petName, pet
 async function emailApplicant(kind, app, ...args) {
   const account = app.userId ? await db.findOne('users', { id: app.userId }) : null;
   const to = [...new Set([app.email, account?.email].map((e) => String(e || '').toLowerCase()).filter(isEmail))];
+  const optOut = account && !emailPrefs(account).applications ? 'Not sent: the adopter turned off emails about their applications.' : '';
   const results = [];
   for (const email of to) {
-    try { results.push(await emails[kind]({ ...app, email }, ...args)); } catch (err) { results.push({ status: 'failed', error: err.message }); }
+    try { results.push(await emails[kind]({ ...app, email, skipReason: optOut }, ...args)); } catch (err) { results.push({ status: 'failed', error: err.message }); }
   }
-  const sent = to.filter((_, i) => results[i].status === 'sent');
-  return { to, sent, error: results.find((r) => r.status !== 'sent')?.error || null };
+  const pick = (status) => to.map((addr, i) => ({ to: addr, reason: results[i].error || '' })).filter((_, i) => results[i].status === status);
+  const sent = pick('sent').map((x) => x.to);
+  const skipped = [...pick('skipped'), ...pick('deferred')];
+  const failed = pick('failed');
+  return { to, sent, skipped, failed, status: sent.length ? 'sent' : failed.length ? 'failed' : skipped.length ? 'skipped' : 'none',
+    error: failed[0]?.reason || skipped[0]?.reason || null };
 }
-const emailNote = (r) => (r.sent.length ? ` We emailed ${r.sent.join(' and ')}.` : r.to.length ? ` The email to ${r.to.join(' and ')} could not be sent (${r.error}).` : '');
+// One sentence for the staff/adopter confirmation, e.g. "We emailed a@b.com." / "Email skipped: demo address."
+function emailNote(r) {
+  const parts = [];
+  if (r.sent.length) parts.push(`We emailed ${r.sent.join(' and ')}.`);
+  r.skipped.forEach((x) => parts.push(/demo or test address/.test(x.reason) ? `Email skipped for ${x.to}: demo address.`
+    : /turned off/.test(x.reason) ? `Email not sent to ${x.to}: they turned off application emails.` : `Email to ${x.to} not sent (${x.reason.replace(/^Not sent:\s*/, '')}).`));
+  r.failed.forEach((x) => parts.push(`The email to ${x.to} could not be sent (${x.reason}).`));
+  return parts.length ? ` ${parts.join(' ')}` : '';
+}
 
 // Optional sections the shelter likes to have — used for "incomplete application" reporting
 const missingSections = (a) => [!a.phone && 'phone', !a.address && 'address', !a.experienceDetails && 'experience details',
@@ -83,7 +96,7 @@ router.post('/', requireAdopter, asyncHandler(async (req, res) => {
   await db.insert('applications', app);
   // Keep the adopter's profile up to date with the contact details they just gave
   if (!req.user.phone && form.phone) await db.update('users', req.user.id, { phone: form.phone });
-  await notify(req.user.id, { type: 'application', title: 'Application submitted', message: `Your application for ${pet.name} has been sent to the shelter.`, link: `my-applications.html?id=${app.id}` });
+  await notify(req.user.id, { type: 'application', title: 'Application submitted', message: `Your application for ${pet.name} has been sent to the shelter.`, link: `my-applications.html?id=${app.id}` }, { email: false });
   await notifyStaff(app.shelterId, { title: `New application for ${pet.name}`, message: `${form.name} applied to adopt ${pet.name}.`, link: `applications.html?id=${app.id}` });
   const mail = await emailApplicant('applicationReceived', app);
   res.status(201).json({ application: forApplicant(app), email: mail, message: `Application submitted.${mail.sent.length ? ` A confirmation is on its way to ${mail.sent.join(' and ')}.` : ''}` });
@@ -128,12 +141,12 @@ router.post('/:id/messages', requireAuth, asyncHandler(async (req, res) => {
   const updated = await db.update('applications', app.id, patch);
   let mail = null;
   if (staff) {
-    await notify(app.userId, { type: 'info', title: `Message about ${app.petName}`, message: text.slice(0, 140), link: `my-applications.html?id=${app.id}` });
+    await notify(app.userId, { type: 'info', title: `Message about ${app.petName}`, message: text.slice(0, 140), link: `my-applications.html?id=${app.id}` }, { email: false });
     mail = await emailApplicant('shelterMessage', updated, text);
   } else {
     await notifyStaff(app.shelterId, { title: `Reply from ${app.name}`, message: `${app.petName}: ${text.slice(0, 120)}`, link: `applications.html?id=${app.id}` });
   }
-  res.json({ application: staff ? updated : forApplicant(updated), ...(mail ? { email: mail, emailSent: mail.sent.length > 0 } : {}),
+  res.json({ application: staff ? updated : forApplicant(updated), ...(mail ? { email: mail, emailSent: mail.sent.length > 0, emailStatus: mail.status } : {}),
     message: patch.status ? 'Thanks — your reply was sent and your application is back under review.' : `Message sent.${mail ? emailNote(mail) : ''}` });
 }));
 
@@ -208,7 +221,7 @@ router.patch('/:id/status', requireStaff, asyncHandler(async (req, res) => {
   const when = appointmentAt ? new Date(appointmentAt).toLocaleString('en-AU', { dateStyle: 'medium', timeStyle: 'short' }) : '';
   await notify(app.userId, { type: STATUS_NOTE_TYPE[status] || 'status', title: `${app.petName}: ${status}`,
     message: APP_NEEDS_DATE.includes(status) ? `${status} booked for ${when}.` : status === 'Info Requested' ? 'The shelter needs more information — tap to reply.' : APP_STATUS_INFO[status],
-    link: `my-applications.html?id=${app.id}` });
+    link: `my-applications.html?id=${app.id}` }, { email: false });
 
   // Keep the pet's availability in sync with the pipeline
   let closed = 0;
@@ -219,7 +232,7 @@ router.patch('/:id/status', requireStaff, asyncHandler(async (req, res) => {
       const closedApp = await db.update('applications', o.id, { status: 'Declined', updatedAt: at,
         history: [...o.history, { status: 'Declined', at, by: 'PawPal (automatic)', note: `${app.petName} was adopted by another applicant.` }] });
       await emailApplicant('adoptionClosed', closedApp);
-      await notify(o.userId, { type: 'declined', title: `${app.petName} has found a home`, message: 'This application was closed automatically. PawPal can suggest other pets for you.', link: 'ai-matching.html' });
+      await notify(o.userId, { type: 'declined', title: `${app.petName} has found a home`, message: 'This application was closed automatically. PawPal can suggest other pets for you.', link: 'ai-matching.html' }, { email: false });
       closed++;
     }
     const favs = await db.find('favourites', { petId: app.petId });
@@ -232,7 +245,7 @@ router.patch('/:id/status', requireStaff, asyncHandler(async (req, res) => {
     await releasePetIfIdle(app.petId);
   }
 
-  res.json({ application: updated, closedOthers: closed, email: mail, emailSent: mail.sent.length > 0,
+  res.json({ application: updated, closedOthers: closed, email: mail, emailSent: mail.sent.length > 0, emailStatus: mail.status,
     message: (status === 'Adopted' ? `Adoption complete.${closed ? ` ${closed} other application${closed > 1 ? 's were' : ' was'} closed and notified.` : ''}`
       : `Status updated to ${status}. The applicant was notified in the app.`) + emailNote(mail) });
 }));
