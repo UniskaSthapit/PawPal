@@ -283,6 +283,18 @@ const PawPal = (() => {
     if (Number(pet.energyLevel) === 1) tags.push('Calm');
     return tags.slice(0, 3);
   }
+  // ---------- language for machine translation (pet profiles and chat) ----------
+  const LANGUAGES = [['en', 'English'], ['ne', 'नेपाली · Nepali'], ['hi', 'हिन्दी · Hindi'], ['zh', '简体中文 · Chinese'], ['es', 'Español · Spanish']];
+  const HTML_LANG = { en: 'en', ne: 'ne', hi: 'hi', zh: 'zh-Hans', es: 'es' };
+  const lang = {
+    list: LANGUAGES,
+    get() { try { const v = localStorage.getItem('pp_lang'); return HTML_LANG[v] ? v : 'en'; } catch { return 'en'; } },
+    set(v) { try { localStorage.setItem('pp_lang', HTML_LANG[v] ? v : 'en'); } catch { /* ignore */ } },
+    html: (v) => HTML_LANG[v] || 'en',
+  };
+  const langSelectHTML = (id, current = lang.get(), cls = '') => `<select class="select lang-select ${cls}" id="${id}" aria-label="Language">
+    ${LANGUAGES.map(([v, label]) => `<option value="${v}" ${v === current ? 'selected' : ''}>${esc(label)}</option>`).join('')}</select>`;
+
   // ---------- compare (up to 3 pets, remembered in this browser) ----------
   const COMPARE_KEY = 'pp_compare';
   const COMPARE_MAX = 3;
@@ -807,6 +819,6 @@ const PawPal = (() => {
 
   return { $, $$, params, page, layout, esc, fmtDate, fmtDateTime, timeAgo, initials, ageText, ageLong, energyText, money, photo, sized, srcset, icons, icon, aiLabel,
     FALLBACK, PLACEHOLDER, statusBadge, statusClass, scoreBadge, toast, modal, confirm: confirmDialog, setBusy, errorHTML, emptyHTML, skeletonCards,
-    favs, compare, compareToggleHTML, petCardHTML, petTags, ready, booted, emailToastType, get user() { return user; }, isStaffUser, logout, loadBell, noteHTML, hydrateIcons, reveal, reduceMotion,
+    favs, lang, langSelectHTML, compare, compareToggleHTML, petCardHTML, petTags, ready, booted, emailToastType, get user() { return user; }, isStaffUser, logout, loadBell, noteHTML, hydrateIcons, reveal, reduceMotion,
     finePointer, countUp, carousel, hscroll, accordion, siteConfig, fillContactLinks };
 })();

@@ -167,6 +167,38 @@ Return {"summary": string, "highlights": [{"petId": string, "points": string[] (
   }
 }
 
+// ---------------- Translation (pet profiles and chat replies) ----------------
+// Only public text is translated. Without a model, callers keep English and say so.
+const LANGUAGES = { en: 'English', ne: 'Nepali', hi: 'Hindi', zh: 'Chinese (Simplified)', es: 'Spanish' };
+const sane = (orig, out) => typeof out === 'string' && (!orig || out.trim().length > 0) && out.length <= orig.length * 4 + 200;
+// fields: { description, idealHome, traits: [] } — or texts: string[] (chat replies). Returns the same shape, or null.
+async function translate({ fields = null, texts = null }, lang) {
+  if (!LANGUAGES[lang] || lang === 'en' || !llm.llmEnabled) return null;
+  const system = `Translate text for an Australian animal adoption website into ${LANGUAGES[lang]}${lang === 'zh' ? ' using Simplified Chinese characters' : ''}.
+Translate faithfully: do not add, remove or soften any information. Keep pet names, place names, numbers, prices, emails, links and the brand "PawPal" unchanged.
+Keep line breaks. Use natural, friendly, everyday language.`;
+  try {
+    if (fields) {
+      const raw = await llm.complete({ json: true, maxTokens: 1800,
+        system: `${system}\nReturn {"description": string, "idealHome": string, "traits": string[] (same number and order as given, max 40 characters each)}.`,
+        messages: [{ role: 'user', content: JSON.stringify(fields) }] });
+      const traits = Array.isArray(raw.traits) ? raw.traits : [];
+      if (!sane(fields.description, raw.description) || !sane(fields.idealHome, raw.idealHome)
+        || traits.length !== fields.traits.length || traits.some((t) => typeof t !== 'string' || !t.trim() || t.length > 60)) return null;
+      return { description: raw.description.trim(), idealHome: raw.idealHome.trim(), traits: traits.map((t) => t.trim()) };
+    }
+    const raw = await llm.complete({ json: true, maxTokens: 2500,
+      system: `${system}\nReturn {"translations": string[]} with exactly one translation per input text, in the same order.`,
+      messages: [{ role: 'user', content: JSON.stringify({ texts }) }] });
+    const out = Array.isArray(raw.translations) ? raw.translations : [];
+    if (out.length !== texts.length || out.some((t, i) => !sane(texts[i], t))) return null;
+    return out.map((t) => t.trim());
+  } catch (err) {
+    if (!err.quiet) console.warn('AI translation unavailable:', err.message.split('\n')[0].slice(0, 160));
+    return null;
+  }
+}
+
 // ---------------- Lifestyle understanding ----------------
 async function understandLifestyle(text, prev = {}, locations = []) {
   const ruled = parseProfile(text, prev, locations);
@@ -567,5 +599,5 @@ async function insights(facts, ruleSentences) {
   }
 }
 
-module.exports = { comparePets, templateCompare, promotePost, templatePost, PLATFORMS, TONES, describePet, templateDescription, understandLifestyle, explainMatches, profileToFilters, describeFilters,
+module.exports = { translate, LANGUAGES, comparePets, templateCompare, promotePost, templatePost, PLATFORMS, TONES, describePet, templateDescription, understandLifestyle, explainMatches, profileToFilters, describeFilters,
   chat, explainQuestion, shelterAssistant, summarizeApplication, insights, promptPet, SOURCE };

@@ -10,12 +10,14 @@ const { toPublic, applyFilters, keywordFilter, publicPets } = require('./pets');
 const { missingSections } = require('./applications');
 const { APP_CLOSED, APP_NEEDS_DATE } = require('../constants');
 const { newId, now, asyncHandler, clean, toBool, toInt, HttpError } = require('../utils');
+const crypto = require('crypto');
 const config = require('../config');
 
 const router = express.Router();
 // Counted per signed-in person (per IP address for visitors), so colleagues on the same shelter network don't share a limit
 const aiLimiter = rateLimit({ windowMs: 60 * 1000, limit: 30, standardHeaders: true, legacyHeaders: false,
   keyGenerator: (req) => (req.user ? `user:${req.user.id}` : rateLimit.ipKeyGenerator(req.ip)),
+  skip: (req) => req.path === '/translate', // has its own limit below, so translating chat replies doesn't use up the chat limit
   message: { error: 'You\'re sending messages quickly — please wait a moment and try again.' } });
 router.use(aiLimiter);
 
@@ -273,4 +275,55 @@ router.post('/compare', asyncHandler(async (req, res) => {
   await db.insert('events', { id: newId('evt'), type: 'ai_compare', at: now() });
   res.json({ pets: publicList.map((p) => ({ ...p, shelterName: shelters[p.shelterId] || null })), scores, hasProfile,
     understood: hasProfile ? describeProfile(profile) : [], ...result });
+}));
+
+// ---- Translate public pet text or chat replies (cached: each text is translated once per language) ----
+const translateLimiter = rateLimit({ windowMs: 10 * 60 * 1000, limit: 60, standardHeaders: true, legacyHeaders: false,
+  keyGenerator: (req) => (req.user ? `user:${req.user.id}` : rateLimit.ipKeyGenerator(req.ip)),
+  message: { error: 'Too many translations at once — please wait a few minutes and try again.' } });
+const sha = (s) => crypto.createHash('sha256').update(s).digest('hex');
+const UNAVAILABLE = 'Translation isn\'t available right now, so this is shown in English.';
+async function cached(key, petId, lang, hash, make) {
+  const id = `tr_${sha(`${key}|${lang}|${hash}`).slice(0, 40)}`;
+  const hit = await db.findOne('translations', { id });
+  if (hit) return { value: hit.value, cached: true };
+  const value = await make();
+  if (value === null) return null;
+  try { await db.insert('translations', { id, petId: petId || null, lang, hash, value, createdAt: now() }); } catch { /* translated twice at once — fine */ }
+  return { value, cached: false };
+}
+router.post('/translate', translateLimiter, asyncHandler(async (req, res) => {
+  const lang = String(req.body?.lang || '');
+  if (!ai.LANGUAGES[lang]) throw new HttpError(400, `Choose a language: ${Object.values(ai.LANGUAGES).join(', ')}.`);
+  const petId = req.body?.petId ? clean(req.body.petId, 40) : '';
+  const texts = req.body?.texts;
+  if (!petId && !Array.isArray(texts)) throw new HttpError(400, 'Send a pet or the text to translate.');
+  if (petId) {
+    const pet = await db.findOne('pets', { id: petId });
+    if (!pet || !['Available', 'On Hold', 'Adopted'].includes(pet.status)) throw new HttpError(404, 'Pet not found.');
+    const p = toPublic(pet);
+    const fields = { description: String(p.description || ''), idealHome: String(p.idealHome || ''), traits: (p.traits || []).map(String) };
+    if (lang === 'en') return res.json({ lang, translated: false, fields });
+    const out = await cached(`pet:${pet.id}`, pet.id, lang, sha(JSON.stringify(fields)), () => ai.translate({ fields }, lang));
+    if (!out) return res.json({ lang, translated: false, fields, notice: UNAVAILABLE });
+    return res.json({ lang, translated: true, cached: out.cached, fields: out.value, label: 'Machine translated' });
+  }
+  if (!texts.length || texts.length > 10 || texts.some((t) => typeof t !== 'string' || !t.trim() || t.length > 2000)) {
+    throw new HttpError(400, 'Send between 1 and 10 texts of up to 2,000 characters.');
+  }
+  if (lang === 'en') return res.json({ lang, translated: false, texts });
+  // Look up each text in the cache; translate only the missing ones in one call
+  const keys = texts.map((t) => `tr_${sha(`text|${lang}|${sha(t)}`).slice(0, 40)}`);
+  const hits = await Promise.all(keys.map((id) => db.findOne('translations', { id })));
+  const missing = texts.map((t, i) => (hits[i] ? null : i)).filter((i) => i !== null);
+  const result = hits.map((h) => h?.value ?? null);
+  if (missing.length) {
+    const out = await ai.translate({ texts: missing.map((i) => texts[i]) }, lang);
+    if (!out) return res.json({ lang, translated: false, texts, notice: UNAVAILABLE });
+    for (const [j, i] of missing.entries()) {
+      result[i] = out[j];
+      try { await db.insert('translations', { id: keys[i], petId: null, lang, hash: sha(texts[i]), value: out[j], createdAt: now() }); } catch { /* duplicate */ }
+    }
+  }
+  res.json({ lang, translated: true, cached: !missing.length, texts: result, label: 'Machine translated' });
 }));
