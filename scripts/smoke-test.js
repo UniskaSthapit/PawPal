@@ -272,6 +272,59 @@ const mailFor = async (anon, email, type) => (await anon('GET', `/api/dev/emails
   r = await adopter('GET', '/api/applications/mine');
   const mine = r.body.applications.find((a) => a.id === appId);
   check('Adopter timeline shows full status history', mine?.status === 'Adopted' && mine.history.length === 9 /* 8 journey steps + the Interview used by the email-settings test */ && mine.messages.length >= 2);
+  console.log('\nFirst 30 days care plan');
+  let planned = null;
+  for (let i = 0; i < 40 && !planned?.carePlan; i++) { planned = await db.findOne('applications', { id: appId }); if (!planned.carePlan) await new Promise((ok) => setTimeout(ok, 50)); }
+  const plan = planned.carePlan;
+  check('Approving an application creates a care plan stored on it', plan && plan.sections.length === 9 && plan.generatedAt && plan.source === 'rules'
+    && ['before', 'days1to3', 'week1', 'weeks2to4', 'feeding', 'exercise', 'vet', 'training', 'warning'].every((k, i) => plan.sections[i].key === k && plan.sections[i].items.length >= 2));
+  check('The plan says it is general guidance, not veterinary advice', plan.disclaimer === 'This is general guidance, not veterinary advice.');
+  check('The adopter sees that the care plan is ready', mine.carePlanReady === true);
+  r = await anon('GET', `/api/applications/${appId}/care-plan`);
+  check('Care plan needs a login', r.status === 401);
+  r = await adopter('GET', `/api/applications/${appId}/care-plan`);
+  check('Adopter can open their care plan', r.status === 200 && r.body.carePlan.sections.length === 9 && r.body.canRegenerate === false && r.body.pet.name === max.name);
+  const otherApp = (await db.find('applications')).find((x) => x.userId && x.userId !== planned.userId && x.carePlan);
+  r = await adopter('GET', `/api/applications/${otherApp.id}/care-plan`);
+  check('Adopters cannot open someone else\'s care plan', r.status === 404);
+  r = await adopter('GET', '/api/notifications');
+  check('In-app notification: your care plan is ready', r.body.notifications.some((n) => n.type === 'careplan' && n.link === `care-plan.html?id=${appId}`));
+  r = await anon('GET', `/api/dev/emails?to=${encodeURIComponent(email)}`);
+  check('…and an email', r.body.emails.some((m) => /care plan is ready/i.test(m.subject)));
+  r = await adopter('POST', `/api/applications/${appId}/care-plan`);
+  check('Only staff can regenerate a care plan', r.status === 403);
+  const earlyApp = (await db.find('applications')).find((x) => x.status === 'Submitted');
+  r = await admin('POST', `/api/applications/${earlyApp.id}/care-plan`);
+  check('Care plans are only for approved applications', r.status === 400);
+  r = await admin('GET', `/api/applications/${appId}/care-plan`);
+  check('Staff can view the care plan and regenerate it', r.status === 200 && r.body.canRegenerate === true);
+  r = await admin('POST', `/api/applications/${appId}/care-plan`);
+  check('Staff regenerate the care plan', r.status === 200 && r.body.carePlan.sections.length === 9 && /regenerated/.test(r.body.message));
+  {
+    const { rulesPlan, generateCarePlan } = require('../src/services/careplan');
+    const text = (type) => JSON.stringify(rulesPlan({ name: 'Test', type }, {}).sections).toLowerCase();
+    check('Rules templates are species-specific', /harness/.test(text('Dog')) && /litter/.test(text('Cat')) && /hay/.test(text('Rabbit')) && /uvb/.test(text('Reptile')) && /aquarium/.test(text('Fish')));
+    check('Lifestyle answers personalise the plan', /other pets slowly/.test(JSON.stringify(rulesPlan({ name: 'Rex', type: 'Dog' }, { hasOtherPets: true }))));
+    const llm = require('../src/services/llm');
+    const real = { llmEnabled: llm.llmEnabled, provider: llm.provider, complete: llm.complete };
+    let sent = '';
+    const keys = ['before', 'days1to3', 'week1', 'weeks2to4', 'feeding', 'exercise', 'vet', 'training', 'warning'];
+    const fullApp = await db.findOne('applications', { id: appId });
+    const petRow = await db.findOne('pets', { id: fullApp.petId });
+    const { toPublic } = require('../src/routes/pets');
+    try {
+      Object.assign(llm, { llmEnabled: true, provider: 'gemini', complete: async ({ messages }) => { sent = messages[0].content;
+        return { intro: 'Welcome home, a plan for the first month.', sections: Object.fromEntries(keys.map((k) => [k, [`AI ${k} step one here`, `AI ${k} step two here`]])) }; } });
+      let p2 = await generateCarePlan(toPublic(petRow), fullApp);
+      check('With AI, the plan is personalised and validated', p2.source === 'gemini' && p2.sections[0].items[0] === 'AI before step one here');
+      check('Only public pet fields and lifestyle answers are sent to the AI', !sent.includes(fullApp.email) && !sent.includes(fullApp.name)
+        && !(fullApp.phone && sent.includes(fullApp.phone)) && !(petRow.medicalHistory && sent.includes(petRow.medicalHistory.slice(0, 20))) && /livingType/.test(sent));
+      llm.complete = async () => ({ intro: 'x', sections: { before: ['only one section'] } });
+      p2 = await generateCarePlan(toPublic(petRow), fullApp);
+      check('Incomplete AI output falls back to the species template', p2.source === 'rules' && p2.sections.length === 9);
+    } finally { Object.assign(llm, real); }
+  }
+
   r = await anon('GET', `/api/dev/emails?to=${encodeURIComponent(email)}`);
   check('Adopter received emails for each step', r.body.emails.filter((m) => ['status-update', 'closure', 'application', 'message'].includes(m.type)).length >= 7);
   r = await adopter('GET', '/api/notifications');

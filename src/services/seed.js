@@ -7,6 +7,7 @@ const { calculateSuitabilityScore } = require('./scoring');
 const { templateDescription } = require('./ai');
 const { DEFAULT_SHELTERS, SCHEMA_VERSION, shelterFor, addExtraPets } = require('./migrate');
 const { parseProfile } = require('./matching');
+const { rulesPlan, DISCLAIMER } = require('./careplan');
 
 // A wall-clock time in Melbourne (handles daylight saving) as a Date
 function melbourneTime(day, hour, minute = 0) {
@@ -118,6 +119,8 @@ const APPLICANTS = [
   ['Ava Taylor', 'House with yard', 2, true, false, 'Experienced', 4, 9, 'Adoption Scheduled', 16, 'Own'],
   ['Ethan Martin', 'House without yard', 1, false, true, 'Some experience', 5, 15, 'Submitted', 0, 'Live with family'],
   ['Grace Lee', 'Apartment', 2, false, false, 'First-time owner', 7, 14, 'Under Review', 3, 'Rent'],
+  // The demo adopter's completed adoption (care plan and adoption fee demos)
+  ['(demo adopter)', 'House with yard', 2, true, false, 'Some experience', 4, 7, 'Adopted', 12, 'Own'],
 ];
 const FLOW = ['Submitted', 'Under Review', 'Interview', 'Meet & Greet', 'Approved', 'Adoption Scheduled', 'Adopted'];
 const KEYWORDS = ['golden retriever', 'puppy', 'cat', 'apartment', 'small dog', 'kitten', 'good with kids', 'rabbit', 'beagle', 'calm', 'border collie', 'senior cat', 'hypoallergenic', 'poodle'];
@@ -156,7 +159,7 @@ async function seedIfEmpty({ force = false } = {}) {
   for (const [i, a] of APPLICANTS.entries()) {
     const [name, livingType, activityLevel, hasChildren, hasOtherPets, experience, hoursAlone, petIndex, status, ago, ownership] = a;
     const pet = pets[petIndex];
-    const isDemo = i === 2 || i === 3;
+    const isDemo = i === 2 || i === 3 || i === APPLICANTS.length - 1;
     const applicant = isDemo ? demo.name : name;
     const email = isDemo ? demo.email : `${name.split(' ')[0].toLowerCase()}@example.com`;
     const form = { livingType, activityLevel, hasChildren, hasOtherPets, experience, hoursAlone };
@@ -178,6 +181,9 @@ async function seedIfEmpty({ force = false } = {}) {
       score: s.score, label: s.label, breakdown: s.breakdown, notes: s.notes, status, history, messages, staffNotes: '',
       appointmentAt: needsDate ? daysAgo(-(2 + (i % 4)), 11) : null,
       submittedAt: daysAgo(ago, 9), updatedAt: history[history.length - 1].at,
+      // Approved and later: the "first 30 days" care plan (rules templates; no AI call while seeding)
+      ...(['Approved', 'Adoption Scheduled', 'Adopted'].includes(status) ? { carePlan: { ...rulesPlan(pet, form), petType: pet.type, source: 'rules', disclaimer: DISCLAIMER,
+        generatedAt: history.find((h) => h.status === 'Approved')?.at || history[history.length - 1].at } } : {}),
     });
     if (status === 'Adopted') { pet.status = 'Adopted'; pet.adoptedAt = history[history.length - 1].at; }
     else if (['Approved', 'Meet & Greet', 'Adoption Scheduled'].includes(status) && pet.status === 'Available') pet.status = 'On Hold';

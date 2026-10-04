@@ -65,6 +65,14 @@
         ${a.slotId ? '' : `<div><button class="btn ${a.bookingInvite ? '' : 'btn-primary'}" type="button" id="inviteBtn">${icons.calendar}${a.bookingInvite ? 'Send the invite again' : 'Invite to book a meet & greet'}</button></div>`}
       </div></div>` : ''}
 
+      ${['Approved', 'Adoption Scheduled', 'Adopted'].includes(a.status) ? `<div class="card" id="careCard"><div class="card-head"><div><span class="src-label src-ai">${icons.clipboard}First 30 days</span><h3>Care plan</h3></div>
+        ${a.carePlan ? `<a class="btn btn-sm" id="viewCare" href="care-plan.html?id=${encodeURIComponent(a.id)}">${icons.file}View</a>` : ''}</div>
+        <div class="card-body stack" style="--stack:10px">
+        ${a.carePlan ? `<p class="small">Prepared ${esc(timeAgo(a.carePlan.generatedAt))} (${esc(PawPal.aiLabel(a.carePlan.source, 'care templates'))}) and shared with ${esc(a.name.split(' ')[0])}.</p>`
+          : `<p class="small muted">The care plan is being prepared for ${esc(a.name.split(' ')[0])}. If it doesn't appear, create it now.</p>`}
+        <div><button class="btn btn-sm" type="button" id="careBtn">${icons.refresh}${a.carePlan ? 'Regenerate' : 'Create care plan'}</button></div>
+      </div></div>` : ''}
+
       ${closed ? '' : `<form class="card" id="statusForm"><div class="card-head"><h3>Update status</h3></div><div class="card-body stack" style="--stack:12px">
         <div class="field"><label for="newStatus">Move to</label><select class="select" id="newStatus">${next.map((s) => `<option>${esc(s)}</option>`).join('')}<option disabled>──────────</option>${statuses.filter((s) => !next.includes(s) && s !== a.status && s !== 'Withdrawn').map((s) => `<option>${esc(s)}</option>`).join('')}</select></div>
         <div class="field" id="dateField" hidden><label for="apptAt">Appointment date &amp; time</label><input class="input" type="datetime-local" id="apptAt"></div>
@@ -128,6 +136,12 @@
         try { const r = await PawPalAPI.post(`/applications/${encodeURIComponent(a.id)}/invite-booking`, { message: $('#inviteMsg', m).value.trim() }); toast(r.message, PawPal.emailToastType(r)); renderDetail(a.id); return true; }
         catch (err) { setBusy(btn, false); $('#inviteErr', m).innerHTML = errorHTML(err.message); return false; }
       } }] }));
+    $('#careBtn')?.addEventListener('click', async () => {
+      if (a.carePlan && !(await PawPal.confirm({ title: 'Regenerate the care plan?', message: `This replaces the current plan and lets ${a.name.split(' ')[0]} know it was updated.`, confirmText: 'Regenerate' }))) return;
+      const btn = $('#careBtn'); setBusy(btn, true, 'Preparing…');
+      try { const r = await PawPalAPI.post(`/applications/${encodeURIComponent(a.id)}/care-plan`); toast(r.message); renderDetail(a.id); }
+      catch (err) { setBusy(btn, false); toast(err.message, 'error'); }
+    });
     $('#msgForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const text = $('#msgText').value.trim(); if (text.length < 2) return;

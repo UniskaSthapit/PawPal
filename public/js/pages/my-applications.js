@@ -79,6 +79,13 @@
         <form id="replyForm" style="margin-top:12px"><label class="sr-only" for="replyText">Your reply</label><textarea class="textarea" id="replyText" maxlength="2000" placeholder="Type your reply to the shelter…" required></textarea>
           <button class="btn btn-primary" style="margin-top:10px" type="submit">${icons.send}Send reply</button></form></div>` : ''}
 
+      ${a.carePlanReady ? `<div class="card card-pad care-cta" id="carePlanCard"><span class="src-label src-ai">${icons.clipboard}Your first 30 days</span>
+        <h3 style="font-size:20px;margin-top:6px">A care plan to help ${esc(a.petName)} settle in</h3>
+        <p class="small muted" style="margin-top:4px">What to prepare, the first few days, feeding, exercise, the vet and warning signs — ready to print.</p>
+        <a class="btn btn-primary btn-sm" style="margin-top:12px" id="viewCarePlan" href="care-plan.html?id=${encodeURIComponent(a.id)}">${icons.file}View care plan</a></div>`
+        : ['Approved', 'Adoption Scheduled', 'Adopted'].includes(a.status) ? `<div class="card card-pad"><span class="src-label src-ai">${icons.clipboard}Your first 30 days</span>
+        <p class="small muted" style="margin-top:6px">Your care plan for ${esc(a.petName)} is being prepared — we'll let you know when it's ready.</p></div>` : ''}
+
       ${a.booking ? `<div class="card card-pad" id="booking"><span class="src-label" style="color:var(--sky)">${icons.calendar}Meet &amp; greet</span>
         ${a.booking.slotId ? `<h3 style="font-size:20px;margin-top:6px">You're booked to meet ${esc(a.petName)}</h3>
           <p class="small muted" style="margin-top:4px">${a.booking.canChange ? 'You can change or cancel this time until 24 hours before.' : 'It\'s less than 24 hours away — message the shelter if you can\'t make it.'}</p>
