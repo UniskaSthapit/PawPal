@@ -18,6 +18,9 @@
 <main id="main" tabindex="-1">
 <div class="app-head"><div><h1>Users &amp; shelters</h1><p>Administrator tools: manage roles, shelter assignments, access and partner shelters.</p></div>
   <div class="row"><button class="btn" id="addShelter"><span data-icon="building"></span>Add shelter</button><button class="btn btn-primary" id="inviteBtn"><span data-icon="plus"></span>Invite staff</button></div></div>
+<section class="card" id="securityCard" style="margin-bottom:24px"><div class="card-head"><h2>Security</h2></div><div class="card-body">
+  <label class="switch-row" for="req2fa"><span><b>Require two-factor authentication for staff</b><span class="hint">Staff and administrators without it will be asked to set it up before they can use the shelter portal. Adopters are not affected.</span></span>
+    <input type="checkbox" class="switch" id="req2fa" role="switch"></label></div></section>
 <section class="card" style="margin-bottom:20px"><div class="card-head"><h2>Shelters</h2></div><div class="card-body"><div class="grid grid-2" id="shelters"></div></div></section>
 <section><div class="row-between" style="margin-bottom:14px"><div class="tabs" role="tablist" id="roleTabs" style="margin:0;border:0"></div>
   <div class="input-group" style="min-width:260px"><span data-icon="search"></span><label class="sr-only" for="userQ">Search users</label><input class="input" id="userQ" placeholder="Search name or email"></div></div>

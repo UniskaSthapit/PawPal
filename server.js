@@ -107,6 +107,7 @@ async function start() {
   await db.init();
   const seeded = await seedIfEmpty();
   const migrated = seeded ? false : await migrate();
+  await require('./src/services/settings').getSettings(); // cache site settings (e.g. "Require 2FA for staff")
   const owner = await ensureOwnerAdmin();
   const disabledDemo = await disableDemoAccountsInProduction();
   app.listen(config.port, () => {

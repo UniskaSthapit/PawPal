@@ -3,7 +3,7 @@
   const { $, $$, params, setBusy, errorHTML, esc, icons } = PawPal;
   let role = params.get('role') === 'staff' ? 'staff' : 'user';
   let pendingEmail = '';
-  const panels = { login: '#loginForm', signup: '#signupForm', forgot: '#forgotForm', sent: '#sentPanel' };
+  const panels = { login: '#loginForm', signup: '#signupForm', forgot: '#forgotForm', sent: '#sentPanel', code: '#codeForm' };
   const okHTML = (msg) => `<div class="alert alert-success" role="status">${icons.checkCircle}<div>${esc(msg)}</div></div>`;
 
   function show(name) {
@@ -56,7 +56,8 @@
     const btn = $('#loginBtn'); setBusy(btn, true, 'Logging in…');
     try {
       const res = await PawPalAPI.post('/auth/login', { email, password, role, remember: $('#lRemember').checked });
-      location.href = safeNext || res.redirect;
+      if (res.twoFactorRequired) { setBusy(btn, false); $('#lPassword').value = ''; $('#codeMsg').innerHTML = ''; show('code'); return; }
+      location.href = res.twoFactorSetupRequired ? res.redirect : safeNext || res.redirect;
     } catch (err) {
       setBusy(btn, false);
       if (err.data?.code === 'EMAIL_NOT_VERIFIED') {
@@ -66,6 +67,25 @@
       } else $('#loginMsg').innerHTML = errorHTML(err.message);
     }
   });
+
+  // ---- two-step sign-in: code from the authenticator app, or a backup code ----
+  $('#codeForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const code = $('#tfCode').value.trim();
+    if (!code) { $('#codeMsg').innerHTML = errorHTML('Enter the 6-digit code from your app.'); return; }
+    const btn = $('#codeBtn'); setBusy(btn, true, 'Checking…');
+    try {
+      const res = await PawPalAPI.post('/auth/2fa/verify', { code });
+      location.href = res.twoFactorSetupRequired ? res.redirect : safeNext || res.redirect;
+    } catch (err) {
+      setBusy(btn, false);
+      $('#tfCode').select();
+      $('#codeMsg').innerHTML = errorHTML(err.message);
+      if (err.status === 401) setTimeout(() => show('login'), 1800); // pending sign-in expired
+    }
+  });
+  // Submit automatically once 6 digits are typed
+  $('#tfCode').addEventListener('input', (e) => { if (/^\d{6}$/.test(e.target.value.trim())) $('#codeForm').requestSubmit(); });
 
   // ---- sign up ----
   $('#sPassword').addEventListener('input', (e) => {

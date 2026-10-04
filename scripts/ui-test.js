@@ -127,6 +127,32 @@ const ok = (name, cond) => { if (cond) { pass++; console.log('  ✅ ' + name); }
   ok('Notification bell lists the status change', /Meet & Greet/.test(await p.textContent('#bellList')));
   await ctx.close();
 
+  console.log('Two-factor authentication');
+  const totp = require('../src/services/totp');
+  ctx = await mk(); p = await ctx.newPage(); watch(p);
+  await p.goto(BASE + 'login.html?role=staff'); await p.fill('#lEmail', 'staff@pawpal.com'); await p.fill('#lPassword', 'Staff@123');
+  await p.click('#loginBtn'); await p.waitForURL(/index\.html/);
+  await p.goto(BASE + 'settings.html#twofactor'); await p.click('#tfStart'); await p.waitForSelector('.tf-qr svg.qr');
+  ok('2FA setup shows a QR code and the setup key', (await p.$$('.tf-qr svg.qr path')).length === 1 && /[A-Z2-7]{4} /.test(await p.textContent('.tf-secret')));
+  const uiSecret = (await p.textContent('.tf-secret code')).replace(/\s/g, '');
+  await p.fill('#tfEnableCode', totp.totp(uiSecret)); await p.click('#tfEnableBtn'); await p.waitForSelector('.tf-codes li');
+  ok('Turning 2FA on shows 8 backup codes once', (await p.$$('.tf-codes li')).length === 8);
+  await p.click('#tfDone'); await p.waitForSelector('#tfBadge .badge-sage');
+  ok('Settings shows 2FA as on', /On/.test(await p.textContent('#tfBadge')));
+  await ctx.close();
+  ctx = await mk(390); p = await ctx.newPage(); watch(p);
+  await p.goto(BASE + 'login.html?role=staff'); await p.fill('#lEmail', 'staff@pawpal.com'); await p.fill('#lPassword', 'Staff@123');
+  await p.click('#loginBtn'); await p.waitForSelector('#codeForm:not([hidden])');
+  ok('Login asks for the authenticator code after the password', await p.isVisible('#tfCode'));
+  await p.fill('#tfCode', '000000'); await p.waitForSelector('#codeMsg .alert');
+  ok('A wrong code shows an error', /not correct/i.test(await p.textContent('#codeMsg')));
+  await p.fill('#tfCode', totp.totp(uiSecret, Date.now() + 30000)); await p.waitForURL(/index\.html/);
+  ok('The right code signs in to the shelter portal', /index\.html/.test(p.url()));
+  await ctx.close();
+  // Leave the demo staff account as it was for anything that runs later
+  const staffUser = await db.findOne('users', { email: 'staff@pawpal.com' });
+  await db.update('users', staffUser.id, { twoFactor: null });
+
   ok('No uncaught JavaScript errors during journeys', errors.length === 0);
   if (errors.length) console.log(errors);
   console.log(`\n${fails.length ? '❌' : '✅'} ${pass} passed, ${fails.length} failed`);

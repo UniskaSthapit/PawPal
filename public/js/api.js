@@ -21,6 +21,8 @@ const PawPalAPI = (() => {
       const err = new Error(data.error || `Request failed (${res.status}).`);
       err.status = res.status;
       err.data = data;
+      // An administrator requires 2FA for staff and this account hasn't set it up: go to the setup screen
+      if (data.code === 'TWO_FACTOR_SETUP_REQUIRED' && !/settings\.html$/.test(location.pathname)) location.href = 'settings.html#twofactor';
       throw err;
     }
     return data;
