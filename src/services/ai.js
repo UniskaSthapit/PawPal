@@ -56,6 +56,54 @@ async function describePet(pet) {
   }
 }
 
+// ---------------- Social post maker (staff) ----------------
+const PLATFORMS = ['instagram', 'facebook'];
+const TONES = ['friendly', 'playful', 'heartfelt'];
+const SPECIES_TAGS = { Dog: ['RescueDog', 'AdoptADog', 'DogsOfInstagram'], Cat: ['RescueCat', 'AdoptACat', 'CatsOfInstagram'], Rabbit: ['RescueBunny', 'AdoptARabbit'],
+  'Guinea Pig': ['GuineaPigsOfInstagram', 'AdoptAGuineaPig'], Hamster: ['HamsterLove', 'AdoptAHamster'], Bird: ['RescueBird', 'AdoptABird'],
+  Reptile: ['ReptileRescue', 'AdoptAReptile'], Fish: ['AquariumLife', 'AdoptAFish'], 'Farm Animal': ['FarmSanctuary', 'AdoptAFarmAnimal'], Other: ['AdoptAPet'] };
+const cleanTag = (t) => String(t || '').replace(/^#/, '').replace(/[^A-Za-z0-9_]/g, '').slice(0, 40);
+function baseHashtags(pet) {
+  const city = cleanTag(String(pet.location || '').split(',')[0].replace(/\s+/g, ''));
+  return [...new Set(['AdoptDontShop', ...(SPECIES_TAGS[pet.type] || SPECIES_TAGS.Other), 'PawPal', city && `${city}Pets`].filter(Boolean))];
+}
+// Template caption used without an AI key (or when the AI is unavailable) — public facts only
+function templatePost(pet, { platform, tone, link }) {
+  const age = pet.age === undefined || pet.age === '' ? '' : Number(pet.age) === 0 ? 'young ' : `${Number(pet.age)}-year-old `;
+  const traits = (pet.traits || []).slice(0, 3).map((t) => t.toLowerCase());
+  const traitText = traits.length ? `${traits.slice(0, -1).join(', ')}${traits.length > 1 ? ' and ' : ''}${traits.slice(-1)}` : 'full of personality';
+  const extras = [pet.goodWithChildren && 'good with kids', pet.goodWithOtherPets && 'happy with other pets', !pet.requiresYard && 'fine without a yard']
+    .filter(Boolean).slice(0, 2);
+  const openers = {
+    friendly: `Meet ${pet.name}! 🐾 This ${age}${pet.breed} is ${traitText} and looking for a home of their own.`,
+    playful: `Warning: ${pet.name} may steal your heart (and the best spot on the couch). 😄 This ${age}${pet.breed} is ${traitText}!`,
+    heartfelt: `Every day, ${pet.name} waits for the person who'll call them family. This ${age}${pet.breed} is ${traitText}, and ready to love someone.`,
+  };
+  const middle = extras.length ? ` ${pet.name} is ${extras.join(' and ')}.` : '';
+  const where = pet.location ? ` Currently at our ${String(pet.location).split(',')[0]} shelter.` : '';
+  const close = platform === 'instagram' ? `\n\nTap the link in our bio to meet ${pet.name}.` : `\n\nMeet ${pet.name} and apply here: ${link}`;
+  return { caption: `${openers[tone] || openers.friendly}${middle}${where}${close}`, hashtags: baseHashtags(pet) };
+}
+async function promotePost(pet, { platform = 'instagram', tone = 'friendly', link = '' } = {}) {
+  const fallback = templatePost(pet, { platform, tone, link });
+  if (!llm.llmEnabled) return { ...fallback, source: 'rules' };
+  try {
+    const raw = await llm.complete({ json: true, maxTokens: 600,
+      system: `You write social media posts for an Australian animal shelter to help a pet get adopted. ${GUARDRAILS}
+Use only the facts given; never mention health, medical or rescue history. Tone: ${tone}. Platform: ${platform}.
+${platform === 'instagram' ? 'Instagram: 60–110 words, short lines, up to 3 emojis, end with "Link in bio to meet NAME".' : `Facebook: 80–140 words, a friendly paragraph or two, up to 2 emojis, end with the profile link ${link}.`}
+Return {"caption": string (no hashtags in it), "hashtags": string[] (6–10, without #, no spaces)}.`,
+      messages: [{ role: 'user', content: JSON.stringify({ pet: promptPet(pet), profileLink: link }) }] });
+    const caption = typeof raw.caption === 'string' ? raw.caption.replace(/(^|\s)#\w+/g, '').trim().slice(0, 2000) : '';
+    const hashtags = Array.isArray(raw.hashtags) ? [...new Set(raw.hashtags.map(cleanTag).filter((t) => t.length >= 3))].slice(0, 10) : [];
+    if (caption.length < 30 || !caption.includes(pet.name)) return { ...fallback, source: 'rules' };
+    return { caption, hashtags: hashtags.length >= 3 ? hashtags : fallback.hashtags, source: llm.provider };
+  } catch (err) {
+    if (!err.quiet) console.warn('AI social post fallback:', err.message.split('\n')[0].slice(0, 160));
+    return { ...fallback, source: 'rules' };
+  }
+}
+
 // ---------------- Lifestyle understanding ----------------
 async function understandLifestyle(text, prev = {}, locations = []) {
   const ruled = parseProfile(text, prev, locations);
@@ -456,5 +504,5 @@ async function insights(facts, ruleSentences) {
   }
 }
 
-module.exports = { describePet, templateDescription, understandLifestyle, explainMatches, profileToFilters, describeFilters,
+module.exports = { promotePost, templatePost, PLATFORMS, TONES, describePet, templateDescription, understandLifestyle, explainMatches, profileToFilters, describeFilters,
   chat, explainQuestion, shelterAssistant, summarizeApplication, insights, promptPet, SOURCE };

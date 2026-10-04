@@ -496,6 +496,31 @@ const mailFor = async (anon, email, type) => (await anon('GET', `/api/dev/emails
   r = await admin('GET', `/api/pets/${flyerPet.id}`);
   check('The normal staff view still includes internal fields', 'medicalHistory' in r.body.pet);
 
+  console.log('\nSocial post maker');
+  const promoPet = (await db.find('pets')).find((x) => x.status === 'Available' && x.shelterId === melbourneId && x.medicalHistory);
+  const otherShelterPet = (await db.find('pets')).find((x) => x.status === 'Available' && x.shelterId !== melbourneId);
+  r = await anon('POST', '/api/ai/promote', { petId: promoPet.id, platform: 'instagram', tone: 'friendly' });
+  check('Post maker needs a login', r.status === 401);
+  r = await adopter('POST', '/api/ai/promote', { petId: promoPet.id, platform: 'instagram', tone: 'friendly' });
+  check('Post maker is for staff only', r.status === 403);
+  r = await staff('POST', '/api/ai/promote', { petId: promoPet.id, platform: 'tiktok', tone: 'friendly' });
+  check('Platform is validated', r.status === 400);
+  r = await staff('POST', '/api/ai/promote', { petId: promoPet.id, platform: 'instagram', tone: 'angry' });
+  check('Tone is validated', r.status === 400);
+  r = await staff('POST', '/api/ai/promote', { petId: otherShelterPet.id, platform: 'instagram', tone: 'friendly' });
+  check('Staff can only promote their own shelter\'s pets', r.status === 404);
+  const adoptedPet = (await db.find('pets')).find((x) => x.status === 'Adopted');
+  r = await admin('POST', '/api/ai/promote', { petId: adoptedPet.id, platform: 'facebook', tone: 'friendly' });
+  check('Adopted pets can\'t be promoted', r.status === 400);
+  for (const [platform, tone] of [['instagram', 'playful'], ['facebook', 'heartfelt']]) {
+    r = await staff('POST', '/api/ai/promote', { petId: promoPet.id, platform, tone });
+    check(`Caption + hashtags for ${platform} (${tone}) from public facts only`, r.status === 200 && r.body.caption.includes(promoPet.name)
+      && r.body.hashtags.length >= 3 && r.body.hashtags.every((h) => /^[A-Za-z0-9_]+$/.test(h)) && /\/p\/pet_/.test(r.body.link)
+      && !r.body.caption.includes(promoPet.medicalHistory.slice(0, 20)) && (platform === 'facebook' ? r.body.caption.includes(r.body.link) : /link in our bio/i.test(r.body.caption)));
+  }
+  r = await anon('GET', `/p/${promoPet.id}`);
+  check('Short profile links redirect to the pet profile', r.status === 302 && r.headers.get('location') === `/pet-profile.html?id=${promoPet.id}`);
+
   console.log('\nTwo-factor authentication (staff)');
   const totp = require('../src/services/totp');
   r = await anon('GET', '/api/auth/2fa/status');

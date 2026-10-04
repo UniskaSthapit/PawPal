@@ -72,6 +72,8 @@ const ADMIN_PAGES = ['admin.html'];
 const ADOPTER_PAGES = ['dashboard.html', 'my-applications.html', 'inquiry-form.html'];
 const ACCOUNT_PAGES = ['profile.html', 'notifications.html'];
 app.get('/', (req, res) => res.redirect('/home.html'));
+// Short pet profile links for posters, flyers and social posts: /p/<petId>
+app.get(/^\/p\/([\w-]{1,40})$/, (req, res) => res.redirect(302, `/pet-profile.html?id=${encodeURIComponent(req.params[0])}`));
 app.get(/^\/([a-z-]+\.html)$/, (req, res, next) => {
   const page = req.params[0];
   const next_ = encodeURIComponent(req.originalUrl.slice(1));
