@@ -214,6 +214,30 @@ const ok = (name, cond) => { if (cond) { pass++; console.log('  ✅ ' + name); }
   ok('Promote downloads a 1080×1080 PNG pet card', /\.png$/.test(png.suggestedFilename()) && (await p.$eval('#prCanvas', (c) => c.width === 1080 && c.height === 1080)));
   await ctx.close();
 
+  console.log('Care plan');
+  ctx = await mk(); p = await ctx.newPage(); watch(p);
+  await p.goto(BASE + 'login.html'); await p.fill('#lEmail', 'user@pawpal.com'); await p.fill('#lPassword', 'User@123'); await p.click('#loginBtn'); await p.waitForURL(/dashboard/);
+  const demoAdopted = (await db.find('applications')).find((x) => x.email === 'user@pawpal.com' && x.status === 'Adopted');
+  await p.goto(BASE + `my-applications.html?id=${demoAdopted.id}`); await p.waitForSelector('#viewCarePlan');
+  await p.click('#viewCarePlan'); await p.waitForSelector('.care-section');
+  ok('Adopter opens a first-30-days care plan with every section', (await p.$$('.care-section')).length === 9 && /not veterinary advice/.test(await p.textContent('.care-disclaimer'))
+    && await p.isEnabled('#printBtn') && await p.isHidden('#regenBtn'));
+  ok('The vet section links to the vet finder', (await p.$$('.care-section[data-section="vet"] a[href="vet-finder.html"]')).length === 1);
+  await p.emulateMedia({ media: 'print' });
+  ok('Print layout shows only the plan (no header, buttons or chat)', await p.isHidden('.site-header') && await p.isHidden('#printBtn') && await p.isVisible('.care-section >> nth=8'));
+  await p.emulateMedia({ media: 'screen' });
+  await ctx.close();
+  ctx = await mk(); p = await ctx.newPage(); watch(p);
+  await p.goto(BASE + 'login.html?role=staff'); await p.fill('#lEmail', 'admin@pawpal.com'); await p.fill('#lPassword', 'Admin@123');
+  await p.click('#loginBtn'); await p.waitForURL(/index\.html/);
+  await p.goto(BASE + `applications.html?status=Adopted&id=${demoAdopted.id}`); await p.waitForSelector('#careCard');
+  ok('Staff see the care plan on the application', /Prepared/.test(await p.textContent('#careCard')));
+  await p.click('#careBtn'); await p.click('.modal .btn-primary'); await p.waitForSelector('#toastWrap >> text=regenerated');
+  ok('Staff can regenerate it', true);
+  await p.goto(BASE + `care-plan.html?id=${demoAdopted.id}`); await p.waitForSelector('.care-section');
+  ok('Staff can view the plan, with a Regenerate button', await p.isVisible('#regenBtn'));
+  await ctx.close();
+
   console.log('Two-factor authentication');
   const totp = require('../src/services/totp');
   ctx = await mk(); p = await ctx.newPage(); watch(p);

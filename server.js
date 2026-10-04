@@ -70,7 +70,7 @@ app.use('/api', (req, res) => res.status(404).json({ error: 'Not found.' }));
 const STAFF_PAGES = ['index.html', 'pets.html', 'add-pet.html', 'applications.html', 'analytics.html', 'settings.html', 'enquiries.html', 'assistant.html', 'flyer.html', 'availability.html'];
 const ADMIN_PAGES = ['admin.html'];
 const ADOPTER_PAGES = ['dashboard.html', 'my-applications.html', 'inquiry-form.html'];
-const ACCOUNT_PAGES = ['profile.html', 'notifications.html'];
+const ACCOUNT_PAGES = ['profile.html', 'notifications.html', 'care-plan.html'];
 app.get('/', (req, res) => res.redirect('/home.html'));
 // Short pet profile links for posters, flyers and social posts: /p/<petId>
 app.get(/^\/p\/([\w-]{1,40})$/, (req, res) => res.redirect(302, `/pet-profile.html?id=${encodeURIComponent(req.params[0])}`));

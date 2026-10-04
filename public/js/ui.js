@@ -535,7 +535,7 @@ const PawPal = (() => {
 
   // ---------- notifications ----------
   const NOTE_ICON = { application: 'file', status: 'refresh', info: 'help', appointment: 'calendar', approved: 'checkCircle', declined: 'info', adopted: 'home',
-    enquiry: 'message', pet: 'paw', match: 'sparkle', account: 'user', staff: 'inbox' };
+    enquiry: 'message', pet: 'paw', match: 'sparkle', account: 'user', staff: 'inbox', booking: 'calendar', careplan: 'clipboard', payment: 'checkCircle' };
   const noteHTML = (n) => `<a class="notif-item ${n.read ? '' : 'unread'}" href="${esc(n.link || '#')}" data-note="${esc(n.id)}">
       <span class="n-icon">${icons[NOTE_ICON[n.type] || 'bell']}</span><div><b>${esc(n.title)}</b><span>${esc(n.message)}</span><small>${timeAgo(n.at)}</small></div></a>`;
   async function loadBell(render = false) {
