@@ -45,7 +45,7 @@ router.post('/:id/reply', requireStaff, asyncHandler(async (req, res) => {
   const reply = clean(req.body.reply, 2000);
   if (reply.length < 2) throw new HttpError(400, 'Please write a reply.');
   const updated = await db.update('enquiries', enq.id, { reply, status: 'Answered', repliedBy: req.user.name, repliedAt: now() });
-  await notify(enq.userId, { type: 'enquiry', title: `Reply about ${enq.petName}`, message: reply.slice(0, 140), link: 'dashboard.html#enquiries' });
+  await notify(enq.userId, { type: 'enquiry', title: `Reply about ${enq.petName}`, message: reply.slice(0, 140), link: 'dashboard.html#enquiries' }, { email: false });
   emails.enquiryReply(updated).catch(() => {});
   res.json({ enquiry: updated, message: 'Reply sent — the adopter has been emailed.' });
 }));

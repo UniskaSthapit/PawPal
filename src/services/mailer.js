@@ -32,6 +32,10 @@ function parseFrom(from) {
   return m ? { name: m[1].trim() || 'PawPal', email: m[2].trim() } : { name: 'PawPal', email: String(from || '').trim() };
 }
 
+// Provider errors carry the HTTP status so sendMail can tell a temporary failure (network, 5xx) from a
+// permanent one (4xx: bad address, bad key…), which must never be retried.
+const providerError = (name, status, detail) => Object.assign(new Error(`${name} ${status}: ${String(detail).slice(0, 300)}`), { status });
+
 // ---- Gmail API helpers ----
 // A short-lived access token is fetched with the refresh token and reused until shortly before it expires.
 let gmailToken = { value: '', expires: 0 };
@@ -47,7 +51,8 @@ async function gmailAccessToken() {
   const data = await r.json().catch(() => ({}));
   if (!r.ok || !data.access_token) {
     const hint = data.error === 'invalid_grant' ? ' (the refresh token was revoked or has expired — create a new one, see DEPLOY.md)' : '';
-    throw new Error(`Gmail sign-in ${r.status}: ${data.error_description || data.error || 'no access token'}${hint}`);
+    throw Object.assign(new Error(`Gmail sign-in ${r.status}: ${data.error_description || data.error || 'no access token'}${hint}`),
+      { status: r.status, code: data.error || null });
   }
   gmailToken = { value: data.access_token, expires: Date.now() + (Number(data.expires_in) || 3600) * 1000 - 60000 };
   return gmailToken.value;
@@ -80,7 +85,7 @@ const HTTP_PROVIDERS = {
     });
     let r = await send(await gmailAccessToken());
     if (r.status === 401) { gmailToken = { value: '', expires: 0 }; r = await send(await gmailAccessToken()); }
-    if (!r.ok) throw new Error(`Gmail ${r.status}: ${(await r.text()).slice(0, 300)}`);
+    if (!r.ok) throw providerError('Gmail', r.status, await r.text());
   },
   async resend({ to, subject, html }) {
     const r = await fetch('https://api.resend.com/emails', {
@@ -89,7 +94,7 @@ const HTTP_PROVIDERS = {
       body: JSON.stringify({ from: config.mailFrom, to, subject, html }),
       signal: AbortSignal.timeout(15000),
     });
-    if (!r.ok) throw new Error(`Resend ${r.status}: ${(await r.text()).slice(0, 300)}`);
+    if (!r.ok) throw providerError('Resend', r.status, await r.text());
   },
   async brevo({ to, subject, html }) {
     const r = await fetch('https://api.brevo.com/v3/smtp/email', {
@@ -98,10 +103,12 @@ const HTTP_PROVIDERS = {
       body: JSON.stringify({ sender: parseFrom(config.mailFrom), to: [{ email: to }], subject, htmlContent: html }),
       signal: AbortSignal.timeout(15000),
     });
-    if (!r.ok) throw new Error(`Brevo ${r.status}: ${(await r.text()).slice(0, 300)}`);
+    if (!r.ok) throw providerError('Brevo', r.status, await r.text());
   },
   async smtp({ to, subject, html }) {
-    await transporter.sendMail({ from: config.mailFrom, to, subject, html });
+    try { await transporter.sendMail({ from: config.mailFrom, to, subject, html }); }
+    // SMTP 4xx replies are temporary, 5xx permanent — map them onto the HTTP convention used above
+    catch (err) { throw Object.assign(err, { status: err.responseCode ? (err.responseCode < 500 ? 503 : 400) : undefined }); }
   },
 };
 
@@ -136,17 +143,40 @@ function layout({ heading, body, buttonText, buttonUrl }) {
 // sending account suspended by the email provider, so they are skipped with a note in the log.
 const UNDELIVERABLE = /@((.+\.)?example(\.(com|net|org))?|.+\.(test|invalid|localhost|local)|(.+\.)?pawpal\.(com|app))$/i;
 
-async function sendMail({ to, subject, heading, body, buttonText, buttonUrl, type = 'general' }) {
+// Temporary failures (network error, timeout, HTTP 5xx or 429) are retried once; 4xx never are.
+const isTransient = (err) => !err.status || err.status >= 500 || err.status === 429;
+const sleep = (ms) => new Promise((resolve) => { setTimeout(resolve, ms); });
+
+async function deliver(message) {
+  try {
+    await HTTP_PROVIDERS[emailMode](message);
+    return { retried: false };
+  } catch (err) {
+    if (!isTransient(err)) throw err;
+    console.warn(`✉️  Email to ${message.to} failed (${err.message.split('\n')[0]}) — retrying once.`);
+    await sleep(config.mailRetryDelayMs);
+    await HTTP_PROVIDERS[emailMode](message);
+    return { retried: true };
+  }
+}
+
+// userId / appId record who and what the email is about; skipReason records an email we chose not to send
+// (e.g. the recipient turned these emails off) so the admin email log explains it.
+async function sendMail({ to, subject, heading, body, buttonText, buttonUrl, type = 'general', userId = null, appId = null, skipReason = '' }) {
   const html = layout({ heading: heading || subject, body, buttonText, buttonUrl });
-  const record = { id: newId('mail'), to, subject, type, html, link: buttonUrl || null, mode: emailMode, status: 'sent', sentAt: now() };
-  if (emailMode !== 'dev' && UNDELIVERABLE.test(String(to || '').trim())) {
+  const record = { id: newId('mail'), to, subject, type, userId, appId, html, link: buttonUrl || null, mode: emailMode, status: 'sent', sentAt: now() };
+  if (skipReason) {
+    record.status = 'skipped';
+    record.error = skipReason;
+  } else if (emailMode !== 'dev' && UNDELIVERABLE.test(String(to || '').trim())) {
     record.status = 'skipped';
     record.error = 'Not sent: this is a demo or test address that cannot receive email.';
   } else if (emailMode === 'dev') {
     console.log(`✉️  [dev mailbox] To: ${to} | ${subject}${buttonUrl ? ' | ' + buttonUrl : ''}`);
   } else {
     try {
-      await HTTP_PROVIDERS[emailMode]({ to, subject, html });
+      const { retried } = await deliver({ to, subject, html });
+      if (retried) record.retried = true;
     } catch (err) {
       record.status = 'failed';
       record.error = err.message;
@@ -164,6 +194,9 @@ const first = (name) => escapeHtml(String(name || 'there').split(' ')[0]);
 const when = (iso) => new Date(iso).toLocaleString('en-AU', { dateStyle: 'full', timeStyle: 'short' });
 const quote = (text) => `<div style="margin:16px 0;padding:14px 16px;background:#FBF4EC;border-left:4px solid #C4452A;border-radius:8px;white-space:pre-wrap">${escapeHtml(text)}</div>`;
 
+// Who/what an application email is about, plus an optional reason not to send it (set by emailApplicant)
+const appMeta = (app) => ({ userId: app.userId || null, appId: app.id || null, skipReason: app.skipReason || '' });
+
 // What the adopter is told for each workflow status
 const STATUS_COPY = {
   'Under Review': (a) => p(`Good news — a member of our team has started reviewing your application for <b>${escapeHtml(a.petName)}</b>.`),
@@ -178,6 +211,12 @@ const STATUS_COPY = {
 };
 
 const emails = {
+  // Every in-app notification without a more specific email gets this one (see services/notify.js)
+  notification: (user, { title, message, link }, extra = {}) => sendMail({
+    to: user.email, type: 'notification', userId: user.id, subject: title, heading: title,
+    body: p(`Hi ${first(user.name)},`) + p(escapeHtml(message || '')),
+    buttonText: 'Open PawPal', buttonUrl: `${config.appUrl}/${String(link || 'dashboard.html').replace(/^\//, '')}`, ...extra,
+  }),
   verify: (user, link) => sendMail({
     to: user.email, type: 'verification', subject: 'Verify your PawPal email',
     heading: `Welcome to PawPal, ${first(user.name)}!`,
@@ -207,21 +246,21 @@ const emails = {
     buttonText: 'Choose my password', buttonUrl: link,
   }),
   applicationReceived: (app) => sendMail({
-    to: app.email, type: 'application', subject: `We received your application for ${app.petName}`,
+    ...appMeta(app), to: app.email, type: 'application', subject: `We received your application for ${app.petName}`,
     heading: 'Application received',
     body: p(`Thank you, ${first(app.name)}! Your adoption application for <b>${escapeHtml(app.petName)}</b> has been submitted.`) +
       p('Our shelter team usually starts reviewing applications within 2–3 business days. You can follow every step on your adoption timeline.'),
     buttonText: 'Track my application', buttonUrl: `${config.appUrl}/my-applications.html?id=${app.id}`,
   }),
   statusChanged: (app, note = '') => sendMail({
-    to: app.email, type: 'status-update', subject: `${app.petName}: your application is now "${app.status}"`,
+    ...appMeta(app), to: app.email, type: 'status-update', subject: `${app.petName}: your application is now "${app.status}"`,
     heading: `Your application is now: ${app.status}`,
     body: p(`Hi ${first(app.name)},`) + (STATUS_COPY[app.status] ? STATUS_COPY[app.status](app) : p(`There is an update on your application for <b>${escapeHtml(app.petName)}</b>.`)) +
       (note ? p('<b>Message from the shelter:</b>') + quote(note) : ''),
     buttonText: app.status === 'Info Requested' ? 'Reply to the shelter' : 'View my timeline', buttonUrl: `${config.appUrl}/my-applications.html?id=${app.id}`,
   }),
   adoptionClosed: (app) => sendMail({
-    to: app.email, type: 'closure', subject: `${app.petName} has found a home`,
+    ...appMeta(app), to: app.email, type: 'closure', subject: `${app.petName} has found a home`,
     heading: `${app.petName} has been adopted`,
     body: p(`Hi ${first(app.name)}, thank you for your interest in <b>${escapeHtml(app.petName)}</b>. ` +
       'They have now been adopted by another family, so this application has been closed.') +
@@ -229,14 +268,14 @@ const emails = {
     buttonText: 'Find my PawPal', buttonUrl: `${config.appUrl}/ai-matching.html`,
   }),
   adoptionComplete: (app) => sendMail({
-    to: app.email, type: 'closure', subject: `Congratulations on adopting ${app.petName}!`,
+    ...appMeta(app), to: app.email, type: 'closure', subject: `Congratulations on adopting ${app.petName}!`,
     heading: `Welcome home, ${app.petName}!`,
     body: p(`Congratulations ${first(app.name)}! Your adoption of <b>${escapeHtml(app.petName)}</b> is complete.`) +
       p('A first vet check-up within two weeks is a great start. PawPal\'s vet finder can show clinics near you.'),
     buttonText: 'Find a nearby vet', buttonUrl: `${config.appUrl}/vet-finder.html`,
   }),
   shelterMessage: (app, text) => sendMail({
-    to: app.email, type: 'message', subject: `New message about your application for ${app.petName}`,
+    ...appMeta(app), to: app.email, type: 'message', subject: `New message about your application for ${app.petName}`,
     heading: 'You have a new message',
     body: p(`Hi ${first(app.name)}, the shelter team sent you a message about <b>${escapeHtml(app.petName)}</b>.`) + quote(text),
     buttonText: 'Reply on PawPal', buttonUrl: `${config.appUrl}/my-applications.html?id=${app.id}`,
