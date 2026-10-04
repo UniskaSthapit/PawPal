@@ -1319,3 +1319,11 @@ body.side-open::after, body.filters-open::after { content: ''; position: fixed; 
 .slot-choice:hover { border-color: var(--brand); color: var(--brand-ink); }
 .slot-choice:focus-visible { outline: none; box-shadow: var(--ring); border-color: var(--brand); }
 .slot-choice[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: #fff; }
+
+/* Social post maker */
+.promote { display: grid; gap: 16px; }
+.promote-out { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 340px); gap: 20px; align-items: start; }
+.promote-out[hidden] { display: none; }
+.promote-card { display: grid; gap: 10px; }
+.promote-card canvas { width: 100%; height: auto; aspect-ratio: 1; border-radius: 14px; border: 1px solid var(--line); background: var(--paper-2); }
+@media (max-width: 760px) { .promote-out { grid-template-columns: minmax(0, 1fr); } }

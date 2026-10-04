@@ -28,7 +28,9 @@
       document.title = `Edit ${current.name} — PawPal shelter portal`;
       $('#pageTitle').textContent = `Edit ${current.name}`; $('#crumb').textContent = current.name;
       $('#statusPill').innerHTML = `${statusBadge(current.status)} <span class="small muted">${res.applicationCount} applications · ${res.enquiryCount} enquiries · ${res.favouriteCount} saves</span>
-        <a class="btn btn-sm" href="flyer.html?id=${encodeURIComponent(current.id)}">${PawPal.icons.download}Print flyer</a>`;
+        <a class="btn btn-sm" href="flyer.html?id=${encodeURIComponent(current.id)}">${PawPal.icons.download}Print flyer</a>
+        ${['Available', 'On Hold'].includes(current.status) ? `<button class="btn btn-sm" type="button" id="promoteBtn">${PawPal.icons.sparkle}Promote</button>` : ''}`;
+      $('#promoteBtn')?.addEventListener('click', () => PawPalPromote.open(current));
       $('#publishBtn').textContent = current.status === 'Draft' ? 'Publish pet' : 'Save changes';
       $('#draftBtn').textContent = current.status === 'Draft' ? 'Save draft' : 'Move to drafts';
       $('#editActions').hidden = false;

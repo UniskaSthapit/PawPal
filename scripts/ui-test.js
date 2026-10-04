@@ -161,6 +161,11 @@ const ok = (name, cond) => { if (cond) { pass++; console.log('  ✅ ' + name); }
   ok('Flyer shows the pet, public facts and a QR code to their profile', /Hi, I'm/.test(await p.textContent('.flyer-name'))
     && (await p.$$('.flyer-facts div')).length >= 3 && /pet-profile\.html\?id=/.test(await p.textContent('.flyer-url')));
   ok('Flyer has a print button', !(await p.isDisabled('#printBtn')));
+  await p.goto(BASE + 'pets.html'); await p.waitForSelector('#petRows [data-promote]');
+  await p.click('#petRows [data-promote] >> nth=0'); await p.click('#prGo'); await p.waitForSelector('#prOut:not([hidden])');
+  ok('Promote writes a caption with hashtags', /#AdoptDontShop/.test(await p.inputValue('#prCaption')));
+  const [png] = await Promise.all([p.waitForEvent('download'), p.click('#prDownload')]);
+  ok('Promote downloads a 1080×1080 PNG pet card', /\.png$/.test(png.suggestedFilename()) && (await p.$eval('#prCanvas', (c) => c.width === 1080 && c.height === 1080)));
   await ctx.close();
 
   console.log('Two-factor authentication');

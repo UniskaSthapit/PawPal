@@ -10,9 +10,12 @@ const { toPublic, applyFilters, keywordFilter, publicPets } = require('./pets');
 const { missingSections } = require('./applications');
 const { APP_CLOSED, APP_NEEDS_DATE } = require('../constants');
 const { newId, now, asyncHandler, clean, toBool, toInt, HttpError } = require('../utils');
+const config = require('../config');
 
 const router = express.Router();
+// Counted per signed-in person (per IP address for visitors), so colleagues on the same shelter network don't share a limit
 const aiLimiter = rateLimit({ windowMs: 60 * 1000, limit: 30, standardHeaders: true, legacyHeaders: false,
+  keyGenerator: (req) => (req.user ? `user:${req.user.id}` : rateLimit.ipKeyGenerator(req.ip)),
   message: { error: 'You\'re sending messages quickly — please wait a moment and try again.' } });
 router.use(aiLimiter);
 
@@ -235,3 +238,17 @@ router.get('/applications/:id/summary', requireStaff, asyncHandler(async (req, r
 
 module.exports = router;
 module.exports.shelterSnapshot = shelterSnapshot;
+
+// ---- Social post maker (staff): caption + hashtags from public fields only; nothing is posted automatically ----
+router.post('/promote', requireStaff, asyncHandler(async (req, res) => {
+  const platform = String(req.body.platform || '').toLowerCase();
+  const tone = String(req.body.tone || '').toLowerCase();
+  if (!ai.PLATFORMS.includes(platform)) throw new HttpError(400, 'Choose Instagram or Facebook.');
+  if (!ai.TONES.includes(tone)) throw new HttpError(400, 'Choose a friendly, playful or heartfelt tone.');
+  const pet = await db.findOne('pets', { id: clean(req.body.petId, 40) });
+  if (!pet || !inScope(req, pet)) throw new HttpError(404, 'Pet not found.');
+  if (!['Available', 'On Hold'].includes(pet.status)) throw new HttpError(400, `${pet.name} isn't listed for adoption right now, so there's nothing to promote.`);
+  const link = `${config.appUrl}/p/${encodeURIComponent(pet.id)}`;
+  const post = await ai.promotePost(toPublic(pet), { platform, tone, link });
+  res.json({ ...post, link, platform, tone });
+}));
