@@ -17,6 +17,8 @@ const forApplicant = (a) => ({ id: a.id, petId: a.petId, petName: a.petName, pet
   status: a.status, statusInfo: APP_STATUS_INFO[a.status], history: (a.history || []).map((h) => ({ status: h.status, at: h.at, note: h.note || '' })),
   messages: (a.messages || []).map((m) => ({ from: m.from, name: m.from === 'staff' ? 'Shelter team' : m.name, text: m.text, at: m.at })),
   appointmentAt: a.appointmentAt || null, submittedAt: a.submittedAt, updatedAt: a.updatedAt,
+  booking: a.bookingInvite && !APP_CLOSED.includes(a.status) ? { invited: true, message: a.bookingInvite.message || '', slotId: a.slotId || null,
+    canChange: !a.slotId || new Date(a.appointmentAt).getTime() - Date.now() > CHANGE_CUTOFF_MS } : null,
   shelterId: a.shelterId || null, answers: { livingType: a.livingType, ownership: a.ownership, activityLevel: a.activityLevel, hoursAlone: a.hoursAlone,
     hasChildren: a.hasChildren, hasOtherPets: a.hasOtherPets, experience: a.experience, motivation: a.motivation } });
 
@@ -118,6 +120,7 @@ router.post('/:id/withdraw', requireAuth, asyncHandler(async (req, res) => {
   if (APP_CLOSED.includes(app.status)) throw new HttpError(400, 'This application is already closed.');
   const updated = await db.update('applications', app.id, { status: 'Withdrawn', updatedAt: now(),
     history: [...app.history, { status: 'Withdrawn', at: now(), by: 'Applicant' }] });
+  await freeSlot(app);
   await releasePetIfIdle(app.petId);
   await notifyStaff(app.shelterId, { title: `Application withdrawn: ${app.petName}`, message: `${app.name} withdrew their application.`, link: `applications.html?id=${app.id}` });
   res.json({ application: forApplicant(updated), message: 'Application withdrawn.' });
@@ -148,6 +151,107 @@ router.post('/:id/messages', requireAuth, asyncHandler(async (req, res) => {
   }
   res.json({ application: staff ? updated : forApplicant(updated), ...(mail ? { email: mail, emailSent: mail.sent.length > 0, emailStatus: mail.status } : {}),
     message: patch.status ? 'Thanks — your reply was sent and your application is back under review.' : `Message sent.${mail ? emailNote(mail) : ''}` });
+}));
+
+// ---- Meet & greet booking (staff invite → adopter picks a slot) ----
+const CHANGE_CUTOFF_MS = 24 * 60 * 60 * 1000; // adopters can change or cancel until 24 hours before
+const BOOKABLE_FROM = ['Submitted', 'Under Review', 'Info Requested', 'Interview', 'Meet & Greet'];
+
+// Frees the slot an application holds (when it closes, is cancelled or staff set a manual time)
+async function freeSlot(app) {
+  if (!app.slotId) return null;
+  const slot = await db.updateWhere('slots', { id: app.slotId, bookedBy: app.id }, { bookedBy: null });
+  return slot;
+}
+
+router.post('/:id/invite-booking', requireStaff, asyncHandler(async (req, res) => {
+  const app = await db.findOne('applications', { id: req.params.id });
+  if (!app || !inScope(req, app)) throw new HttpError(404, 'Application not found.');
+  if (!BOOKABLE_FROM.includes(app.status)) throw new HttpError(400, `A meet & greet can't be booked while the application is ${app.status.toLowerCase()}.`);
+  const message = clean(req.body.message, 1000);
+  const freeSlots = (await db.find('slots', { shelterId: app.shelterId })).filter((sl) => !sl.bookedBy && new Date(sl.start) > new Date()).length;
+  const at = now();
+  const patch = { bookingInvite: { at, by: req.user.name, message, statusBefore: app.status }, updatedAt: at };
+  if (message) patch.messages = [...(app.messages || []), { id: newId('msg'), from: 'staff', name: req.user.name, text: message, at }];
+  const updated = await db.update('applications', app.id, patch);
+  await notify(app.userId, { type: 'booking', title: `Book a time to meet ${app.petName}`, message: 'Choose a meet & greet time that suits you.',
+    link: `my-applications.html?id=${app.id}#booking` }, { email: false });
+  const mail = await emailApplicant('bookingInvite', updated, message);
+  res.json({ application: updated, freeSlots, email: mail, emailSent: mail.sent.length > 0, emailStatus: mail.status,
+    message: `${app.name.split(' ')[0]} was invited to book a meet & greet.${freeSlots ? '' : ' There are no free times yet — add some on the Availability page.'}${emailNote(mail)}` });
+}));
+
+// Free times the invited adopter can choose from (their application's shelter, next 60 days)
+router.get('/:id/slots', requireAuth, asyncHandler(async (req, res) => {
+  const app = await db.findOne('applications', { id: req.params.id });
+  if (!ownsApp(req, app)) throw new HttpError(404, 'Application not found.');
+  if (!app.bookingInvite || APP_CLOSED.includes(app.status)) throw new HttpError(400, 'The shelter hasn\'t invited you to book a meet & greet for this application yet.');
+  const nowMs = Date.now(); const until = nowMs + 60 * 24 * 60 * 60 * 1000;
+  const slots = (await db.find('slots', { shelterId: app.shelterId }))
+    .filter((sl) => !sl.bookedBy && new Date(sl.start).getTime() > nowMs + 60 * 60 * 1000 && new Date(sl.start).getTime() < until)
+    .sort((a, b) => new Date(a.start) - new Date(b.start)).slice(0, 120)
+    .map((sl) => ({ id: sl.id, start: sl.start, durationMins: sl.durationMins }));
+  res.json({ slots, current: app.slotId ? { slotId: app.slotId, start: app.appointmentAt } : null });
+}));
+
+async function holdPetFor(app) {
+  const pet = await db.findOne('pets', { id: app.petId });
+  if (pet?.status === 'Available') await db.update('pets', pet.id, { status: 'On Hold', updatedAt: now() });
+}
+
+router.post('/:id/book', requireAdopter, asyncHandler(async (req, res) => {
+  const app = await db.findOne('applications', { id: req.params.id });
+  if (!ownsApp(req, app)) throw new HttpError(404, 'Application not found.');
+  if (!app.bookingInvite || APP_CLOSED.includes(app.status)) throw new HttpError(400, 'The shelter hasn\'t invited you to book a meet & greet for this application.');
+  if (!BOOKABLE_FROM.includes(app.status)) throw new HttpError(400, `Your application is ${app.status.toLowerCase()}, so the meet & greet can't be changed here. Message the shelter instead.`);
+  const rescheduling = Boolean(app.slotId);
+  if (rescheduling && new Date(app.appointmentAt).getTime() - Date.now() <= CHANGE_CUTOFF_MS) {
+    throw new HttpError(400, 'Your meet & greet is less than 24 hours away, so it can\'t be changed online. Please message the shelter.');
+  }
+  const slotId = clean(req.body.slotId, 40);
+  const slot = slotId && await db.findOne('slots', { id: slotId });
+  if (!slot || slot.shelterId !== app.shelterId) throw new HttpError(404, 'That time is not available.');
+  if (new Date(slot.start).getTime() <= Date.now() + 60 * 60 * 1000) throw new HttpError(400, 'That time is too soon — please choose a later one.');
+  if (slot.id === app.slotId) throw new HttpError(400, 'You are already booked at that time.');
+  // Claim the slot only if it is still free at this exact moment (atomic in MongoDB) — prevents double booking
+  const claimed = await db.updateWhere('slots', { id: slot.id, bookedBy: null }, { bookedBy: app.id, bookedAt: now() });
+  if (!claimed) throw new HttpError(409, 'Sorry — someone has just booked that time. Please choose another.');
+  const previousStart = app.appointmentAt;
+  if (rescheduling) await freeSlot(app);
+  const at = now();
+  const updated = await db.update('applications', app.id, { status: 'Meet & Greet', appointmentAt: slot.start, slotId: slot.id, updatedAt: at,
+    history: [...app.history, { status: 'Meet & Greet', at, by: 'Applicant', note: rescheduling ? 'Rescheduled by applicant' : 'Booked by applicant', appointmentAt: slot.start }] });
+  await holdPetFor(app);
+  const when = new Date(slot.start).toLocaleString('en-AU', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Australia/Melbourne' });
+  await notify(app.userId, { type: 'booking', title: `${rescheduling ? 'Meet & greet moved' : 'Meet & greet booked'}: ${app.petName}`,
+    message: `You're booked to meet ${app.petName} on ${when}.`, link: `my-applications.html?id=${app.id}#booking` }, { email: false });
+  await notifyStaff(app.shelterId, { title: `${rescheduling ? 'Meet & greet rescheduled' : 'Meet & greet booked'}: ${app.petName}`,
+    message: `${app.name} ${rescheduling ? `moved their meet & greet from ${new Date(previousStart).toLocaleString('en-AU', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Australia/Melbourne' })} to` : 'booked'} ${when}.`,
+    link: `applications.html?id=${app.id}` });
+  const mail = await emailApplicant('bookingConfirmed', updated, { rescheduled: rescheduling });
+  res.json({ application: forApplicant(updated), email: mail, emailStatus: mail.status,
+    message: `${rescheduling ? 'Moved' : 'Booked'}! See you on ${when}.${mail.sent.length ? ' A confirmation email is on its way.' : ''}` });
+}));
+
+router.post('/:id/cancel-booking', requireAdopter, asyncHandler(async (req, res) => {
+  const app = await db.findOne('applications', { id: req.params.id });
+  if (!ownsApp(req, app)) throw new HttpError(404, 'Application not found.');
+  if (!app.slotId || app.status !== 'Meet & Greet') throw new HttpError(400, 'There is no booked meet & greet to cancel.');
+  if (new Date(app.appointmentAt).getTime() - Date.now() <= CHANGE_CUTOFF_MS) {
+    throw new HttpError(400, 'Your meet & greet is less than 24 hours away, so it can\'t be cancelled online. Please message the shelter.');
+  }
+  await freeSlot(app);
+  const at = now();
+  const back = BOOKABLE_FROM.includes(app.bookingInvite?.statusBefore) && app.bookingInvite.statusBefore !== 'Meet & Greet' ? app.bookingInvite.statusBefore : 'Under Review';
+  const updated = await db.update('applications', app.id, { status: back, appointmentAt: null, slotId: null, updatedAt: at,
+    history: [...app.history, { status: back, at, by: 'Applicant', note: 'Meet & greet cancelled by applicant' }] });
+  await releasePetIfIdle(app.petId);
+  await notify(app.userId, { type: 'booking', title: `Meet & greet cancelled: ${app.petName}`, message: 'Choose another time whenever you\'re ready.',
+    link: `my-applications.html?id=${app.id}#booking` }, { email: false });
+  await notifyStaff(app.shelterId, { title: `Meet & greet cancelled: ${app.petName}`, message: `${app.name} cancelled their meet & greet. The time is free again.`,
+    link: `applications.html?id=${app.id}` });
+  const mail = await emailApplicant('bookingCancelled', updated, app.appointmentAt);
+  res.json({ application: forApplicant(updated), email: mail, emailStatus: mail.status, message: 'Your meet & greet was cancelled and the time is free again.' });
 }));
 
 // ---- Staff: list ----
@@ -214,6 +318,13 @@ router.patch('/:id/status', requireStaff, asyncHandler(async (req, res) => {
 
   const at = now();
   const patch = { status, appointmentAt, updatedAt: at, history: [...app.history, { status, at, by: req.user.name, ...(note ? { note } : {}), ...(appointmentAt && APP_NEEDS_DATE.includes(status) ? { appointmentAt } : {}) }] };
+  // A booked meet & greet slot no longer applies when the application closes, staff set a time manually, or it
+  // moves back before the meeting took place — free it so other adopters can book it
+  if (app.slotId && (APP_CLOSED.includes(status) || status === 'Meet & Greet'
+    || (new Date(app.appointmentAt) > new Date() && !['Approved', 'Adoption Scheduled'].includes(status)))) {
+    await freeSlot(app);
+    patch.slotId = null;
+  }
   if (note) patch.messages = [...(app.messages || []), { id: newId('msg'), from: 'staff', name: req.user.name, text: note, at }];
   const updated = await db.update('applications', app.id, patch);
 
@@ -229,7 +340,8 @@ router.patch('/:id/status', requireStaff, asyncHandler(async (req, res) => {
     await db.update('pets', app.petId, { status: 'Adopted', adoptedAt: at, updatedAt: at });
     const others = (await db.find('applications', { petId: app.petId })).filter((a) => a.id !== app.id && !APP_CLOSED.includes(a.status));
     for (const o of others) {
-      const closedApp = await db.update('applications', o.id, { status: 'Declined', updatedAt: at,
+      await freeSlot(o);
+      const closedApp = await db.update('applications', o.id, { status: 'Declined', updatedAt: at, slotId: null,
         history: [...o.history, { status: 'Declined', at, by: 'PawPal (automatic)', note: `${app.petName} was adopted by another applicant.` }] });
       await emailApplicant('adoptionClosed', closedApp);
       await notify(o.userId, { type: 'declined', title: `${app.petName} has found a home`, message: 'This application was closed automatically. PawPal can suggest other pets for you.', link: 'ai-matching.html' }, { email: false });

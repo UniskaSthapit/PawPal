@@ -60,13 +60,14 @@ app.use('/api/images', require('./src/routes/images'));
 app.use('/api/applications', require('./src/routes/applications'));
 app.use('/api/favourites', require('./src/routes/favourites'));
 app.use('/api/enquiries', require('./src/routes/enquiries'));
+app.use('/api/slots', require('./src/routes/slots'));
 app.use('/api/ai', require('./src/routes/ai'));
 app.use('/api/admin', require('./src/routes/admin'));
 app.use('/api', require('./src/routes/misc'));
 app.use('/api', (req, res) => res.status(404).json({ error: 'Not found.' }));
 
 // ---------- Page protection (server-side, so protected pages never flash) ----------
-const STAFF_PAGES = ['index.html', 'pets.html', 'add-pet.html', 'applications.html', 'analytics.html', 'settings.html', 'enquiries.html', 'assistant.html', 'flyer.html'];
+const STAFF_PAGES = ['index.html', 'pets.html', 'add-pet.html', 'applications.html', 'analytics.html', 'settings.html', 'enquiries.html', 'assistant.html', 'flyer.html', 'availability.html'];
 const ADMIN_PAGES = ['admin.html'];
 const ADOPTER_PAGES = ['dashboard.html', 'my-applications.html', 'inquiry-form.html'];
 const ACCOUNT_PAGES = ['profile.html', 'notifications.html'];

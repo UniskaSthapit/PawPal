@@ -409,7 +409,7 @@ const PawPal = (() => {
   // Dashboard sidebars
   const ADOPTER_SIDE = [['dashboard.html', 'grid', 'Overview'], ['my-applications.html', 'file', 'My applications'], ['dashboard.html#favourites', 'heart', 'Favourites'],
     ['ai-matching.html', 'sparkle', 'Find my PawPal'], ['notifications.html', 'bell', 'Notifications'], ['profile.html', 'user', 'Profile & preferences']];
-  const STAFF_SIDE = [['index.html', 'grid', 'Overview'], ['pets.html', 'paw', 'Pets'], ['applications.html', 'file', 'Applications', 'apps'], ['enquiries.html', 'message', 'Enquiries', 'enq'],
+  const STAFF_SIDE = [['index.html', 'grid', 'Overview'], ['pets.html', 'paw', 'Pets'], ['applications.html', 'file', 'Applications', 'apps'], ['enquiries.html', 'message', 'Enquiries', 'enq'], ['availability.html', 'calendar', 'Availability'],
     ['analytics.html', 'chart', 'Analytics'], ['assistant.html', 'sparkle', 'AI assistant'], ['notifications.html', 'bell', 'Notifications'], ['settings.html', 'gear', 'Settings']];
 
   // Administrators see a banner on every portal page when email needs attention (Gmail sign-in expired, daily limit reached)

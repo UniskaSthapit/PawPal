@@ -403,6 +403,87 @@ const mailFor = async (anon, email, type) => (await anon('GET', `/api/dev/emails
   check('Upgrade adds missing species without duplicating any', (await db.count('pets')) === petsBefore && (await db.find('pets')).filter((p) => p.breed === 'Pygmy Goat').length === 1);
   check('Upgrade replaces placeholder shelter emails', !/@pawpal\.app$/.test((await db.findOne('shelters', { id: shelter.id })).email));
 
+  console.log('\nMeet & greet booking');
+  await adopter('POST', '/api/auth/login', { email, password: 'NewPaws567', role: 'user' }); // password changed by the account-security checks
+  const melbourneId = (await db.findOne('users', { email: 'staff@pawpal.com' })).shelterId;
+  const openAppPets = new Set((await db.find('applications')).filter((x) => !['Declined', 'Withdrawn', 'Adopted'].includes(x.status)).map((x) => x.petId));
+  const bookPets = (await db.find('pets')).filter((x) => x.status === 'Available' && x.shelterId !== melbourneId && !openAppPets.has(x.id));
+  const bShelter = bookPets[0].shelterId;
+  const [bPet1, bPet2] = bookPets.filter((x) => x.shelterId === bShelter);
+  r = await adopter('POST', '/api/applications', { ...form, petId: bPet1.id, declaration: true });
+  const bApp = r.body.application.id;
+  r = await adopter('POST', '/api/applications', { ...form, petId: bPet2.id, declaration: true });
+  const cApp = r.body.application.id;
+  const at = (days, hours = 10, mins = 0) => { const d = new Date(Date.now() + days * 86400000); d.setHours(hours, mins, 0, 0); return d.toISOString(); };
+  r = await anon('POST', '/api/slots', { windows: [{ start: at(3), end: at(3, 12) }], durationMins: 30 });
+  check('Creating times needs a login', r.status === 401);
+  r = await adopter('POST', '/api/slots', { windows: [{ start: at(3), end: at(3, 12) }], durationMins: 30 });
+  check('Adopters cannot create times', r.status === 403);
+  r = await admin('POST', '/api/slots', { shelterId: bShelter, windows: [{ start: at(3), end: at(3, 12) }], durationMins: 25 });
+  check('Slot length is validated', r.status === 400);
+  r = await admin('POST', '/api/slots', { shelterId: bShelter, windows: [{ start: at(3, 12), end: at(3, 10) }], durationMins: 30 });
+  check('End must be after start', r.status === 400);
+  r = await admin('POST', '/api/slots', { shelterId: bShelter, windows: [{ start: at(-1), end: at(-1, 12) }], durationMins: 30 });
+  check('Times must be in the future', r.status === 400);
+  r = await admin('POST', '/api/slots', { windows: [{ start: at(3), end: at(3, 12) }], durationMins: 30 });
+  check('Admins must choose a shelter', r.status === 400);
+  r = await admin('POST', '/api/slots', { shelterId: bShelter, windows: [{ start: at(3), end: at(3, 12) }, { start: at(10), end: at(10, 11) }], durationMins: 30 });
+  check('Repeating times are generated back to back (4 + 2 slots)', r.status === 201 && r.body.created === 6);
+  r = await admin('POST', '/api/slots', { shelterId: bShelter, windows: [{ start: at(3), end: at(3, 12) }], durationMins: 30 });
+  check('Existing times are not duplicated', r.status === 201 && r.body.created === 0 && r.body.skipped === 4);
+  r = await admin('GET', `/api/slots?shelterId=${bShelter}`);
+  const bSlots = r.body.slots.filter((x) => !x.bookedBy).sort((x, y) => new Date(x.start) - new Date(y.start));
+  check('Staff see the free times', r.status === 200 && bSlots.length >= 6);
+  r = await staff('GET', '/api/slots');
+  check('Staff only see their own shelter\'s times', r.status === 200 && r.body.slots.every((x) => x.shelterId === melbourneId));
+  r = await adopter('GET', `/api/applications/${bApp}/slots`);
+  check('Adopters can\'t book before being invited', r.status === 400);
+  r = await staff('POST', `/api/applications/${bApp}/invite-booking`, {});
+  check('Staff from another shelter can\'t invite', r.status === 404);
+  r = await admin('POST', `/api/applications/${bApp}/invite-booking`, { message: 'Bring your other dog if you can!' });
+  check('Staff can invite an applicant to book (in-app + email)', r.status === 200 && r.body.freeSlots >= 6 && /invited/.test(r.body.message)
+    && Boolean(await mailFor(anon, email, 'booking')) && (await adopter('GET', '/api/notifications')).body.notifications.some((n) => n.type === 'booking'));
+  await admin('POST', `/api/applications/${cApp}/invite-booking`, {});
+  r = await adopter('GET', `/api/applications/${bApp}/slots`);
+  check('Invited adopters see the free times for that shelter', r.status === 200 && r.body.slots.length >= 6);
+  const [race1, race2] = await Promise.all([adopter('POST', `/api/applications/${bApp}/book`, { slotId: bSlots[0].id }),
+    adopter('POST', `/api/applications/${cApp}/book`, { slotId: bSlots[0].id })]);
+  check('Two bookings for the same time at once: exactly one wins', [race1.status, race2.status].sort().join() === '200,409');
+  const winner = race1.status === 200 ? bApp : cApp; const loser = winner === bApp ? cApp : bApp;
+  r = await adopter('GET', `/api/applications/${winner}`);
+  check('Booking moves the application to Meet & Greet at the slot time', r.body.application.status === 'Meet & Greet'
+    && r.body.application.appointmentAt === bSlots[0].start && /Booked by applicant/.test(r.body.application.history.at(-1).note) && r.body.application.booking.canChange);
+  check('…and puts the pet on hold', (await db.findOne('pets', { id: winner === bApp ? bPet1.id : bPet2.id })).status === 'On Hold');
+  r = await adopter('POST', `/api/applications/${loser}/book`, { slotId: bSlots[0].id });
+  check('A booked time can\'t be taken again', r.status === 409);
+  r = await adopter('POST', `/api/applications/${winner}/book`, { slotId: bSlots[1].id });
+  check('Adopters can reschedule more than 24 hours ahead', r.status === 200 && /Rescheduled by applicant/.test(r.body.application.history.at(-1).note));
+  r = await admin('GET', `/api/slots?shelterId=${bShelter}`);
+  check('Rescheduling frees the old time', !r.body.slots.find((x) => x.id === bSlots[0].id).bookedBy && r.body.slots.find((x) => x.id === bSlots[1].id).bookedBy === winner);
+  r = await admin('DELETE', `/api/slots/${bSlots[1].id}`);
+  check('Booked times can\'t be deleted', r.status === 409);
+  r = await admin('DELETE', `/api/slots/${bSlots[5].id}`);
+  check('Free times can be deleted', r.status === 200);
+  r = await adopter('POST', `/api/applications/${winner}/cancel-booking`);
+  check('Adopters can cancel more than 24 hours ahead (application stays open)', r.status === 200 && r.body.application.status === 'Submitted' && !r.body.application.appointmentAt);
+  r = await admin('GET', `/api/slots?shelterId=${bShelter}`);
+  check('Cancelling frees the time', !r.body.slots.find((x) => x.id === bSlots[1].id).bookedBy);
+  const soon = new Date(Date.now() + 3 * 3600000); soon.setMinutes(0, 0, 0);
+  await admin('POST', '/api/slots', { shelterId: bShelter, windows: [{ start: soon.toISOString(), end: new Date(soon.getTime() + 30 * 60000).toISOString() }], durationMins: 30 });
+  const soonSlot = (await admin('GET', `/api/slots?shelterId=${bShelter}`)).body.slots.find((x) => x.start === soon.toISOString());
+  r = await adopter('POST', `/api/applications/${winner}/book`, { slotId: soonSlot.id });
+  check('A time a few hours away can be booked', r.status === 200);
+  r = await adopter('POST', `/api/applications/${winner}/cancel-booking`);
+  check('…but not cancelled online within 24 hours', r.status === 400 && /24 hours/.test(r.body.error));
+  r = await adopter('POST', `/api/applications/${winner}/book`, { slotId: bSlots[2].id });
+  check('…or moved within 24 hours', r.status === 400);
+  await adopter('POST', `/api/applications/${winner}/withdraw`);
+  await adopter('POST', `/api/applications/${loser}/withdraw`);
+  r = await admin('GET', `/api/slots?shelterId=${bShelter}`);
+  check('Withdrawing frees the booked time', !r.body.slots.find((x) => x.id === soonSlot.id).bookedBy);
+  r = await anon('GET', '/availability.html');
+  check('Availability page is for staff only', r.status === 302);
+
   console.log('\nPrintable flyers');
   r = await anon('GET', '/flyer.html');
   check('Flyer page is for staff only (visitors are sent to log in)', r.status === 302 && /login\.html\?role=staff/.test(r.headers.get('location')));
@@ -417,7 +498,6 @@ const mailFor = async (anon, email, type) => (await anon('GET', `/api/dev/emails
 
   console.log('\nTwo-factor authentication (staff)');
   const totp = require('../src/services/totp');
-  await adopter('POST', '/api/auth/login', { email, password: 'NewPaws567', role: 'user' }); // logged out by the account-security checks
   r = await anon('GET', '/api/auth/2fa/status');
   check('2FA status needs a login', r.status === 401);
   r = await adopter('POST', '/api/auth/2fa/setup');

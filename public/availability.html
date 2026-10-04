@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Meet &amp; greet availability — PawPal shelter portal</title>
+  <meta name="description" content="Publish meet and greet times that invited adopters can book.">
+  <meta name="theme-color" content="#FBF6EE">
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
+  <link rel="preload" href="fonts/fraunces-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/plus-jakarta-sans-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/pawpal.css?v=6">
+  <script src="js/api.js?v=6" defer></script>
+  <script src="js/ui.js?v=6" defer></script>
+  <script src="js/pages/availability.js?v=6" defer></script>
+</head>
+<body data-layout="staff" data-page="availability">
+<main id="main" tabindex="-1">
+<div class="app-head"><div><h1>Meet &amp; greet availability</h1><p>Add the times your team can host meet &amp; greets. Adopters you invite from an application choose one of the free times.</p></div></div>
+<div class="grid avail-grid">
+  <form class="card" id="slotForm" novalidate><div class="card-head"><h2>Add times</h2></div><div class="card-body stack">
+    <div class="field" id="shelterField" hidden><label for="slotShelter">Shelter</label><select class="select" id="slotShelter"></select></div>
+    <div class="field"><label for="slotDate">Day</label><input class="input" type="date" id="slotDate" required></div>
+    <div class="grid" style="grid-template-columns:1fr 1fr;gap:12px">
+      <div class="field"><label for="slotFrom">From</label><input class="input" type="time" id="slotFrom" value="10:00" required></div>
+      <div class="field"><label for="slotTo">To</label><input class="input" type="time" id="slotTo" value="14:00" required></div>
+    </div>
+    <div class="grid" style="grid-template-columns:1fr 1fr;gap:12px">
+      <div class="field"><label for="slotLen">Each meet &amp; greet</label><select class="select" id="slotLen"><option value="15">15 minutes</option><option value="20">20 minutes</option><option value="30" selected>30 minutes</option><option value="45">45 minutes</option><option value="60">1 hour</option><option value="90">1½ hours</option><option value="120">2 hours</option></select></div>
+      <div class="field"><label for="slotWeeks">Repeat</label><select class="select" id="slotWeeks"><option value="1">Just this day</option><option value="2">Same day for 2 weeks</option><option value="4" selected>Same day for 4 weeks</option><option value="6">Same day for 6 weeks</option><option value="8">Same day for 8 weeks</option><option value="12">Same day for 12 weeks</option></select></div>
+    </div>
+    <p class="small muted" id="slotPreview" aria-live="polite"></p>
+    <div id="slotMsg"></div>
+    <button class="btn btn-primary" id="slotBtn" type="submit"><span data-icon="plus"></span>Add times</button>
+  </div></form>
+  <section class="card"><div class="card-head"><h2>Upcoming times</h2><span class="small muted" id="slotSummary"></span></div>
+    <div class="card-body" id="slotList" aria-live="polite"><div class="skeleton" style="height:120px"></div></div></section>
+</div>
+</main>
+</body>
+</html>

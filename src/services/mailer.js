@@ -373,6 +373,28 @@ const emails = {
     body: p(`Hi ${first(app.name)}, the shelter team sent you a message about <b>${escapeHtml(app.petName)}</b>.`) + quote(text),
     buttonText: 'Reply on PawPal', buttonUrl: `${config.appUrl}/my-applications.html?id=${app.id}`,
   }),
+  bookingInvite: (app, message = '') => sendMail({
+    ...appMeta(app), to: app.email, type: 'booking', subject: `Book a time to meet ${app.petName}`,
+    heading: `Choose a time to meet ${app.petName}`,
+    body: p(`Hi ${first(app.name)}, the shelter team would love you to meet <b>${escapeHtml(app.petName)}</b> in person.`) +
+      p('Pick a meet &amp; greet time that suits you from the shelter\'s available times. You can change or cancel it up to 24 hours before.') +
+      (message ? p('<b>Message from the shelter:</b>') + quote(message) : ''),
+    buttonText: 'Choose a time', buttonUrl: `${config.appUrl}/my-applications.html?id=${app.id}#booking`,
+  }),
+  bookingConfirmed: (app, { rescheduled = false } = {}) => sendMail({
+    ...appMeta(app), to: app.email, type: 'booking', subject: `${rescheduled ? 'New time' : 'Booked'}: meet ${app.petName} on ${when(app.appointmentAt)}`,
+    heading: rescheduled ? 'Your meet & greet has moved' : 'Your meet & greet is booked',
+    body: p(`Hi ${first(app.name)}, you're booked to meet <b>${escapeHtml(app.petName)}</b>.`) + p(`<b>When:</b> ${when(app.appointmentAt)}`) +
+      p('Please bring photo ID and, if you rent, your landlord\'s pet approval. You can add it to your calendar from your timeline, and change or cancel it up to 24 hours before.'),
+    buttonText: 'View my booking', buttonUrl: `${config.appUrl}/my-applications.html?id=${app.id}#booking`,
+  }),
+  bookingCancelled: (app, startedAt) => sendMail({
+    ...appMeta(app), to: app.email, type: 'booking', subject: `Cancelled: meet & greet with ${app.petName}`,
+    heading: 'Your meet & greet was cancelled',
+    body: p(`Hi ${first(app.name)}, your meet &amp; greet with <b>${escapeHtml(app.petName)}</b>${startedAt ? ` on ${when(startedAt)}` : ''} has been cancelled.`) +
+      p('Your application is still open — choose another time whenever you\'re ready.'),
+    buttonText: 'Choose another time', buttonUrl: `${config.appUrl}/my-applications.html?id=${app.id}#booking`,
+  }),
   enquiryReceived: (enq) => sendMail({
     to: enq.email, type: 'enquiry', subject: `Your question about ${enq.petName}`,
     heading: 'We got your question',

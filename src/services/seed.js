@@ -8,6 +8,20 @@ const { templateDescription } = require('./ai');
 const { DEFAULT_SHELTERS, SCHEMA_VERSION, shelterFor, addExtraPets } = require('./migrate');
 const { parseProfile } = require('./matching');
 
+// A wall-clock time in Melbourne (handles daylight saving) as a Date
+function melbourneTime(day, hour, minute = 0) {
+  const guess = new Date(Date.UTC(day.getUTCFullYear(), day.getUTCMonth(), day.getUTCDate(), hour, minute));
+  const offset = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Melbourne', timeZoneName: 'shortOffset' }).formatToParts(guess)
+    .find((x) => x.type === 'timeZoneName').value.match(/GMT([+-]\d+)(?::(\d+))?/);
+  const mins = offset ? Number(offset[1]) * 60 + Math.sign(Number(offset[1])) * Number(offset[2] || 0) : 600;
+  return new Date(guess.getTime() - mins * 60000);
+}
+// The Saturday `weeks` weeks after the coming one (as a UTC date)
+function nextSaturday(weeks = 0) {
+  const d = new Date(); d.setUTCDate(d.getUTCDate() + ((6 - d.getUTCDay() + 7) % 7 || 7) + weeks * 7);
+  return d;
+}
+
 const img = (id, w = 1000, h = 800) => `https://images.unsplash.com/${id}?w=${w}&h=${h}&fit=crop&auto=format&q=80`;
 const daysAgo = (d, hour = 10) => { const t = new Date(); t.setDate(t.getDate() - d); t.setHours(hour, (Math.abs(d) * 7) % 60, 0, 0); return t.toISOString(); };
 
@@ -111,7 +125,7 @@ const KEYWORDS = ['golden retriever', 'puppy', 'cat', 'apartment', 'small dog', 
 async function seedIfEmpty({ force = false } = {}) {
   if (!force && (await db.count('users')) > 0) return false;
   for (const c of ['users', 'pets', 'applications', 'searches', 'events', 'notifications', 'emails', 'shelters', 'favourites', 'enquiries',
-    'conversations', 'matches', 'phoneCodes', 'sms', 'images', 'messages', 'meta', 'settings', 'mailStats']) await db.clear(c);
+    'conversations', 'matches', 'phoneCodes', 'sms', 'images', 'messages', 'meta', 'settings', 'mailStats', 'slots']) await db.clear(c);
   require('./settings').resetSettingsCache();
 
   const shelters = [];
@@ -171,6 +185,21 @@ async function seedIfEmpty({ force = false } = {}) {
   for (const pet of pets) await db.insert('pets', pet);
   // Reptiles, birds, fish, hamsters, goats and cows (see extra-pets.js)
   await addExtraPets(shelters, { createdBy: admin.id });
+
+  // Meet & greet times: the next three Saturdays, 10:00–13:00 Melbourne time, every 30 minutes, at every shelter.
+  // One of the demo adopter's open applications is invited to book one (My applications → "Choose a time").
+  for (const shelter of shelters) {
+    for (let week = 0; week < 3; week++) {
+      for (let k = 0; k < 6; k++) {
+        await db.insert('slots', { id: newId('slot'), shelterId: shelter.id, start: melbourneTime(nextSaturday(week), 10, k * 30).toISOString(),
+          durationMins: 30, bookedBy: null, createdBy: staff.id, createdAt: now() });
+      }
+    }
+  }
+  const invitable = (await db.find('applications', { userId: demo.id })).find((a) => ['Submitted', 'Under Review', 'Interview'].includes(a.status));
+  if (invitable) {
+    await db.update('applications', invitable.id, { bookingInvite: { at: daysAgo(1, 10), by: staff.name, message: 'We\'d love you to meet them — pick any time that suits.', statusBefore: invitable.status } });
+  }
 
   // Enquiries and favourites
   const enquiries = [[2, 'Is Max okay being left alone for a few hours while I\'m at work?', 'Answered', 'He copes well with 4–5 hours once settled. We recommend a slow start with short absences.'],
