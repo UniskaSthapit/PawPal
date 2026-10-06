@@ -1,13 +1,13 @@
 // One-time data upgrades so an existing PawPal database (e.g. the live MongoDB) keeps working
 // after the workflow, roles and shelters were added. Safe to run on every start: it is versioned and idempotent.
 const db = require('../db');
-const { LEGACY_APP_STATUS, LEGACY_PET_STATUS } = require('../constants');
+const { LEGACY_APP_STATUS, LEGACY_PET_STATUS, DEFAULT_FEES } = require('../constants');
 const { newId, now } = require('../utils');
 const config = require('../config');
 const { EXTRA_PETS } = require('./extra-pets');
 
 // v3: real contact email on shelters, and reptiles, birds, fish, hamsters and farm animals added to the catalogue
-const SCHEMA_VERSION = 3;
+const SCHEMA_VERSION = 4;
 
 const DEFAULT_SHELTERS = [
   { key: 'VIC', name: 'PawPal Melbourne Rescue Centre', suburb: 'Footscray', state: 'VIC', address: '14 Hopkins Street, Footscray VIC 3011',
@@ -48,6 +48,7 @@ async function migrate() {
     const patch = {};
     if (!pet.shelterId) patch.shelterId = shelterFor(pet.location, shelters).id;
     if (LEGACY_PET_STATUS[pet.status]) patch.status = LEGACY_PET_STATUS[pet.status];
+    if (pet.adoptionFee === undefined || pet.adoptionFee === null) patch.adoptionFee = DEFAULT_FEES[pet.type] ?? DEFAULT_FEES.Other; // v4: every pet has a fee
     // Move inline base64 photos into the images collection so pet lists stay light
     if ((pet.photos || []).some((p) => p.startsWith('data:'))) {
       const { storeDataUrl } = require('../routes/images');

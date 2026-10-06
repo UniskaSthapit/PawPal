@@ -16,6 +16,16 @@
     } catch { /* ignore */ }
   }
 
+  // New pets start with the suggested fee for their species (same values as DEFAULT_FEES in src/constants.js) until staff change it
+  const SUGGESTED_FEES = { Dog: 400, Cat: 180, Rabbit: 90, 'Guinea Pig': 50, Hamster: 25, Bird: 70, Reptile: 130, Fish: 20, 'Farm Animal': 300, Other: 50 };
+  if (!editId) {
+    let feeTouched = false;
+    const suggest = () => { if (!feeTouched && SUGGESTED_FEES[$('#type').value] !== undefined) $('#adoptionFee').value = SUGGESTED_FEES[$('#type').value]; };
+    $('#adoptionFee').addEventListener('input', () => { feeTouched = true; });
+    $('#type').addEventListener('change', suggest);
+    suggest();
+  }
+
   if (editId) {
     try {
       const res = await PawPalAPI.get(`/pets/${encodeURIComponent(editId)}`);
@@ -27,7 +37,10 @@
       photos = [...(current.photos || [])];
       document.title = `Edit ${current.name} — PawPal shelter portal`;
       $('#pageTitle').textContent = `Edit ${current.name}`; $('#crumb').textContent = current.name;
-      $('#statusPill').innerHTML = `${statusBadge(current.status)} <span class="small muted">${res.applicationCount} applications · ${res.enquiryCount} enquiries · ${res.favouriteCount} saves</span>`;
+      $('#statusPill').innerHTML = `${statusBadge(current.status)} <span class="small muted">${res.applicationCount} applications · ${res.enquiryCount} enquiries · ${res.favouriteCount} saves</span>
+        <a class="btn btn-sm" href="flyer.html?id=${encodeURIComponent(current.id)}">${PawPal.icons.download}Print flyer</a>
+        ${['Available', 'On Hold'].includes(current.status) ? `<button class="btn btn-sm" type="button" id="promoteBtn">${PawPal.icons.sparkle}Promote</button>` : ''}`;
+      $('#promoteBtn')?.addEventListener('click', () => PawPalPromote.open(current));
       $('#publishBtn').textContent = current.status === 'Draft' ? 'Publish pet' : 'Save changes';
       $('#draftBtn').textContent = current.status === 'Draft' ? 'Save draft' : 'Move to drafts';
       $('#editActions').hidden = false;

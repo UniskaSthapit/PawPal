@@ -7,6 +7,21 @@ const { calculateSuitabilityScore } = require('./scoring');
 const { templateDescription } = require('./ai');
 const { DEFAULT_SHELTERS, SCHEMA_VERSION, shelterFor, addExtraPets } = require('./migrate');
 const { parseProfile } = require('./matching');
+const { rulesPlan, DISCLAIMER } = require('./careplan');
+
+// A wall-clock time in Melbourne (handles daylight saving) as a Date
+function melbourneTime(day, hour, minute = 0) {
+  const guess = new Date(Date.UTC(day.getUTCFullYear(), day.getUTCMonth(), day.getUTCDate(), hour, minute));
+  const offset = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Melbourne', timeZoneName: 'shortOffset' }).formatToParts(guess)
+    .find((x) => x.type === 'timeZoneName').value.match(/GMT([+-]\d+)(?::(\d+))?/);
+  const mins = offset ? Number(offset[1]) * 60 + Math.sign(Number(offset[1])) * Number(offset[2] || 0) : 600;
+  return new Date(guess.getTime() - mins * 60000);
+}
+// The Saturday `weeks` weeks after the coming one (as a UTC date)
+function nextSaturday(weeks = 0) {
+  const d = new Date(); d.setUTCDate(d.getUTCDate() + ((6 - d.getUTCDay() + 7) % 7 || 7) + weeks * 7);
+  return d;
+}
 
 const img = (id, w = 1000, h = 800) => `https://images.unsplash.com/${id}?w=${w}&h=${h}&fit=crop&auto=format&q=80`;
 const daysAgo = (d, hour = 10) => { const t = new Date(); t.setDate(t.getDate() - d); t.setHours(hour, (Math.abs(d) * 7) % 60, 0, 0); return t.toISOString(); };
@@ -104,6 +119,8 @@ const APPLICANTS = [
   ['Ava Taylor', 'House with yard', 2, true, false, 'Experienced', 4, 9, 'Adoption Scheduled', 16, 'Own'],
   ['Ethan Martin', 'House without yard', 1, false, true, 'Some experience', 5, 15, 'Submitted', 0, 'Live with family'],
   ['Grace Lee', 'Apartment', 2, false, false, 'First-time owner', 7, 14, 'Under Review', 3, 'Rent'],
+  // The demo adopter's completed adoption (care plan and adoption fee demos)
+  ['(demo adopter)', 'House with yard', 2, true, false, 'Some experience', 4, 7, 'Adopted', 12, 'Own'],
 ];
 const FLOW = ['Submitted', 'Under Review', 'Interview', 'Meet & Greet', 'Approved', 'Adoption Scheduled', 'Adopted'];
 const KEYWORDS = ['golden retriever', 'puppy', 'cat', 'apartment', 'small dog', 'kitten', 'good with kids', 'rabbit', 'beagle', 'calm', 'border collie', 'senior cat', 'hypoallergenic', 'poodle'];
@@ -111,7 +128,8 @@ const KEYWORDS = ['golden retriever', 'puppy', 'cat', 'apartment', 'small dog', 
 async function seedIfEmpty({ force = false } = {}) {
   if (!force && (await db.count('users')) > 0) return false;
   for (const c of ['users', 'pets', 'applications', 'searches', 'events', 'notifications', 'emails', 'shelters', 'favourites', 'enquiries',
-    'conversations', 'matches', 'phoneCodes', 'sms', 'images', 'messages', 'meta']) await db.clear(c);
+    'conversations', 'matches', 'phoneCodes', 'sms', 'images', 'messages', 'meta', 'settings', 'mailStats', 'slots', 'translations', 'payments']) await db.clear(c);
+  require('./settings').resetSettingsCache();
 
   const shelters = [];
   for (const { key, ...s } of DEFAULT_SHELTERS) {
@@ -141,7 +159,7 @@ async function seedIfEmpty({ force = false } = {}) {
   for (const [i, a] of APPLICANTS.entries()) {
     const [name, livingType, activityLevel, hasChildren, hasOtherPets, experience, hoursAlone, petIndex, status, ago, ownership] = a;
     const pet = pets[petIndex];
-    const isDemo = i === 2 || i === 3;
+    const isDemo = i === 2 || i === 3 || i === APPLICANTS.length - 1;
     const applicant = isDemo ? demo.name : name;
     const email = isDemo ? demo.email : `${name.split(' ')[0].toLowerCase()}@example.com`;
     const form = { livingType, activityLevel, hasChildren, hasOtherPets, experience, hoursAlone };
@@ -153,8 +171,19 @@ async function seedIfEmpty({ force = false } = {}) {
       ...(st === 'Declined' ? { note: 'Luna needs a very experienced home with no long days alone. We\'d love to help you find a better match.' } : {}) }));
     const needsDate = ['Interview', 'Meet & Greet', 'Adoption Scheduled'].includes(status);
     const messages = history.filter((h) => h.note).map((h) => ({ id: newId('msg'), from: 'staff', name: staff.name, text: h.note, at: h.at }));
+    const appId = newId('app');
+    // Adoption fee: the demo adopter's is still due (try the checkout); the others were paid at the time
+    let fee = {};
+    if (status === 'Adopted' && pet.adoptionFee > 0) {
+      fee = { feeDue: pet.adoptionFee, paymentStatus: isDemo ? 'due' : 'paid' };
+      if (!isDemo) {
+        fee.paymentId = newId('pay');
+        await db.insert('payments', { id: fee.paymentId, applicationId: appId, userId: null, amount: pet.adoptionFee, brand: 'Visa', last4: '4242',
+          status: 'succeeded', receiptNo: `PP-${history[history.length - 1].at.slice(0, 10).replace(/-/g, '')}-SEED${i}`, paidAt: history[history.length - 1].at });
+      }
+    }
     await db.insert('applications', {
-      id: newId('app'), petId: pet.id, petName: pet.name, petBreed: pet.breed, petPhoto: pet.photos[0], shelterId: pet.shelterId,
+      id: appId, petId: pet.id, petName: pet.name, petBreed: pet.breed, petPhoto: pet.photos[0], shelterId: pet.shelterId,
       userId: isDemo ? demo.id : null, name: applicant, email, phone: isDemo ? demo.phone : '04' + String(10000000 + i * 7654321).slice(0, 8),
       address: isDemo ? '12 Wattle Street, Footscray VIC 3011' : i % 3 === 0 ? '' : 'Melbourne VIC', ownership, landlordPermission: ownership === 'Rent' ? i % 2 === 0 : '',
       householdAdults: 1 + (i % 3), workSchedule: i % 4 === 0 ? '' : 'Office three days a week, home two days.',
@@ -163,6 +192,10 @@ async function seedIfEmpty({ force = false } = {}) {
       score: s.score, label: s.label, breakdown: s.breakdown, notes: s.notes, status, history, messages, staffNotes: '',
       appointmentAt: needsDate ? daysAgo(-(2 + (i % 4)), 11) : null,
       submittedAt: daysAgo(ago, 9), updatedAt: history[history.length - 1].at,
+      // Approved and later: the "first 30 days" care plan (rules templates; no AI call while seeding)
+      ...fee,
+      ...(['Approved', 'Adoption Scheduled', 'Adopted'].includes(status) ? { carePlan: { ...rulesPlan(pet, form), petType: pet.type, source: 'rules', disclaimer: DISCLAIMER,
+        generatedAt: history.find((h) => h.status === 'Approved')?.at || history[history.length - 1].at } } : {}),
     });
     if (status === 'Adopted') { pet.status = 'Adopted'; pet.adoptedAt = history[history.length - 1].at; }
     else if (['Approved', 'Meet & Greet', 'Adoption Scheduled'].includes(status) && pet.status === 'Available') pet.status = 'On Hold';
@@ -170,6 +203,21 @@ async function seedIfEmpty({ force = false } = {}) {
   for (const pet of pets) await db.insert('pets', pet);
   // Reptiles, birds, fish, hamsters, goats and cows (see extra-pets.js)
   await addExtraPets(shelters, { createdBy: admin.id });
+
+  // Meet & greet times: the next three Saturdays, 10:00–13:00 Melbourne time, every 30 minutes, at every shelter.
+  // One of the demo adopter's open applications is invited to book one (My applications → "Choose a time").
+  for (const shelter of shelters) {
+    for (let week = 0; week < 3; week++) {
+      for (let k = 0; k < 6; k++) {
+        await db.insert('slots', { id: newId('slot'), shelterId: shelter.id, start: melbourneTime(nextSaturday(week), 10, k * 30).toISOString(),
+          durationMins: 30, bookedBy: null, createdBy: staff.id, createdAt: now() });
+      }
+    }
+  }
+  const invitable = (await db.find('applications', { userId: demo.id })).find((a) => ['Submitted', 'Under Review', 'Interview'].includes(a.status));
+  if (invitable) {
+    await db.update('applications', invitable.id, { bookingInvite: { at: daysAgo(1, 10), by: staff.name, message: 'We\'d love you to meet them — pick any time that suits.', statusBefore: invitable.status } });
+  }
 
   // Enquiries and favourites
   const enquiries = [[2, 'Is Max okay being left alone for a few hours while I\'m at work?', 'Answered', 'He copes well with 4–5 hours once settled. We recommend a slow start with short absences.'],

@@ -56,6 +56,149 @@ async function describePet(pet) {
   }
 }
 
+// ---------------- Social post maker (staff) ----------------
+const PLATFORMS = ['instagram', 'facebook'];
+const TONES = ['friendly', 'playful', 'heartfelt'];
+const SPECIES_TAGS = { Dog: ['RescueDog', 'AdoptADog', 'DogsOfInstagram'], Cat: ['RescueCat', 'AdoptACat', 'CatsOfInstagram'], Rabbit: ['RescueBunny', 'AdoptARabbit'],
+  'Guinea Pig': ['GuineaPigsOfInstagram', 'AdoptAGuineaPig'], Hamster: ['HamsterLove', 'AdoptAHamster'], Bird: ['RescueBird', 'AdoptABird'],
+  Reptile: ['ReptileRescue', 'AdoptAReptile'], Fish: ['AquariumLife', 'AdoptAFish'], 'Farm Animal': ['FarmSanctuary', 'AdoptAFarmAnimal'], Other: ['AdoptAPet'] };
+const cleanTag = (t) => String(t || '').replace(/^#/, '').replace(/[^A-Za-z0-9_]/g, '').slice(0, 40);
+function baseHashtags(pet) {
+  const city = cleanTag(String(pet.location || '').split(',')[0].replace(/\s+/g, ''));
+  return [...new Set(['AdoptDontShop', ...(SPECIES_TAGS[pet.type] || SPECIES_TAGS.Other), 'PawPal', city && `${city}Pets`].filter(Boolean))];
+}
+// Template caption used without an AI key (or when the AI is unavailable) — public facts only
+function templatePost(pet, { platform, tone, link }) {
+  const age = pet.age === undefined || pet.age === '' ? '' : Number(pet.age) === 0 ? 'young ' : `${Number(pet.age)}-year-old `;
+  const traits = (pet.traits || []).slice(0, 3).map((t) => t.toLowerCase());
+  const traitText = traits.length ? `${traits.slice(0, -1).join(', ')}${traits.length > 1 ? ' and ' : ''}${traits.slice(-1)}` : 'full of personality';
+  const extras = [pet.goodWithChildren && 'good with kids', pet.goodWithOtherPets && 'happy with other pets', !pet.requiresYard && 'fine without a yard']
+    .filter(Boolean).slice(0, 2);
+  const openers = {
+    friendly: `Meet ${pet.name}! 🐾 This ${age}${pet.breed} is ${traitText} and looking for a home of their own.`,
+    playful: `Warning: ${pet.name} may steal your heart (and the best spot on the couch). 😄 This ${age}${pet.breed} is ${traitText}!`,
+    heartfelt: `Every day, ${pet.name} waits for the person who'll call them family. This ${age}${pet.breed} is ${traitText}, and ready to love someone.`,
+  };
+  const middle = extras.length ? ` ${pet.name} is ${extras.join(' and ')}.` : '';
+  const where = pet.location ? ` Currently at our ${String(pet.location).split(',')[0]} shelter.` : '';
+  const close = platform === 'instagram' ? `\n\nTap the link in our bio to meet ${pet.name}.` : `\n\nMeet ${pet.name} and apply here: ${link}`;
+  return { caption: `${openers[tone] || openers.friendly}${middle}${where}${close}`, hashtags: baseHashtags(pet) };
+}
+async function promotePost(pet, { platform = 'instagram', tone = 'friendly', link = '' } = {}) {
+  const fallback = templatePost(pet, { platform, tone, link });
+  if (!llm.llmEnabled) return { ...fallback, source: 'rules' };
+  try {
+    const raw = await llm.complete({ json: true, maxTokens: 600,
+      system: `You write social media posts for an Australian animal shelter to help a pet get adopted. ${GUARDRAILS}
+Use only the facts given; never mention health, medical or rescue history. Tone: ${tone}. Platform: ${platform}.
+${platform === 'instagram' ? 'Instagram: 60–110 words, short lines, up to 3 emojis, end with "Link in bio to meet NAME".' : `Facebook: 80–140 words, a friendly paragraph or two, up to 2 emojis, end with the profile link ${link}.`}
+Return {"caption": string (no hashtags in it), "hashtags": string[] (6–10, without #, no spaces)}.`,
+      messages: [{ role: 'user', content: JSON.stringify({ pet: promptPet(pet), profileLink: link }) }] });
+    const caption = typeof raw.caption === 'string' ? raw.caption.replace(/(^|\s)#\w+/g, '').trim().slice(0, 2000) : '';
+    const hashtags = Array.isArray(raw.hashtags) ? [...new Set(raw.hashtags.map(cleanTag).filter((t) => t.length >= 3))].slice(0, 10) : [];
+    if (caption.length < 30 || !caption.includes(pet.name)) return { ...fallback, source: 'rules' };
+    return { caption, hashtags: hashtags.length >= 3 ? hashtags : fallback.hashtags, source: llm.provider };
+  } catch (err) {
+    if (!err.quiet) console.warn('AI social post fallback:', err.message.split('\n')[0].slice(0, 160));
+    return { ...fallback, source: 'rules' };
+  }
+}
+
+// ---------------- Compare pets (adopters) ----------------
+const listNames = (names) => (names.length > 1 ? `${names.slice(0, -1).join(', ')} and ${names.slice(-1)}` : names[0] || '');
+// Rules explanation built from shelter facts and (when the adopter has a saved lifestyle) the match scores
+function templateCompare(pets, scores = null) {
+  const lines = [];
+  const highlights = {};
+  const note = (pet, text) => { (highlights[pet.id] = highlights[pet.id] || []).push(text); };
+  if (scores) {
+    const ranked = [...pets].sort((a, b) => scores[b.id].score - scores[a.id].score);
+    const [top, next] = ranked;
+    const gap = scores[top.id].score - scores[next.id].score;
+    lines.push(gap >= 5
+      ? `For the lifestyle you've told us about, ${top.name} is the closest fit (${scores[top.id].score}% vs ${scores[next.id].score}% for ${next.name}).`
+      : `${listNames(ranked.map((p) => p.name))} are a similarly good fit for your lifestyle (${ranked.map((p) => `${scores[p.id].score}%`).join(', ')}).`);
+    ranked.forEach((p) => {
+      if (scores[p.id].reasons[0]) note(p, scores[p.id].reasons[0]);
+      if (scores[p.id].considerations[0]) note(p, `Worth considering: ${scores[p.id].considerations[0].charAt(0).toLowerCase()}${scores[p.id].considerations[0].slice(1)}`);
+    });
+  }
+  const byEnergy = [...pets].sort((a, b) => (Number(a.energyLevel) || 2) - (Number(b.energyLevel) || 2));
+  if ((Number(byEnergy[0].energyLevel) || 2) !== (Number(byEnergy.at(-1).energyLevel) || 2)) {
+    lines.push(`${byEnergy[0].name} is the calmest; ${byEnergy.at(-1).name} has the most energy and will need the most exercise.`);
+  }
+  const kids = pets.filter((p) => p.goodWithChildren).map((p) => p.name);
+  if (kids.length && kids.length < pets.length) lines.push(`The shelter says ${listNames(kids)} ${kids.length > 1 ? 'are' : 'is'} good with children.`);
+  const yard = pets.filter((p) => p.requiresYard).map((p) => p.name);
+  if (yard.length && yard.length < pets.length) lines.push(`${listNames(yard)} need${yard.length > 1 ? '' : 's'} a secure yard.`);
+  const others = pets.filter((p) => !p.goodWithOtherPets).map((p) => p.name);
+  if (others.length && others.length < pets.length) lines.push(`${listNames(others)} would prefer to be the only pet.`);
+  pets.forEach((p) => {
+    const traits = (p.traits || []).slice(0, 2).map((t) => t.toLowerCase());
+    if (traits.length) note(p, `Described by the shelter as ${traits.join(' and ')}`);
+    if (p.status === 'On Hold') note(p, 'Currently on hold for another adopter');
+  });
+  if (!lines.length) lines.push(`${listNames(pets.map((p) => p.name))} have a lot in common — meeting them is the best way to decide.`);
+  lines.push('Compatibility is guidance only; the shelter team will help you decide.');
+  return { summary: lines.join(' '), highlights: pets.map((p) => ({ petId: p.id, points: (highlights[p.id] || []).slice(0, 3) })) };
+}
+
+async function comparePets(pets, scores = null) {
+  const fallback = templateCompare(pets, scores);
+  if (!llm.llmEnabled) return { ...fallback, source: 'rules' };
+  try {
+    const raw = await llm.complete({ json: true, maxTokens: 700,
+      system: `You help someone choose between rescue pets they are comparing. ${GUARDRAILS}
+Compare the pets side by side in 60–120 words: who suits what kind of home, energy and care differences, and anything to ask the shelter.
+${scores ? 'Each pet has a compatibility score with the adopter\'s lifestyle — refer to it, but do not change it.' : 'There is no adopter profile — do not guess one.'}
+Return {"summary": string, "highlights": [{"petId": string, "points": string[] (1–3 short points, max 16 words each)}]}.`,
+      messages: [{ role: 'user', content: JSON.stringify({ pets: pets.map((p) => ({ ...promptPet(p), ...(scores ? { compatibility: scores[p.id] } : {}) })) }) }] });
+    const summary = typeof raw.summary === 'string' ? raw.summary.trim().slice(0, 1500) : '';
+    if (summary.length < 40 || !pets.some((p) => summary.includes(p.name))) return { ...fallback, source: 'rules' };
+    const ids = new Set(pets.map((p) => p.id));
+    const given = new Map((Array.isArray(raw.highlights) ? raw.highlights : [])
+      .filter((h) => h && ids.has(h.petId) && Array.isArray(h.points))
+      .map((h) => [h.petId, h.points.filter((x) => typeof x === 'string' && x.trim()).map((x) => x.trim().slice(0, 160)).slice(0, 3)]));
+    const highlights = fallback.highlights.map((h) => ({ petId: h.petId, points: given.get(h.petId)?.length ? given.get(h.petId) : h.points }));
+    return { summary, highlights, source: llm.provider };
+  } catch (err) {
+    if (!err.quiet) console.warn('AI compare fallback:', err.message.split('\n')[0].slice(0, 160));
+    return { ...fallback, source: 'rules' };
+  }
+}
+
+// ---------------- Translation (pet profiles and chat replies) ----------------
+// Only public text is translated. Without a model, callers keep English and say so.
+const LANGUAGES = { en: 'English', ne: 'Nepali', hi: 'Hindi', zh: 'Chinese (Simplified)', es: 'Spanish' };
+const sane = (orig, out) => typeof out === 'string' && (!orig || out.trim().length > 0) && out.length <= orig.length * 4 + 200;
+// fields: { description, idealHome, traits: [] } — or texts: string[] (chat replies). Returns the same shape, or null.
+async function translate({ fields = null, texts = null }, lang) {
+  if (!LANGUAGES[lang] || lang === 'en' || !llm.llmEnabled) return null;
+  const system = `Translate text for an Australian animal adoption website into ${LANGUAGES[lang]}${lang === 'zh' ? ' using Simplified Chinese characters' : ''}.
+Translate faithfully: do not add, remove or soften any information. Keep pet names, place names, numbers, prices, emails, links and the brand "PawPal" unchanged.
+Keep line breaks. Use natural, friendly, everyday language.`;
+  try {
+    if (fields) {
+      const raw = await llm.complete({ json: true, maxTokens: 1800,
+        system: `${system}\nReturn {"description": string, "idealHome": string, "traits": string[] (same number and order as given, max 40 characters each)}.`,
+        messages: [{ role: 'user', content: JSON.stringify(fields) }] });
+      const traits = Array.isArray(raw.traits) ? raw.traits : [];
+      if (!sane(fields.description, raw.description) || !sane(fields.idealHome, raw.idealHome)
+        || traits.length !== fields.traits.length || traits.some((t) => typeof t !== 'string' || !t.trim() || t.length > 60)) return null;
+      return { description: raw.description.trim(), idealHome: raw.idealHome.trim(), traits: traits.map((t) => t.trim()) };
+    }
+    const raw = await llm.complete({ json: true, maxTokens: 2500,
+      system: `${system}\nReturn {"translations": string[]} with exactly one translation per input text, in the same order.`,
+      messages: [{ role: 'user', content: JSON.stringify({ texts }) }] });
+    const out = Array.isArray(raw.translations) ? raw.translations : [];
+    if (out.length !== texts.length || out.some((t, i) => !sane(texts[i], t))) return null;
+    return out.map((t) => t.trim());
+  } catch (err) {
+    if (!err.quiet) console.warn('AI translation unavailable:', err.message.split('\n')[0].slice(0, 160));
+    return null;
+  }
+}
+
 // ---------------- Lifestyle understanding ----------------
 async function understandLifestyle(text, prev = {}, locations = []) {
   const ruled = parseProfile(text, prev, locations);
@@ -456,5 +599,5 @@ async function insights(facts, ruleSentences) {
   }
 }
 
-module.exports = { describePet, templateDescription, understandLifestyle, explainMatches, profileToFilters, describeFilters,
+module.exports = { translate, LANGUAGES, comparePets, templateCompare, promotePost, templatePost, PLATFORMS, TONES, describePet, templateDescription, understandLifestyle, explainMatches, profileToFilters, describeFilters,
   chat, explainQuestion, shelterAssistant, summarizeApplication, insights, promptPet, SOURCE };

@@ -60,17 +60,21 @@ app.use('/api/images', require('./src/routes/images'));
 app.use('/api/applications', require('./src/routes/applications'));
 app.use('/api/favourites', require('./src/routes/favourites'));
 app.use('/api/enquiries', require('./src/routes/enquiries'));
+app.use('/api/slots', require('./src/routes/slots'));
+app.use('/api/payments', require('./src/routes/payments'));
 app.use('/api/ai', require('./src/routes/ai'));
 app.use('/api/admin', require('./src/routes/admin'));
 app.use('/api', require('./src/routes/misc'));
 app.use('/api', (req, res) => res.status(404).json({ error: 'Not found.' }));
 
 // ---------- Page protection (server-side, so protected pages never flash) ----------
-const STAFF_PAGES = ['index.html', 'pets.html', 'add-pet.html', 'applications.html', 'analytics.html', 'settings.html', 'enquiries.html', 'assistant.html'];
+const STAFF_PAGES = ['index.html', 'pets.html', 'add-pet.html', 'applications.html', 'analytics.html', 'settings.html', 'enquiries.html', 'assistant.html', 'flyer.html', 'availability.html'];
 const ADMIN_PAGES = ['admin.html'];
-const ADOPTER_PAGES = ['dashboard.html', 'my-applications.html', 'inquiry-form.html'];
-const ACCOUNT_PAGES = ['profile.html', 'notifications.html'];
+const ADOPTER_PAGES = ['dashboard.html', 'my-applications.html', 'inquiry-form.html', 'checkout.html'];
+const ACCOUNT_PAGES = ['profile.html', 'notifications.html', 'care-plan.html', 'receipt.html'];
 app.get('/', (req, res) => res.redirect('/home.html'));
+// Short pet profile links for posters, flyers and social posts: /p/<petId>
+app.get(/^\/p\/([\w-]{1,40})$/, (req, res) => res.redirect(302, `/pet-profile.html?id=${encodeURIComponent(req.params[0])}`));
 app.get(/^\/([a-z-]+\.html)$/, (req, res, next) => {
   const page = req.params[0];
   const next_ = encodeURIComponent(req.originalUrl.slice(1));
@@ -99,14 +103,16 @@ app.use((req, res) => res.status(404).sendFile(path.join(__dirname, 'public', '4
 app.use((err, req, res, next) => {
   if (err.type === 'entity.too.large') return res.status(413).json({ error: 'That upload is too large. Try fewer or smaller photos.' });
   const status = err.status || 500;
-  if (status >= 500) console.error(err);
-  res.status(status).json({ error: status >= 500 ? 'Something went wrong on our side. Please try again.' : err.message });
+  // Never log request bodies (they can hold passwords or test card numbers): body-parser errors carry the raw body
+  if (status >= 500) console.error(Object.assign(err, { body: undefined }));
+  res.status(status).json({ error: status >= 500 ? 'Something went wrong on our side. Please try again.' : err.message, ...(err.field && status < 500 ? { field: err.field } : {}) });
 });
 
 async function start() {
   await db.init();
   const seeded = await seedIfEmpty();
   const migrated = seeded ? false : await migrate();
+  await require('./src/services/settings').getSettings(); // cache site settings (e.g. "Require 2FA for staff")
   const owner = await ensureOwnerAdmin();
   const disabledDemo = await disableDemoAccountsInProduction();
   app.listen(config.port, () => {

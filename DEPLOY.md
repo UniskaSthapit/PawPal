@@ -32,6 +32,24 @@ Google sends the mail itself, so it passes Gmail's checks and lands in inboxes. 
 If emails start failing with `invalid_grant`, the token was revoked (e.g. the Google password changed) — repeat
 step 5 and update `GMAIL_REFRESH_TOKEN`.
 
+### Keeping Gmail healthy
+Google can rate-limit or lock a Gmail account that sends too much, bounces a lot or looks automated. PawPal protects
+`pawpaladmin@gmail.com` like this — and you should do the same:
+- **Publish the OAuth app** (Google Auth Platform → Audience → *Publish app*). Apps left in *Testing* get refresh
+  tokens that expire after 7 days, and then every email fails with `invalid_grant`. If that happens, every admin page
+  shows *"Gmail sign-in expired — create a new refresh token"*: repeat step 5 above and update `GMAIL_REFRESH_TOKEN`.
+- **Daily limit:** PawPal sends at most `MAIL_DAILY_LIMIT` emails a day (default 300; Google's own limit for a normal
+  Gmail account is about 500). Further emails that day are logged as *deferred*, in-app notifications still arrive, and
+  admins see a banner. The counter resets at midnight Melbourne time. *Settings → System status* shows "sent today".
+- **Only real addresses on the live site.** Demo and test addresses (`example.com`, `*.test`, `*.invalid`, the demo
+  `pawpal.com` accounts) and obvious typos (`gmial.com`, `gmail.con` …) are never sent to — bounces are the fastest way
+  to get an account blocked. Use your own real addresses when you test on the live site.
+- **Never run the automated tests against production.** `npm test` and `npm run test:ui` use their own throwaway
+  database and the dev mailbox; don't point them at the live `MONGODB_URI` or give them the Gmail keys.
+- Duplicate emails (the same email about the same application within 2 minutes, e.g. a double click) are sent once.
+  Temporary failures are retried once after 3 seconds; permanent ones (4xx) never are.
+- Every email has a plain-text part as well as HTML, and `Reply-To` is your `MAIL_FROM` address. No attachments are sent.
+
 ### Option B — Brevo
 1. Create a free account at https://www.brevo.com (300 emails/day).
 2. **Senders & IPs → Senders → Add a sender** → `pawpaladmin@gmail.com` → click the confirmation email Brevo sends.
@@ -71,3 +89,22 @@ If several keys are set, the order is Anthropic → OpenAI → Gemini. The start
 - Keep `ALLOW_DEMO_RESET=false` in production.
 - Have the privacy policy and terms reviewed and add your organisation's legal details.
 - Free Render instances sleep when idle — the first request can take ~50 seconds.
+
+## 7. Extras: what to know when deploying
+Nothing new is required: the extras use the same keys as above. The existing database is upgraded automatically on
+the next start (schema v4 gives every pet an adoption fee if it had none; new collections and indexes are created).
+
+- **Email settings (optional):** `MAIL_DAILY_LIMIT` (default 300) and `MAIL_RETRY_DELAY_MS` (default 3000) — see
+  *Keeping Gmail healthy* above. They are already in `render.yaml`.
+- **Two-factor login:** staff and admins can turn it on under *Settings → Two-factor authentication*. To make it
+  mandatory, an administrator turns it on for themselves first, then switches on *Users & shelters → Security →
+  Require two-factor login for staff*. 2FA secrets are encrypted with a key derived from `JWT_SECRET`, so **don't
+  change `JWT_SECRET`** once people use 2FA (if you must, reset their 2FA from *Users & shelters*).
+- **AI features** (social posts, compare, translation, care plans) use the same AI key. Without one, captions,
+  comparisons and care plans come from PawPal's templates, and translation shows the page in English with a notice.
+  Translations are cached in the database, so each text uses the AI only once per language.
+- **Adoption fee payments are a simulation.** No payment provider is connected and no real money is taken; only the
+  published test cards work. Every checkout page and receipt says so. Set each pet's real fee on the pet form.
+- **Flyers and short links** use `APP_URL` for the QR code and `/p/<petId>` links — make sure it is your real URL.
+- **Meet & greet times** are entered in the browser's local time; set your shelters' availability under
+  *Availability* after deploying (the demo times only exist in the demo data).

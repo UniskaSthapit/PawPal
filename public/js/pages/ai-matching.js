@@ -31,7 +31,8 @@
         <div class="fact-panel" style="padding:10px 12px"><span class="src-label src-shelter">${icons.building}Shelter facts</span>
           <div class="small" style="margin-top:4px">${esc(PawPal.energyText(p.energyLevel))} · ${p.goodWithChildren ? 'Good with kids' : 'Adult home preferred'} · ${p.goodWithOtherPets ? 'OK with other pets' : 'Only pet'} · ${p.requiresYard ? 'Needs a yard' : 'No yard needed'}${p.status === 'On Hold' ? ' · Currently on hold' : ''}</div></div>
         <div class="row" style="margin-top:auto"><a class="btn btn-primary btn-sm" href="pet-profile.html?id=${encodeURIComponent(p.id)}">Meet ${esc(p.name)}</a>
-          <button class="btn btn-sm" data-ask="Why did you recommend ${esc(p.name)}?">${icons.message}Ask why</button></div>
+          <button class="btn btn-sm" data-ask="Why did you recommend ${esc(p.name)}?">${icons.message}Ask why</button>
+          ${PawPal.isStaffUser(PawPal.user) ? '' : PawPal.compareToggleHTML(p)}</div>
       </div></article>`;
   }
 

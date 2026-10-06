@@ -3,6 +3,7 @@
 const jwt = require('jsonwebtoken');
 const config = require('../config');
 const db = require('../db');
+const { settingsNow } = require('../services/settings');
 
 const COOKIE = 'pawpal_token';
 
@@ -48,15 +49,23 @@ function requireAdopter(req, res, next) {
   next();
 }
 
+// When an administrator requires two-factor authentication for staff, staff without it can only reach their
+// account and the 2FA setup until they turn it on (those routes use requireAuth, not requireStaff).
+const needs2faSetup = (user) => settingsNow().requireStaff2fa && isStaffRole(user.role) && !user.twoFactor?.enabled;
+const setupRequired = (res) => res.status(403).json({ error: 'Your administrator requires two-factor authentication. Set it up in Settings to continue.',
+  code: 'TWO_FACTOR_SETUP_REQUIRED' });
+
 function requireStaff(req, res, next) {
   if (!req.user) return res.status(401).json({ error: 'Please log in to continue.' });
   if (!isStaffRole(req.user.role)) return res.status(403).json({ error: 'Staff access only.' });
+  if (needs2faSetup(req.user)) return setupRequired(res);
   next();
 }
 
 function requireAdmin(req, res, next) {
   if (!req.user) return res.status(401).json({ error: 'Please log in to continue.' });
   if (req.user.role !== 'admin') return res.status(403).json({ error: 'Administrator access only.' });
+  if (needs2faSetup(req.user)) return setupRequired(res);
   next();
 }
 
@@ -67,7 +76,8 @@ const inScope = (req, doc) => { const s = shelterScope(req); return s === null |
 // Safe version of a user for sending to the browser
 const publicUser = (u) => u && ({ id: u.id, name: u.name, email: u.email, role: u.role, phone: u.phone || '',
   phoneVerified: !!u.phoneVerified, emailVerified: !!u.emailVerified, shelterId: u.shelterId || null,
-  preferences: u.preferences || null, createdAt: u.createdAt });
+  preferences: u.preferences || null, twoFactorEnabled: !!u.twoFactor?.enabled, emailPrefs: { applications: u.emailPrefs?.applications !== false, activity: u.emailPrefs?.activity !== false },
+  createdAt: u.createdAt });
 
 module.exports = { setAuthCookie, clearAuthCookie, loadUser, requireAuth, requireAdopter, requireStaff, requireAdmin,
   isStaff, isAdmin, isStaffRole, shelterScope, inScope, publicUser };

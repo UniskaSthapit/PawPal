@@ -20,15 +20,19 @@ const check = (name, cond, extra = '') => {
   if (cond) { passed++; console.log(`  ✅ ${name}`); } else { failures.push(name); console.log(`  ❌ ${name} ${extra}`); }
 };
 
-// Tiny HTTP client that remembers its login cookie
+// Tiny HTTP client with a cookie jar (login cookie, and the short-lived 2FA pending cookie)
 function client() {
-  let cookie = '';
+  const jar = new Map();
   return async (method, url, body) => {
+    const cookie = [...jar].map(([k, v]) => `${k}=${v}`).join('; ');
     const res = await fetch(base + url, { method, redirect: 'manual',
       headers: { ...(body ? { 'Content-Type': 'application/json' } : {}), ...(cookie ? { Cookie: cookie } : {}) },
       body: body ? JSON.stringify(body) : undefined });
-    const set = res.headers.get('set-cookie');
-    if (set) cookie = set.split(';')[0].endsWith('=') ? '' : set.split(';')[0];
+    for (const set of res.headers.getSetCookie()) {
+      const [pair] = set.split(';'); const i = pair.indexOf('=');
+      const name = pair.slice(0, i); const value = pair.slice(i + 1);
+      if (!value || /expires=Thu, 01 Jan 1970/i.test(set)) jar.delete(name); else jar.set(name, value);
+    }
     const text = await res.text();
     let json; try { json = JSON.parse(text); } catch { json = text; }
     return { status: res.status, body: json, headers: res.headers };
@@ -185,6 +189,10 @@ const mailFor = async (anon, email, type) => (await anon('GET', `/api/dev/emails
   r = await adopter('POST', '/api/enquiries', { petId: max.id, message: 'Is Max okay with being alone for a few hours?' });
   check('Adopter can ask the shelter about a pet', r.status === 201);
   const enqId = r.body.enquiry.id;
+  await new Promise((resolve) => { setTimeout(resolve, 150); }); // notification emails are sent in the background
+  r = await anon('GET', '/api/dev/emails?to=admin%40pawpal.com');
+  check('Staff in-app notifications are emailed too', r.body.emails.some((m) => m.type === 'notification' && /New question about Max/.test(m.subject)));
+
 
   console.log('\nAdoption application');
   r = await adopter('POST', '/api/applications', { petId: max.id, name: 'Test Adopter', email, motivation: 'too short' });
@@ -223,6 +231,23 @@ const mailFor = async (anon, email, type) => (await anon('GET', `/api/dev/emails
   r = await admin('PATCH', `/api/applications/${appId}/status`, { status: 'Under Review' });
   check('Status → Under Review', r.status === 200 && r.body.application.status === 'Under Review');
   check('Status change is emailed and reported to staff', r.body.emailSent === true && /We emailed/.test(r.body.message) && Boolean(await mailFor(anon, email, 'status-update')));
+  // Email settings: adopters can turn application emails off; the in-app notification still happens
+  r = await anon('PATCH', '/api/users/me', { emailPrefs: { applications: false } });
+  check('Email settings need a login', r.status === 401);
+  r = await adopter('PATCH', '/api/users/me', { emailPrefs: 'off' });
+  check('Email settings are validated', r.status === 400);
+  r = await adopter('PATCH', '/api/users/me', { emailPrefs: { applications: 'no' } });
+  check('Email settings must be on/off values', r.status === 400);
+  r = await adopter('PATCH', '/api/users/me', { emailPrefs: { applications: false } });
+  check('Adopter can turn off application emails', r.status === 200 && r.body.user.emailPrefs.applications === false && r.body.user.emailPrefs.activity === true);
+  r = await admin('PATCH', `/api/applications/${appId}/status`, { status: 'Interview', appointmentAt: new Date(Date.now() + 86400000).toISOString() });
+  const skippedMail = (await anon('GET', `/api/dev/emails?to=${encodeURIComponent(email)}`)).body.emails.find((m) => /Interview/.test(m.subject));
+  const interviewNote = (await adopter('GET', '/api/notifications')).body.notifications.find((n) => /Interview/.test(n.title));
+  check('Opted-out adopter: email skipped with a reason, staff told, in-app notification kept',
+    r.status === 200 && r.body.emailStatus === 'skipped' && /turned off application emails/.test(r.body.message)
+    && skippedMail?.status === 'skipped' && /turned off/.test(skippedMail.error) && Boolean(interviewNote));
+  r = await adopter('PATCH', '/api/users/me', { emailPrefs: { applications: true } });
+  check('Adopter can turn application emails back on', r.body.user.emailPrefs.applications === true);
   r = await admin('PATCH', `/api/applications/${appId}/status`, { status: 'Info Requested' });
   check('Info request needs a message', r.status === 400);
   r = await admin('PATCH', `/api/applications/${appId}/status`, { status: 'Info Requested', message: 'Please send your landlord approval.' });
@@ -246,7 +271,143 @@ const mailFor = async (anon, email, type) => (await anon('GET', `/api/dev/emails
   check('Completed adoptions cannot be changed', r.status === 400);
   r = await adopter('GET', '/api/applications/mine');
   const mine = r.body.applications.find((a) => a.id === appId);
-  check('Adopter timeline shows full status history', mine?.status === 'Adopted' && mine.history.length === 8 && mine.messages.length >= 2);
+  check('Adopter timeline shows full status history', mine?.status === 'Adopted' && mine.history.length === 9 /* 8 journey steps + the Interview used by the email-settings test */ && mine.messages.length >= 2);
+  console.log('\nFirst 30 days care plan');
+  let planned = null;
+  for (let i = 0; i < 40 && !planned?.carePlan; i++) { planned = await db.findOne('applications', { id: appId }); if (!planned.carePlan) await new Promise((ok) => setTimeout(ok, 50)); }
+  const plan = planned.carePlan;
+  check('Approving an application creates a care plan stored on it', plan && plan.sections.length === 9 && plan.generatedAt && plan.source === 'rules'
+    && ['before', 'days1to3', 'week1', 'weeks2to4', 'feeding', 'exercise', 'vet', 'training', 'warning'].every((k, i) => plan.sections[i].key === k && plan.sections[i].items.length >= 2));
+  check('The plan says it is general guidance, not veterinary advice', plan.disclaimer === 'This is general guidance, not veterinary advice.');
+  check('The adopter sees that the care plan is ready', mine.carePlanReady === true);
+  r = await anon('GET', `/api/applications/${appId}/care-plan`);
+  check('Care plan needs a login', r.status === 401);
+  r = await adopter('GET', `/api/applications/${appId}/care-plan`);
+  check('Adopter can open their care plan', r.status === 200 && r.body.carePlan.sections.length === 9 && r.body.canRegenerate === false && r.body.pet.name === max.name);
+  const otherApp = (await db.find('applications')).find((x) => x.userId && x.userId !== planned.userId && x.carePlan);
+  r = await adopter('GET', `/api/applications/${otherApp.id}/care-plan`);
+  check('Adopters cannot open someone else\'s care plan', r.status === 404);
+  r = await adopter('GET', '/api/notifications');
+  check('In-app notification: your care plan is ready', r.body.notifications.some((n) => n.type === 'careplan' && n.link === `care-plan.html?id=${appId}`));
+  r = await anon('GET', `/api/dev/emails?to=${encodeURIComponent(email)}`);
+  check('…and an email', r.body.emails.some((m) => /care plan is ready/i.test(m.subject)));
+  r = await adopter('POST', `/api/applications/${appId}/care-plan`);
+  check('Only staff can regenerate a care plan', r.status === 403);
+  const earlyApp = (await db.find('applications')).find((x) => x.status === 'Submitted');
+  r = await admin('POST', `/api/applications/${earlyApp.id}/care-plan`);
+  check('Care plans are only for approved applications', r.status === 400);
+  r = await admin('GET', `/api/applications/${appId}/care-plan`);
+  check('Staff can view the care plan and regenerate it', r.status === 200 && r.body.canRegenerate === true);
+  r = await admin('POST', `/api/applications/${appId}/care-plan`);
+  check('Staff regenerate the care plan', r.status === 200 && r.body.carePlan.sections.length === 9 && /regenerated/.test(r.body.message));
+  {
+    const { rulesPlan, generateCarePlan } = require('../src/services/careplan');
+    const text = (type) => JSON.stringify(rulesPlan({ name: 'Test', type }, {}).sections).toLowerCase();
+    check('Rules templates are species-specific', /harness/.test(text('Dog')) && /litter/.test(text('Cat')) && /hay/.test(text('Rabbit')) && /uvb/.test(text('Reptile')) && /aquarium/.test(text('Fish')));
+    check('Lifestyle answers personalise the plan', /other pets slowly/.test(JSON.stringify(rulesPlan({ name: 'Rex', type: 'Dog' }, { hasOtherPets: true }))));
+    const llm = require('../src/services/llm');
+    const real = { llmEnabled: llm.llmEnabled, provider: llm.provider, complete: llm.complete };
+    let sent = '';
+    const keys = ['before', 'days1to3', 'week1', 'weeks2to4', 'feeding', 'exercise', 'vet', 'training', 'warning'];
+    const fullApp = await db.findOne('applications', { id: appId });
+    const petRow = await db.findOne('pets', { id: fullApp.petId });
+    const { toPublic } = require('../src/routes/pets');
+    try {
+      Object.assign(llm, { llmEnabled: true, provider: 'gemini', complete: async ({ messages }) => { sent = messages[0].content;
+        return { intro: 'Welcome home, a plan for the first month.', sections: Object.fromEntries(keys.map((k) => [k, [`AI ${k} step one here`, `AI ${k} step two here`]])) }; } });
+      let p2 = await generateCarePlan(toPublic(petRow), fullApp);
+      check('With AI, the plan is personalised and validated', p2.source === 'gemini' && p2.sections[0].items[0] === 'AI before step one here');
+      check('Only public pet fields and lifestyle answers are sent to the AI', !sent.includes(fullApp.email) && !sent.includes(fullApp.name)
+        && !(fullApp.phone && sent.includes(fullApp.phone)) && !(petRow.medicalHistory && sent.includes(petRow.medicalHistory.slice(0, 20))) && /livingType/.test(sent));
+      llm.complete = async () => ({ intro: 'x', sections: { before: ['only one section'] } });
+      p2 = await generateCarePlan(toPublic(petRow), fullApp);
+      check('Incomplete AI output falls back to the species template', p2.source === 'rules' && p2.sections.length === 9);
+    } finally { Object.assign(llm, real); }
+  }
+
+  console.log('\nAdoption fee (payment simulation)');
+  const logged = [];
+  const origLog = { log: console.log, warn: console.warn, error: console.error, info: console.info };
+  for (const k of Object.keys(origLog)) console[k] = (...a) => { logged.push(a.map((x) => (typeof x === 'string' ? x : require('util').inspect(x, { depth: 5 }))).join(' ')); origLog[k](...a); };
+  const card = (number, extra = {}) => ({ applicationId: appId, card: { name: 'Test Adopter', number, expiry: '12/39', cvc: '123', ...extra } });
+  try {
+    r = await anon('GET', `/api/payments/application/${appId}`);
+    check('Checkout needs a login', r.status === 401);
+    r = await adopter('GET', `/api/payments/application/${appId}`);
+    check('Adopted application shows the adoption fee due', r.status === 200 && r.body.amount === max.adoptionFee && r.body.paymentStatus === 'due' && r.body.simulation === true && r.body.testCards.length === 3);
+    r = await adopter('GET', '/api/applications/mine');
+    check('My Applications shows "Adoption fee due"', r.body.applications.find((a) => a.id === appId).payment?.status === 'due');
+    r = await anon('POST', '/api/payments/checkout', card('4242424242424242'));
+    check('Paying needs a login', r.status === 401);
+    r = await admin('POST', '/api/payments/checkout', card('4242424242424242'));
+    check('Only adopters pay', r.status === 403);
+    for (const [label, body, field, re] of [
+      ['name', card('4242424242424242', { name: '' }), 'name', /name/],
+      ['Luhn check', card('4242424242424241'), 'number', /isn't valid/],
+      ['test cards only', card('4111111111111111'), 'number', /Use a test card/],
+      ['expiry in the future', card('4242424242424242', { expiry: '01/20' }), 'expiry', /expired/],
+      ['expiry format', card('4242424242424242', { expiry: '13/30' }), 'expiry', /month/],
+      ['3-digit CVC', card('4242424242424242', { cvc: '12' }), 'cvc', /CVC/],
+    ]) {
+      r = await adopter('POST', '/api/payments/checkout', body);
+      check(`Card validation: ${label}`, r.status === 400 && r.body.field === field && re.test(r.body.error), JSON.stringify(r.body));
+    }
+    r = await adopter('POST', '/api/payments/checkout', card('4000 0000 0000 0002'));
+    check('Test card 4000…0002 is declined', r.status === 402 && r.body.code === 'declined');
+    r = await adopter('POST', '/api/payments/checkout', card('4000000000009995'));
+    check('Test card 4000…9995 has insufficient funds', r.status === 402 && r.body.code === 'insufficient_funds');
+    r = await adopter('GET', `/api/payments/application/${appId}`);
+    check('A failed payment leaves the fee due', r.body.paymentStatus === 'due');
+    r = await adopter('POST', '/api/payments/pay-in-person', { applicationId: appId });
+    check('Adopter can choose to pay at the shelter', r.status === 200 && r.body.paymentStatus === 'pay_in_person');
+    r = await adopter('POST', '/api/payments/pay-in-person', { applicationId: appId });
+    check('Choosing it again is harmless', r.status === 200);
+    const [p1, p2] = await Promise.all([adopter('POST', '/api/payments/checkout', card('4242424242424242')), adopter('POST', '/api/payments/checkout', card('4242424242424242'))]);
+    const okPay = [p1, p2].find((x) => x.status === 201);
+    check('Two clicks at once charge only once', okPay && [p1, p2].filter((x) => x.status === 201).length === 1 && [p1, p2].some((x) => x.status === 409), JSON.stringify([p1.status, p2.status]));
+    const receipt = okPay.body.payment;
+    check('Test card 4242… succeeds with a receipt (brand + last 4 only)', /^PP-\d{8}-[0-9A-F]{6}$/.test(receipt.receiptNo) && receipt.brand === 'Visa' && receipt.last4 === '4242'
+      && Object.keys(receipt).sort().join() === 'amount,applicationId,brand,id,last4,paidAt,receiptNo,status,userId');
+    r = await adopter('POST', '/api/payments/checkout', card('4242424242424242'));
+    check('A paid adoption cannot be charged again', r.status === 409 && r.body.payment.id === receipt.id);
+    check('Exactly one successful payment is stored', (await db.find('payments', { applicationId: appId })).filter((x) => x.status === 'succeeded').length === 1);
+    r = await adopter('GET', `/api/payments/${receipt.id}`);
+    check('Adopter can open the receipt', r.status === 200 && r.body.payment.receiptNo === receipt.receiptNo && r.body.simulation === true);
+    r = await anon('GET', `/api/payments/${receipt.id}`);
+    check('Receipts need a login', r.status === 401);
+    r = await admin('GET', `/api/payments/${receipt.id}`);
+    check('Staff can open the receipt', r.status === 200);
+    r = await adopter('GET', '/api/notifications');
+    check('In-app notification for the payment', r.body.notifications.some((n) => n.type === 'payment' && n.link === `receipt.html?id=${receipt.id}`));
+    await new Promise((ok) => setTimeout(ok, 100));
+    r = await anon('GET', `/api/dev/emails?to=${encodeURIComponent(email)}`);
+    check('Receipt email sent', r.body.emails.some((m) => m.type === 'receipt' && m.subject.includes(receipt.receiptNo)));
+
+    // The demo adopter's seeded adoption: staff record a payment taken at the shelter
+    const demoUser = client();
+    await demoUser('POST', '/api/auth/login', { email: 'user@pawpal.com', password: 'User@123' });
+    const demoApp = (await db.find('applications')).find((x) => x.email === 'user@pawpal.com' && x.status === 'Adopted');
+    r = await demoUser('GET', `/api/payments/application/${appId}`);
+    check('Adopters cannot see someone else\'s checkout', r.status === 404);
+    r = await demoUser('GET', `/api/payments/${receipt.id}`);
+    check('…or receipt', r.status === 404);
+    r = await demoUser('GET', `/api/payments/application/${demoApp.id}`);
+    check('Seeded demo adoption has a fee due', r.status === 200 && r.body.paymentStatus === 'due' && r.body.amount > 0);
+    r = await demoUser('POST', `/api/payments/application/${demoApp.id}/record`);
+    check('Only staff record in-person payments', r.status === 403);
+    r = await admin('POST', `/api/payments/application/${demoApp.id}/record`);
+    check('Staff record a payment taken at the shelter', r.status === 201 && r.body.payment.brand === 'Paid at the shelter' && r.body.payment.last4 === null);
+    r = await demoUser('POST', '/api/payments/checkout', { applicationId: demoApp.id, card: { name: 'Jordan', number: '4242424242424242', expiry: '12/39', cvc: '123' } });
+    check('…after which it cannot be paid again', r.status === 409);
+    r = await admin('GET', '/api/analytics');
+    check('Analytics shows adoption fees collected', r.status === 200 && r.body.fees.collected >= receipt.amount + demoApp.feeDue && r.body.fees.collectedAllTime >= r.body.fees.collected);
+    r = await admin('GET', `/api/applications/${appId}`);
+    check('Staff see the payment status on the application', r.body.application.paymentStatus === 'paid' && r.body.application.paymentId === receipt.id);
+  } finally { Object.assign(console, origLog); }
+  const everything = JSON.stringify(await Promise.all(['payments', 'applications', 'events', 'notifications', 'emails'].map((c) => db.find(c))));
+  check('Full card numbers and CVCs are never stored', !/4242424242424242|4000000000000002|4000000000009995|4242 4242 4242 4242/.test(everything) && !/"cvc"/.test(everything));
+  check('…or logged', !logged.some((l) => /4242424242424242|4000000000000002|4000000000009995|4242424242424241|4111111111111111|"cvc"/.test(l)));
+
   r = await anon('GET', `/api/dev/emails?to=${encodeURIComponent(email)}`);
   check('Adopter received emails for each step', r.body.emails.filter((m) => ['status-update', 'closure', 'application', 'message'].includes(m.type)).length >= 7);
   r = await adopter('GET', '/api/notifications');
@@ -302,6 +463,15 @@ const mailFor = async (anon, email, type) => (await anon('GET', `/api/dev/emails
   console.log('\nAdministration');
   r = await staff('GET', '/api/admin/users');
   check('Staff cannot reach admin API', r.status === 403);
+  r = await anon('GET', '/api/system/mail-health');
+  check('Email health needs a login', r.status === 401);
+  r = await staff('GET', '/api/system/mail-health');
+  check('Email health is for administrators only', r.status === 403);
+  r = await admin('GET', '/api/system/mail-health');
+  check('Email health shows provider and today\'s count against the daily limit', r.status === 200 && r.body.provider === 'dev'
+    && Number.isInteger(r.body.sentToday) && r.body.dailyLimit === 300 && Array.isArray(r.body.problems));
+  r = await admin('GET', '/api/system/status');
+  check('System status includes email health and the last 20 emails', r.status === 200 && r.body.mail?.dailyLimit === 300 && r.body.recentEmails.length <= 20);
   r = await admin('GET', '/api/admin/users');
   check('Admin can list users', r.status === 200 && r.body.users.length >= 4);
   r = await admin('GET', '/api/admin/shelters');
@@ -368,6 +538,280 @@ const mailFor = async (anon, email, type) => (await anon('GET', `/api/dev/emails
   await migrate();
   check('Upgrade adds missing species without duplicating any', (await db.count('pets')) === petsBefore && (await db.find('pets')).filter((p) => p.breed === 'Pygmy Goat').length === 1);
   check('Upgrade replaces placeholder shelter emails', !/@pawpal\.app$/.test((await db.findOne('shelters', { id: shelter.id })).email));
+
+  console.log('\nMeet & greet booking');
+  await adopter('POST', '/api/auth/login', { email, password: 'NewPaws567', role: 'user' }); // password changed by the account-security checks
+  const melbourneId = (await db.findOne('users', { email: 'staff@pawpal.com' })).shelterId;
+  const openAppPets = new Set((await db.find('applications')).filter((x) => !['Declined', 'Withdrawn', 'Adopted'].includes(x.status)).map((x) => x.petId));
+  const bookPets = (await db.find('pets')).filter((x) => x.status === 'Available' && x.shelterId !== melbourneId && !openAppPets.has(x.id));
+  const bShelter = bookPets[0].shelterId;
+  const [bPet1, bPet2] = bookPets.filter((x) => x.shelterId === bShelter);
+  r = await adopter('POST', '/api/applications', { ...form, petId: bPet1.id, declaration: true });
+  const bApp = r.body.application.id;
+  r = await adopter('POST', '/api/applications', { ...form, petId: bPet2.id, declaration: true });
+  const cApp = r.body.application.id;
+  const at = (days, hours = 10, mins = 0) => { const d = new Date(Date.now() + days * 86400000); d.setHours(hours, mins, 0, 0); return d.toISOString(); };
+  r = await anon('POST', '/api/slots', { windows: [{ start: at(3), end: at(3, 12) }], durationMins: 30 });
+  check('Creating times needs a login', r.status === 401);
+  r = await adopter('POST', '/api/slots', { windows: [{ start: at(3), end: at(3, 12) }], durationMins: 30 });
+  check('Adopters cannot create times', r.status === 403);
+  r = await admin('POST', '/api/slots', { shelterId: bShelter, windows: [{ start: at(3), end: at(3, 12) }], durationMins: 25 });
+  check('Slot length is validated', r.status === 400);
+  r = await admin('POST', '/api/slots', { shelterId: bShelter, windows: [{ start: at(3, 12), end: at(3, 10) }], durationMins: 30 });
+  check('End must be after start', r.status === 400);
+  r = await admin('POST', '/api/slots', { shelterId: bShelter, windows: [{ start: at(-1), end: at(-1, 12) }], durationMins: 30 });
+  check('Times must be in the future', r.status === 400);
+  r = await admin('POST', '/api/slots', { windows: [{ start: at(3), end: at(3, 12) }], durationMins: 30 });
+  check('Admins must choose a shelter', r.status === 400);
+  r = await admin('POST', '/api/slots', { shelterId: bShelter, windows: [{ start: at(3), end: at(3, 12) }, { start: at(10), end: at(10, 11) }], durationMins: 30 });
+  check('Repeating times are generated back to back (4 + 2 slots)', r.status === 201 && r.body.created === 6);
+  r = await admin('POST', '/api/slots', { shelterId: bShelter, windows: [{ start: at(3), end: at(3, 12) }], durationMins: 30 });
+  check('Existing times are not duplicated', r.status === 201 && r.body.created === 0 && r.body.skipped === 4);
+  r = await admin('GET', `/api/slots?shelterId=${bShelter}`);
+  const bSlots = r.body.slots.filter((x) => !x.bookedBy).sort((x, y) => new Date(x.start) - new Date(y.start));
+  check('Staff see the free times', r.status === 200 && bSlots.length >= 6);
+  r = await staff('GET', '/api/slots');
+  check('Staff only see their own shelter\'s times', r.status === 200 && r.body.slots.every((x) => x.shelterId === melbourneId));
+  r = await adopter('GET', `/api/applications/${bApp}/slots`);
+  check('Adopters can\'t book before being invited', r.status === 400);
+  r = await staff('POST', `/api/applications/${bApp}/invite-booking`, {});
+  check('Staff from another shelter can\'t invite', r.status === 404);
+  r = await admin('POST', `/api/applications/${bApp}/invite-booking`, { message: 'Bring your other dog if you can!' });
+  check('Staff can invite an applicant to book (in-app + email)', r.status === 200 && r.body.freeSlots >= 6 && /invited/.test(r.body.message)
+    && Boolean(await mailFor(anon, email, 'booking')) && (await adopter('GET', '/api/notifications')).body.notifications.some((n) => n.type === 'booking'));
+  await admin('POST', `/api/applications/${cApp}/invite-booking`, {});
+  r = await adopter('GET', `/api/applications/${bApp}/slots`);
+  check('Invited adopters see the free times for that shelter', r.status === 200 && r.body.slots.length >= 6);
+  const [race1, race2] = await Promise.all([adopter('POST', `/api/applications/${bApp}/book`, { slotId: bSlots[0].id }),
+    adopter('POST', `/api/applications/${cApp}/book`, { slotId: bSlots[0].id })]);
+  check('Two bookings for the same time at once: exactly one wins', [race1.status, race2.status].sort().join() === '200,409');
+  const winner = race1.status === 200 ? bApp : cApp; const loser = winner === bApp ? cApp : bApp;
+  r = await adopter('GET', `/api/applications/${winner}`);
+  check('Booking moves the application to Meet & Greet at the slot time', r.body.application.status === 'Meet & Greet'
+    && r.body.application.appointmentAt === bSlots[0].start && /Booked by applicant/.test(r.body.application.history.at(-1).note) && r.body.application.booking.canChange);
+  check('…and puts the pet on hold', (await db.findOne('pets', { id: winner === bApp ? bPet1.id : bPet2.id })).status === 'On Hold');
+  r = await adopter('POST', `/api/applications/${loser}/book`, { slotId: bSlots[0].id });
+  check('A booked time can\'t be taken again', r.status === 409);
+  r = await adopter('POST', `/api/applications/${winner}/book`, { slotId: bSlots[1].id });
+  check('Adopters can reschedule more than 24 hours ahead', r.status === 200 && /Rescheduled by applicant/.test(r.body.application.history.at(-1).note));
+  r = await admin('GET', `/api/slots?shelterId=${bShelter}`);
+  check('Rescheduling frees the old time', !r.body.slots.find((x) => x.id === bSlots[0].id).bookedBy && r.body.slots.find((x) => x.id === bSlots[1].id).bookedBy === winner);
+  r = await admin('DELETE', `/api/slots/${bSlots[1].id}`);
+  check('Booked times can\'t be deleted', r.status === 409);
+  r = await admin('DELETE', `/api/slots/${bSlots[5].id}`);
+  check('Free times can be deleted', r.status === 200);
+  r = await adopter('POST', `/api/applications/${winner}/cancel-booking`);
+  check('Adopters can cancel more than 24 hours ahead (application stays open)', r.status === 200 && r.body.application.status === 'Submitted' && !r.body.application.appointmentAt);
+  r = await admin('GET', `/api/slots?shelterId=${bShelter}`);
+  check('Cancelling frees the time', !r.body.slots.find((x) => x.id === bSlots[1].id).bookedBy);
+  const soon = new Date(Date.now() + 3 * 3600000); soon.setMinutes(0, 0, 0);
+  await admin('POST', '/api/slots', { shelterId: bShelter, windows: [{ start: soon.toISOString(), end: new Date(soon.getTime() + 30 * 60000).toISOString() }], durationMins: 30 });
+  const soonSlot = (await admin('GET', `/api/slots?shelterId=${bShelter}`)).body.slots.find((x) => x.start === soon.toISOString());
+  r = await adopter('POST', `/api/applications/${winner}/book`, { slotId: soonSlot.id });
+  check('A time a few hours away can be booked', r.status === 200);
+  r = await adopter('POST', `/api/applications/${winner}/cancel-booking`);
+  check('…but not cancelled online within 24 hours', r.status === 400 && /24 hours/.test(r.body.error));
+  r = await adopter('POST', `/api/applications/${winner}/book`, { slotId: bSlots[2].id });
+  check('…or moved within 24 hours', r.status === 400);
+  await adopter('POST', `/api/applications/${winner}/withdraw`);
+  await adopter('POST', `/api/applications/${loser}/withdraw`);
+  r = await admin('GET', `/api/slots?shelterId=${bShelter}`);
+  check('Withdrawing frees the booked time', !r.body.slots.find((x) => x.id === soonSlot.id).bookedBy);
+  r = await anon('GET', '/availability.html');
+  check('Availability page is for staff only', r.status === 302);
+
+  console.log('\nPrintable flyers');
+  r = await anon('GET', '/flyer.html');
+  check('Flyer page is for staff only (visitors are sent to log in)', r.status === 302 && /login\.html\?role=staff/.test(r.headers.get('location')));
+  r = await adopter('GET', '/flyer.html');
+  check('Adopters cannot open the flyer page', r.status === 302);
+  const flyerPet = (await db.find('pets')).find((x) => x.medicalHistory && x.status === 'Available');
+  r = await admin('GET', `/api/pets/${flyerPet.id}?public=1`);
+  check('Flyers get only public pet fields, even for staff', r.status === 200 && r.body.pet.name === flyerPet.name
+    && !('medicalHistory' in r.body.pet) && !('rescueBackground' in r.body.pet) && !('internalNotes' in r.body.pet) && r.body.shelter?.name);
+  r = await admin('GET', `/api/pets/${flyerPet.id}`);
+  check('The normal staff view still includes internal fields', 'medicalHistory' in r.body.pet);
+
+  console.log('\nSocial post maker');
+  const promoPet = (await db.find('pets')).find((x) => x.status === 'Available' && x.shelterId === melbourneId && x.medicalHistory);
+  const otherShelterPet = (await db.find('pets')).find((x) => x.status === 'Available' && x.shelterId !== melbourneId);
+  r = await anon('POST', '/api/ai/promote', { petId: promoPet.id, platform: 'instagram', tone: 'friendly' });
+  check('Post maker needs a login', r.status === 401);
+  r = await adopter('POST', '/api/ai/promote', { petId: promoPet.id, platform: 'instagram', tone: 'friendly' });
+  check('Post maker is for staff only', r.status === 403);
+  r = await staff('POST', '/api/ai/promote', { petId: promoPet.id, platform: 'tiktok', tone: 'friendly' });
+  check('Platform is validated', r.status === 400);
+  r = await staff('POST', '/api/ai/promote', { petId: promoPet.id, platform: 'instagram', tone: 'angry' });
+  check('Tone is validated', r.status === 400);
+  r = await staff('POST', '/api/ai/promote', { petId: otherShelterPet.id, platform: 'instagram', tone: 'friendly' });
+  check('Staff can only promote their own shelter\'s pets', r.status === 404);
+  const adoptedPet = (await db.find('pets')).find((x) => x.status === 'Adopted');
+  r = await admin('POST', '/api/ai/promote', { petId: adoptedPet.id, platform: 'facebook', tone: 'friendly' });
+  check('Adopted pets can\'t be promoted', r.status === 400);
+  for (const [platform, tone] of [['instagram', 'playful'], ['facebook', 'heartfelt']]) {
+    r = await staff('POST', '/api/ai/promote', { petId: promoPet.id, platform, tone });
+    check(`Caption + hashtags for ${platform} (${tone}) from public facts only`, r.status === 200 && r.body.caption.includes(promoPet.name)
+      && r.body.hashtags.length >= 3 && r.body.hashtags.every((h) => /^[A-Za-z0-9_]+$/.test(h)) && /\/p\/pet_/.test(r.body.link)
+      && !r.body.caption.includes(promoPet.medicalHistory.slice(0, 20)) && (platform === 'facebook' ? r.body.caption.includes(r.body.link) : /link in our bio/i.test(r.body.caption)));
+  }
+  r = await anon('GET', `/p/${promoPet.id}`);
+  check('Short profile links redirect to the pet profile', r.status === 302 && r.headers.get('location') === `/pet-profile.html?id=${promoPet.id}`);
+
+  console.log('\nCompare pets');
+  const listed = (await db.find('pets')).filter((x) => ['Available', 'On Hold'].includes(x.status));
+  const [c1, c2, c3, c4] = listed;
+  r = await anon('POST', '/api/ai/compare', { ids: [c1.id] });
+  check('Compare needs at least 2 pets', r.status === 400);
+  r = await anon('POST', '/api/ai/compare', { ids: [c1.id, c2.id, c3.id, c4.id] });
+  check('Compare rejects more than 3 pets', r.status === 400 && /up to 3/.test(r.body.error));
+  r = await anon('POST', '/api/ai/compare', { ids: 'abc' });
+  check('Compare validates the ids', r.status === 400);
+  r = await anon('POST', '/api/ai/compare', { ids: [c1.id, 'pet_doesnotexist'] });
+  check('Compare rejects unknown pets', r.status === 404);
+  r = await anon('POST', '/api/ai/compare', { ids: [c1.id, adoptedPet.id] });
+  check('Compare rejects pets that are not public', r.status === 404);
+  r = await anon('POST', '/api/ai/compare', { ids: [c1.id, c2.id, c3.id] });
+  const leaks = ['medicalHistory', 'rescueBackground', 'internalNotes', 'createdBy'];
+  check('Visitors can compare 3 pets (public fields only, rules explanation, no scores)', r.status === 200 && r.body.pets.length === 3
+    && r.body.pets.every((x) => leaks.every((k) => !(k in x))) && r.body.scores === null && r.body.summary.length > 20
+    && r.body.highlights.length === 3 && r.body.source === 'rules', JSON.stringify(r.body).slice(0, 300));
+  r = await adopter('POST', '/api/ai/compare', { ids: [c1.id, c2.id] });
+  check('Adopters with a saved lifestyle get a match score per pet', r.status === 200 && r.body.hasProfile
+    && [c1.id, c2.id].every((id) => Number.isInteger(r.body.scores[id].score)) && /\d+%/.test(r.body.summary), JSON.stringify(r.body).slice(0, 300));
+
+  console.log('\nTranslation');
+  const trPet = (await db.find('pets')).find((x) => x.status === 'Available' && x.medicalHistory && x.traits?.length && x.description);
+  r = await anon('POST', '/api/ai/translate', { petId: trPet.id, lang: 'fr' });
+  check('Translate validates the language', r.status === 400);
+  r = await anon('POST', '/api/ai/translate', { lang: 'es' });
+  check('Translate needs a pet or text', r.status === 400);
+  r = await anon('POST', '/api/ai/translate', { petId: 'pet_nope', lang: 'es' });
+  check('Translate rejects unknown pets', r.status === 404);
+  r = await anon('POST', '/api/ai/translate', { texts: Array(11).fill('hello'), lang: 'es' });
+  check('Translate limits how much text is sent', r.status === 400);
+  r = await anon('POST', '/api/ai/translate', { petId: trPet.id, lang: 'es' });
+  check('Without an AI key the profile stays in English with a notice', r.status === 200 && r.body.translated === false && /English/.test(r.body.notice)
+    && r.body.fields.description === trPet.description);
+  // Simulate a language model to check caching and validation
+  const llm = require('../src/services/llm');
+  const realLlm = { llmEnabled: llm.llmEnabled, provider: llm.provider, complete: llm.complete };
+  const prompts = [];
+  let reply = null;
+  Object.assign(llm, { llmEnabled: true, provider: 'gemini', complete: async ({ messages }) => { prompts.push(messages[0].content); return typeof reply === 'function' ? reply(JSON.parse(messages[0].content)) : reply; } });
+  try {
+    reply = (f) => ({ description: `ES: ${f.description}`, idealHome: f.idealHome ? `ES: ${f.idealHome}` : '', traits: f.traits.map((t) => `es-${t}`) });
+    r = await anon('POST', '/api/ai/translate', { petId: trPet.id, lang: 'es' });
+    check('Pet profile is machine translated and labelled', r.status === 200 && r.body.translated && r.body.label === 'Machine translated'
+      && r.body.fields.description.startsWith('ES: ') && r.body.fields.traits.length === trPet.traits.length && r.body.cached === false, JSON.stringify([r.status, r.body]).slice(0, 300));
+    check('Only public fields are sent for translation', prompts.length === 1 && !prompts[0].includes(trPet.medicalHistory.slice(0, 20))
+      && Object.keys(JSON.parse(prompts[0])).sort().join() === 'description,idealHome,traits');
+    r = await anon('POST', '/api/ai/translate', { petId: trPet.id, lang: 'es' });
+    check('Each text is translated once (served from the cache)', r.body.translated && r.body.cached === true && prompts.length === 1);
+    check('Translations are stored by pet, language and content hash', (await db.find('translations', { petId: trPet.id })).some((t) => t.lang === 'es' && /^[0-9a-f]{64}$/.test(t.hash)));
+    reply = (f) => ({ description: 'x', idealHome: '', traits: ['only one'] });
+    r = await anon('POST', '/api/ai/translate', { petId: trPet.id, lang: 'hi' });
+    check('Invalid AI output is rejected and the page stays in English', r.status === 200 && r.body.translated === false && r.body.fields.description === trPet.description);
+    reply = () => { throw new Error('model down'); };
+    r = await anon('POST', '/api/ai/translate', { petId: trPet.id, lang: 'ne' });
+    check('AI errors fall back to English instead of failing', r.status === 200 && r.body.translated === false && r.body.notice);
+    reply = (b) => ({ translations: b.texts.map((t) => `中文 ${t}`) });
+    r = await anon('POST', '/api/ai/translate', { texts: ['Hello there', 'What happens after I apply?'], lang: 'zh' });
+    check('Chat replies are translated in one batch', r.status === 200 && r.body.translated && r.body.texts[1] === '中文 What happens after I apply?');
+    const before = prompts.length;
+    r = await anon('POST', '/api/ai/translate', { texts: ['Hello there', 'A new reply'], lang: 'zh' });
+    check('…and only uncached replies are sent again', r.body.translated && prompts.length === before + 1 && JSON.parse(prompts.at(-1)).texts.length === 1
+      && r.body.texts[0] === '中文 Hello there');
+  } finally { Object.assign(llm, realLlm); }
+  let limited = null;
+  for (let i = 0; i < 70 && !limited; i++) {
+    const t = await anon('POST', '/api/ai/translate', { texts: ['hi'], lang: 'en' });
+    if (t.status === 429) limited = t;
+  }
+  check('Translation is rate limited', limited && /translations/.test(limited.body.error));
+
+  console.log('\nTwo-factor authentication (staff)');
+  const totp = require('../src/services/totp');
+  r = await anon('GET', '/api/auth/2fa/status');
+  check('2FA status needs a login', r.status === 401);
+  r = await adopter('POST', '/api/auth/2fa/setup');
+  check('Adopters cannot turn on 2FA', r.status === 403, JSON.stringify([r.status, r.body]));
+  r = await staff('POST', '/api/auth/login', { email: 'staff@pawpal.com', password: 'Staff@123', role: 'staff' });
+  r = await staff('POST', '/api/auth/2fa/setup');
+  check('Staff can start 2FA setup (secret + otpauth link for the QR code)', r.status === 200 && /^[A-Z2-7]{32}$/.test(r.body.secret) && /^otpauth:\/\/totp\/PawPal%3Astaff%40pawpal\.com\?secret=/.test(r.body.otpauthUrl));
+  const tfSecret = r.body.secret;
+  r = await staff('POST', '/api/auth/2fa/enable', { code: '000000' });
+  check('A wrong code does not turn 2FA on', r.status === 400);
+  r = await staff('POST', '/api/auth/2fa/enable', { code: totp.totp(tfSecret) });
+  const backupCodes = r.body.backupCodes || [];
+  check('Confirming with a code turns 2FA on and shows 8 backup codes once', r.status === 200 && backupCodes.length === 8 && backupCodes.every((c) => /^[0-9a-f]{5}-[0-9a-f]{5}$/.test(c)));
+  const storedUser = await db.findOne('users', { email: 'staff@pawpal.com' });
+  check('The secret is stored encrypted and backup codes only as hashes', /^v1:/.test(storedUser.twoFactor.secret) && !JSON.stringify(storedUser).includes(tfSecret)
+    && storedUser.twoFactor.backupCodes.every((h) => /^\$2[aby]\$/.test(h)));
+  r = await staff('GET', '/api/auth/2fa/status');
+  check('2FA status never returns the secret', r.status === 200 && r.body.enabled === true && r.body.backupCodesLeft === 8 && !JSON.stringify(r.body).includes(tfSecret));
+  const tfLogin = client();
+  r = await tfLogin('POST', '/api/auth/login', { email: 'staff@pawpal.com', password: 'Staff@123', role: 'staff' });
+  check('Password alone only asks for the code (no login cookie)', r.status === 200 && r.body.twoFactorRequired === true && !r.body.user
+    && /pawpal_2fa=/.test(r.headers.get('set-cookie') || '') && !/pawpal_token=[^;]/.test(r.headers.get('set-cookie') || ''));
+  r = await tfLogin('GET', '/api/auth/me');
+  check('Not logged in until the code is entered', r.body.user === null);
+  r = await tfLogin('POST', '/api/auth/2fa/verify', { code: '123456' });
+  check('A wrong code is rejected', r.status === 400);
+  r = await client()('POST', '/api/auth/2fa/verify', { code: totp.totp(tfSecret) });
+  check('A code without the pending sign-in is rejected', r.status === 401);
+  r = await tfLogin('POST', '/api/auth/2fa/verify', { code: totp.totp(tfSecret, Date.now() + 30000) });
+  check('The right code finishes the login', r.status === 200 && r.body.user?.email === 'staff@pawpal.com' && r.body.redirect === 'index.html');
+  r = await tfLogin('GET', '/api/applications');
+  check('…and the staff portal works', r.status === 200, JSON.stringify([r.status, r.body]).slice(0, 200));
+  const tfBackup = client();
+  await tfBackup('POST', '/api/auth/login', { email: 'staff@pawpal.com', password: 'Staff@123', role: 'staff' });
+  r = await tfBackup('POST', '/api/auth/2fa/verify', { code: backupCodes[0].toUpperCase() });
+  check('A backup code works instead of the app code', r.status === 200 && r.body.user?.email === 'staff@pawpal.com');
+  const tfReuse = client();
+  await tfReuse('POST', '/api/auth/login', { email: 'staff@pawpal.com', password: 'Staff@123', role: 'staff' });
+  r = await tfReuse('POST', '/api/auth/2fa/verify', { code: backupCodes[0] });
+  check('Each backup code works only once', r.status === 400);
+  r = await staff('GET', '/api/auth/2fa/status');
+  check('Used backup codes are counted', r.body.backupCodesLeft === 7);
+
+  r = await staff('PUT', '/api/admin/settings', { requireStaff2fa: true });
+  check('Only administrators can require 2FA', r.status === 403);
+  r = await admin('PUT', '/api/admin/settings', { requireStaff2fa: 'yes' });
+  check('Require-2FA setting is validated', r.status === 400);
+  r = await admin('PUT', '/api/admin/settings', { requireStaff2fa: true });
+  check('An admin without 2FA cannot require it (would lock themselves out)', r.status === 400);
+  r = await admin('POST', '/api/auth/2fa/setup');
+  const adminSecret = r.body.secret;
+  await admin('POST', '/api/auth/2fa/enable', { code: totp.totp(adminSecret) });
+  r = await admin('PUT', '/api/admin/settings', { requireStaff2fa: true });
+  check('Admin can require 2FA for staff', r.status === 200 && r.body.settings.requireStaff2fa === true);
+  const noTf = client();
+  r = await noTf('POST', '/api/auth/login', { email: staffEmail, password: 'StaffPaws88', role: 'staff' });
+  check('Staff without 2FA are sent to set it up', r.status === 200 && r.body.twoFactorSetupRequired === true && r.body.redirect === 'settings.html#twofactor');
+  r = await noTf('GET', '/api/applications');
+  check('…and can\'t use the portal until they do', r.status === 403 && r.body.code === 'TWO_FACTOR_SETUP_REQUIRED');
+  r = await noTf('GET', '/api/auth/2fa/status');
+  check('…but can still reach the 2FA setup', r.status === 200 && r.body.required === true && r.body.enabled === false);
+  r = await staff('POST', '/api/auth/2fa/disable', { password: 'Staff@123', code: totp.totp(tfSecret, Date.now() + 30000) });
+  check('2FA cannot be turned off while it is required', r.status === 403);
+  r = await adopter('GET', '/api/applications/mine');
+  check('Adopters are not affected by the staff requirement', r.status === 200, JSON.stringify([r.status, r.body]).slice(0, 200));
+  r = await admin('PUT', '/api/admin/settings', { requireStaff2fa: false });
+  check('Admin can make 2FA optional again', r.status === 200 && r.body.settings.requireStaff2fa === false);
+
+  const staffId = (await db.findOne('users', { email: 'staff@pawpal.com' })).id;
+  r = await staff('POST', '/api/auth/2fa/disable', { password: 'wrong-password1', code: totp.totp(tfSecret, Date.now() + 30000) });
+  check('Turning 2FA off needs the password', r.status === 400);
+  r = await staff('POST', `/api/admin/users/${staffId}/2fa/reset`);
+  check('Only administrators can reset someone\'s 2FA', r.status === 403);
+  r = await admin('POST', `/api/admin/users/${staffId}/2fa/reset`);
+  check('Admin can reset a staff member\'s 2FA (lost phone)', r.status === 200);
+  r = await staff('GET', '/api/auth/me');
+  check('Reset signs them out everywhere', r.body.user === null);
+  r = await staff('POST', '/api/auth/login', { email: 'staff@pawpal.com', password: 'Staff@123', role: 'staff' });
+  check('After a reset they sign in with just their password', r.status === 200 && !r.body.twoFactorRequired && r.body.user.twoFactorEnabled === false);
+  r = await admin('POST', '/api/auth/2fa/disable', { password: 'Admin@123', code: totp.totp(adminSecret, Date.now() + 30000) });
+  check('Password + current code turns 2FA off', r.status === 200 && r.body.enabled === false);
 
   console.log('\nOwner administrator & production safeguards');
   const config = require('../src/config');

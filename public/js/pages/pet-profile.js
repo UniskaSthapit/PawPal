@@ -27,6 +27,8 @@
   }
   const staff = PawPal.isStaffUser(u);
   const photos = pet.photos?.length ? pet.photos : [photo(pet)];
+  const paragraphs = (text) => String(text || `${pet.name} is waiting to meet you. Contact the shelter to learn more.`).split(/\n+/).map((p) => `<p>${esc(p)}</p>`).join('');
+  const traitTags = (traits) => traits.map((t) => `<span class="tag">${esc(t)}</span>`).join('');
   const pronoun = pet.gender === 'Female' ? 'her' : pet.gender === 'Male' ? 'him' : 'them';
   const energy = Number(pet.energyLevel) || 2;
 
@@ -85,16 +87,20 @@
     <div class="profile-body">
       <div class="stack" style="--stack:32px">
         <div class="profile-section" data-reveal>
-          <span class="src-label src-shelter">${icons.building}From the shelter</span>
-          <h2 class="h3" style="margin-top:8px">About ${esc(pet.name)}</h2>
-          <div class="prose" style="margin-top:12px">${String(pet.description || `${pet.name} is waiting to meet you. Contact the shelter to learn more.`).split(/\n+/).map((p) => `<p>${esc(p)}</p>`).join('')}</div>
-          ${pet.traits?.length ? `<div class="row" style="margin-top:16px;gap:6px">${pet.traits.map((t) => `<span class="tag">${esc(t)}</span>`).join('')}</div>` : ''}
+          <div class="row-between" style="align-items:flex-end;gap:12px">
+            <div><span class="src-label src-shelter">${icons.building}From the shelter</span>
+              <h2 class="h3" style="margin-top:8px">About ${esc(pet.name)}</h2></div>
+            <label class="lang-pick">${icons.globe || ''}<span class="sr-only">Read this profile in</span>${PawPal.langSelectHTML('langSelect')}</label>
+          </div>
+          <div class="mt-note" id="mtNote" aria-live="polite" hidden></div>
+          <div class="prose" id="petAbout" style="margin-top:12px">${paragraphs(pet.description)}</div>
+          ${pet.traits?.length ? `<div class="row" id="petTraits" style="margin-top:16px;gap:6px">${traitTags(pet.traits)}</div>` : ''}
         </div>
         <div data-reveal>
           <h2 class="h3">Good with</h2>
           <div class="good-with" style="margin-top:14px">${goodWith.map(([yes, ic, label, sub]) => `<div class="gw-item ${yes ? 'gw-yes' : 'gw-no'}"><span class="gw-ic">${icons[ic]}</span><div>${esc(label)}<small>${esc(sub)}</small></div></div>`).join('')}</div>
         </div>
-        ${pet.idealHome ? `<div class="fact-panel" data-reveal><span class="src-label src-shelter">${icons.home}The shelter's ideal home for ${esc(pet.name)}</span><p style="margin-top:8px;font-size:17px">${esc(pet.idealHome)}</p></div>` : ''}
+        ${pet.idealHome ? `<div class="fact-panel" data-reveal><span class="src-label src-shelter">${icons.home}The shelter's ideal home for ${esc(pet.name)}</span><p id="petIdeal" style="margin-top:8px;font-size:17px">${esc(pet.idealHome)}</p></div>` : ''}
         <div class="profile-section" data-reveal>
           <h2 class="h3">Health &amp; care</h2>
           <ul class="plain reason-list pos" style="margin-top:12px">
@@ -199,6 +205,43 @@
       catch (err) { setBusy(btn, false); $('#enqErr', m).innerHTML = errorHTML(err.message); return false; }
     } }] });
   });
+
+  // ---------- machine translation of the shelter's text (public fields only, cached on the server) ----------
+  const original = { description: pet.description || '', idealHome: pet.idealHome || '', traits: pet.traits || [] };
+  function showText(fields, code) {
+    const htmlLang = PawPal.lang.html(code);
+    $('#petAbout').innerHTML = paragraphs(fields.description);
+    $('#petAbout').lang = htmlLang;
+    if ($('#petTraits')) { $('#petTraits').innerHTML = traitTags(fields.traits); $('#petTraits').lang = htmlLang; }
+    if ($('#petIdeal') && fields.idealHome) { $('#petIdeal').textContent = fields.idealHome; $('#petIdeal').lang = htmlLang; }
+  }
+  async function translateTo(code) {
+    const note = $('#mtNote');
+    const select = $('#langSelect');
+    if (code === 'en') { showText(original, 'en'); note.hidden = true; return; }
+    note.hidden = false; note.className = 'mt-note'; note.innerHTML = `<span class="spinner" aria-hidden="true"></span>Translating…`;
+    select.disabled = true;
+    try {
+      const r = await PawPalAPI.post('/ai/translate', { petId: pet.id, lang: code });
+      if (select.value !== code) return; // changed again while waiting
+      if (r.translated) {
+        showText(r.fields, code);
+        note.innerHTML = `${icons.sparkle}<span>${esc(r.label)} from English — some details may not be exact.</span> <button type="button" class="link-btn small" id="showOriginal">Show original</button>`;
+      } else {
+        showText(original, 'en');
+        note.className = 'mt-note mt-warn'; note.innerHTML = `${icons.info}<span>${esc(r.notice || 'Translation isn\'t available right now.')}</span>`;
+      }
+    } catch (err) {
+      showText(original, 'en');
+      note.className = 'mt-note mt-warn'; note.innerHTML = `${icons.info}<span>${esc(err.status === 429 ? err.message : 'Translation isn\'t available right now, so this is shown in English.')}</span>`;
+    } finally { select.disabled = false; }
+  }
+  $('#langSelect').addEventListener('change', (e) => { PawPal.lang.set(e.target.value); translateTo(e.target.value); });
+  root.addEventListener('click', (e) => {
+    if (!e.target.closest('#showOriginal')) return;
+    $('#langSelect').value = 'en'; PawPal.lang.set('en'); translateTo('en');
+  });
+  if (PawPal.lang.get() !== 'en') translateTo(PawPal.lang.get());
 
   // ---------- similar pets ----------
   try {

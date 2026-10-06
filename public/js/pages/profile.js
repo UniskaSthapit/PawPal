@@ -30,6 +30,18 @@
   });
 
   // Details
+  // Email settings (in-app notifications are always kept)
+  const appEmails = $('#prefAppEmails');
+  appEmails.checked = me.user.emailPrefs?.applications !== false;
+  appEmails.addEventListener('change', async () => {
+    appEmails.disabled = true;
+    try {
+      await PawPalAPI.patch('/users/me', { emailPrefs: { applications: appEmails.checked } });
+      toast(appEmails.checked ? 'You\'ll get emails about your applications' : 'Application emails turned off — you\'ll still see updates in PawPal', appEmails.checked ? 'success' : 'info');
+    } catch (err) { appEmails.checked = !appEmails.checked; toast(err.message, 'error'); }
+    appEmails.disabled = false;
+  });
+
   $('#detailsForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = $('#detailsBtn'); setBusy(btn, true, 'Saving…');
