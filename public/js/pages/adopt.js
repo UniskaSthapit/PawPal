@@ -58,7 +58,7 @@
       $('#loadMore').hidden = true;
       return;
     }
-    grid.innerHTML = pets.slice(0, shown).map((p, i) => (p.pet ? petCardHTML(p.pet, { match: p.score, reason: p.summary, index: i }) : petCardHTML(p, { index: i }))).join('');
+    grid.innerHTML = pets.slice(0, shown).map((p, i) => (p.pet ? petCardHTML(p.pet, { match: p.score, reason: p.summary, index: i, compare: true }) : petCardHTML(p, { index: i, compare: true }))).join('');
     $('#loadMore').hidden = shown >= pets.length;
   }
 
@@ -145,7 +145,7 @@
   // "Show more" appends the next page; only the new cards animate in
   $('#loadMore').addEventListener('click', () => {
     const from = shown; shown += PAGE;
-    $('#grid').insertAdjacentHTML('beforeend', pets.slice(from, shown).map((p, i) => (p.pet ? petCardHTML(p.pet, { match: p.score, reason: p.summary, index: i }) : petCardHTML(p, { index: i }))).join(''));
+    $('#grid').insertAdjacentHTML('beforeend', pets.slice(from, shown).map((p, i) => (p.pet ? petCardHTML(p.pet, { match: p.score, reason: p.summary, index: i, compare: true }) : petCardHTML(p, { index: i, compare: true }))).join(''));
     $('#loadMore').hidden = shown >= pets.length;
   });
   // Category bar mirrors the Species chips

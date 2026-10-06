@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Adoption fee receipt — PawPal</title>
+  <meta name="description" content="Receipt for an adoption fee (payment simulation).">
+  <meta name="theme-color" content="#FBF6EE">
+  <meta name="robots" content="noindex">
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
+  <link rel="preload" href="fonts/fraunces-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/plus-jakarta-sans-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/pawpal.css?v=6">
+  <script src="js/api.js?v=6" defer></script>
+  <script src="js/ui.js?v=6" defer></script>
+  <script src="js/pages/receipt.js?v=6" defer></script>
+</head>
+<body data-layout="account" data-page="receipt" data-print="doc">
+<main id="main" tabindex="-1">
+<div class="app-head no-print"><div><nav class="breadcrumbs" aria-label="Breadcrumb"><a href="my-applications.html" id="backLink">My applications</a><span aria-hidden="true">/</span><span>Receipt</span></nav>
+  <h1 style="margin-top:6px">Receipt</h1></div>
+  <button class="btn btn-primary" id="printBtn" type="button" disabled><span data-icon="download"></span>Print or save as PDF</button></div>
+<article class="card card-pad receipt print-doc" id="receipt" aria-live="polite"><div class="skeleton" style="height:300px"></div></article>
+</main>
+</body>
+</html>

@@ -43,6 +43,10 @@ module.exports = {
   adminEmail: (env.ADMIN_EMAIL || '').trim().toLowerCase(),
   // Public contact address shown on the site and on every shelter (defaults to the owner's address)
   contactEmail: (env.CONTACT_EMAIL || env.ADMIN_EMAIL || 'pawpaladmin@gmail.com').trim().toLowerCase(),
+  // Most emails sent per day (Australia/Melbourne date). Protects the sending Gmail account from Google's limits.
+  mailDailyLimit: Math.max(1, Number(env.MAIL_DAILY_LIMIT) || 300),
+  // Wait before the single retry of a temporarily failed email (network error or provider 5xx)
+  mailRetryDelayMs: Math.max(0, Number(env.MAIL_RETRY_DELAY_MS ?? 3000) || 0),
   mailFrom: env.MAIL_FROM || (env.ADMIN_EMAIL ? `PawPal <${env.ADMIN_EMAIL.trim()}>` : 'PawPal <no-reply@pawpal.app>'),
 
   // AI — Anthropic is used when its key is set, otherwise OpenAI, then Google Gemini, otherwise

@@ -73,6 +73,19 @@
         </form>
 
         <!-- Check your email -->
+        <form id="codeForm" style="margin-top:28px" novalidate hidden>
+          <h1>Two-step sign-in</h1>
+          <p class="muted" style="margin-top:6px">Open your authenticator app and enter the 6-digit code for PawPal.</p>
+          <div id="codeMsg" style="margin-top:18px"></div>
+          <div class="stack" style="margin-top:18px">
+            <div class="field"><label for="tfCode">Authentication code</label>
+              <input class="input otp-input" id="tfCode" inputmode="numeric" autocomplete="one-time-code" maxlength="11" pattern="[0-9a-fA-F -]*" required aria-describedby="tfHint">
+              <span class="hint" id="tfHint">Lost your phone? Enter one of your backup codes (like <code>a1b2c-3d4e5</code>) instead.</span></div>
+            <button class="btn btn-primary btn-lg btn-block" type="submit" id="codeBtn">Verify and log in</button>
+          </div>
+          <p class="center small" style="margin-top:20px"><button type="button" class="link-btn" data-show="login">Back to log in</button></p>
+        </form>
+
         <div id="sentPanel" style="margin-top:28px" hidden>
           <div class="empty" style="text-align:left;padding:28px">
             <div class="e-icon" style="margin:0 0 16px"><span data-icon="mail"></span></div>

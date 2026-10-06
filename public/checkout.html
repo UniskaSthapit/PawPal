@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Adoption fee checkout — PawPal</title>
+  <meta name="description" content="Pay the adoption fee (payment simulation — no real money is taken).">
+  <meta name="theme-color" content="#FBF6EE">
+  <meta name="robots" content="noindex">
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
+  <link rel="preload" href="fonts/fraunces-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/plus-jakarta-sans-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/pawpal.css?v=6">
+  <script src="js/api.js?v=6" defer></script>
+  <script src="js/ui.js?v=6" defer></script>
+  <script src="js/pages/checkout.js?v=6" defer></script>
+</head>
+<body data-layout="account" data-page="checkout">
+<main id="main" tabindex="-1">
+<div class="app-head"><div><nav class="breadcrumbs" aria-label="Breadcrumb"><a href="my-applications.html" id="backLink">My applications</a><span aria-hidden="true">/</span><span>Adoption fee</span></nav>
+  <h1 style="margin-top:6px">Adoption fee</h1></div></div>
+<div class="sim-banner" role="note" id="simBanner"><span data-icon="alert"></span><div><b>PAYMENT SIMULATION — no real money is taken.</b> Use a test card. Never enter a real card number here.</div></div>
+<div id="checkout" aria-live="polite"><div class="skeleton" style="height:360px;border-radius:24px;margin-top:20px"></div></div>
+</main>
+</body>
+</html>

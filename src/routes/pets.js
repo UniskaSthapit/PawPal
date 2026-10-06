@@ -182,6 +182,8 @@ router.get('/:id', asyncHandler(async (req, res) => {
     throw new HttpError(404, 'This pet could not be found. They may have found their home already.');
   }
   const shelter = pet.shelterId ? await db.findOne('shelters', { id: pet.shelterId }) : null;
+  // Staff asking for the public view (e.g. printable flyers, social posts): same fields the website shows, any status
+  if (staff && req.query.public === '1') return res.json({ pet: toPublic(pet), shelter: publicShelter(shelter) });
   if (staff) {
     const [apps, enquiries, favs] = await Promise.all([db.find('applications', { petId: pet.id }),
       db.find('enquiries', { petId: pet.id }), db.count('favourites', { petId: pet.id })]);
@@ -242,6 +244,7 @@ router.delete('/:id', requireStaff, asyncHandler(async (req, res) => {
   if (apps > 0) throw new HttpError(409, `${pet.name} has adoption applications on record, so the profile can't be deleted. Archive it instead.`);
   await db.remove('pets', pet.id);
   await db.removeWhere('favourites', { petId: pet.id });
+  await db.removeWhere('translations', { petId: pet.id });
   res.json({ message: `${pet.name} was deleted.` });
 }));
 

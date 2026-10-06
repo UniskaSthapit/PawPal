@@ -12,6 +12,8 @@
   <link rel="stylesheet" href="css/pawpal.css?v=6">
   <script src="js/api.js?v=6" defer></script>
   <script src="js/ui.js?v=6" defer></script>
+  <script src="vendor/qrcode-generator.js?v=6" defer></script>
+  <script src="js/qr.js?v=6" defer></script>
   <script src="js/pages/settings.js?v=6" defer></script>
 </head>
 <body data-layout="staff" data-page="staff-settings">
@@ -26,6 +28,13 @@
     <div class="field"><label for="curPw">Current password</label><input class="input" type="password" id="curPw" autocomplete="current-password"></div>
     <div class="field"><label for="newPw">New password</label><input class="input" type="password" id="newPw" autocomplete="new-password"><span class="hint">At least 8 characters with a letter and a number.</span></div>
     <button class="btn" id="pwBtn">Update password</button><div id="pwMsg"></div></div></form>
+  <section class="card" id="twofactor" aria-labelledby="tfTitle" style="grid-column:1/-1">
+    <div class="card-head"><div><h2 id="tfTitle">Two-factor authentication</h2><p class="small muted" style="margin-top:4px">Ask for a code from an authenticator app (Google Authenticator, Microsoft Authenticator, Authy…) when you sign in.</p></div><span id="tfBadge"></span></div>
+    <div class="card-body stack" id="tfBody"><div class="skeleton" style="height:60px"></div></div>
+  </section>
+  <section class="card" id="emailSettings"><div class="card-head"><h2>Email notifications</h2></div><div class="card-body stack">
+    <label class="switch-row" for="prefActivity"><span><b>Email me about shelter activity</b><span class="hint">New applications, enquiries and adopter replies for your shelter. They always appear in your PawPal notifications.</span></span>
+      <input type="checkbox" class="switch" id="prefActivity" role="switch"></label></div></section>
   <section class="card"><div class="card-head"><h2>Your shelter</h2></div><div class="card-body" id="shelterInfo"><div class="skeleton" style="height:80px"></div></div></section>
   <section class="card"><div class="card-head"><h2>Team</h2><a class="small" id="manageUsers" href="admin.html" hidden>Manage users</a></div><div id="team"></div></section>
   <section class="card" id="systemCard" hidden style="grid-column:1/-1"><div class="card-head"><h2>System status</h2></div><div class="card-body" id="system"></div></section>

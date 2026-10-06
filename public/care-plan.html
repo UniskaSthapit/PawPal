@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>First 30 days care plan — PawPal</title>
+  <meta name="description" content="A first-30-days care plan for your newly adopted pet: preparing your home, the first days, feeding, exercise, the vet and warning signs.">
+  <meta name="theme-color" content="#FBF6EE">
+  <meta name="robots" content="noindex">
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
+  <link rel="preload" href="fonts/fraunces-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/plus-jakarta-sans-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/pawpal.css?v=6">
+  <script src="js/api.js?v=6" defer></script>
+  <script src="js/ui.js?v=6" defer></script>
+  <script src="js/pages/care-plan.js?v=6" defer></script>
+</head>
+<body data-layout="account" data-page="care-plan" data-print="doc">
+<main id="main" tabindex="-1">
+<div class="app-head no-print"><div><nav class="breadcrumbs" aria-label="Breadcrumb"><a id="backLink" href="my-applications.html">My applications</a><span aria-hidden="true">/</span><span>Care plan</span></nav>
+  <h1 style="margin-top:6px">First 30 days care plan</h1><p>A practical plan for settling in. Print it or save it as a PDF for the fridge.</p></div>
+  <div class="row"><button class="btn" id="regenBtn" type="button" hidden><span data-icon="refresh"></span>Regenerate</button>
+    <button class="btn btn-primary" id="printBtn" type="button" disabled><span data-icon="download"></span>Download PDF</button></div></div>
+<article class="care-doc print-doc" id="carePlan" aria-live="polite"><div class="skeleton" style="height:420px;border-radius:24px"></div></article>
+</main>
+</body>
+</html>

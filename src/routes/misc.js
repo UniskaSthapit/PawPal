@@ -7,7 +7,7 @@ const config = require('../config');
 const ai = require('../services/ai');
 const llm = require('../services/llm');
 const maps = require('../services/maps');
-const { sendMail, emailMode } = require('../services/mailer');
+const { sendMail, emailMode, mailHealth } = require('../services/mailer');
 const { smsMode } = require('../services/sms');
 const { seedIfEmpty } = require('../services/seed');
 const { sanitizeProfile, describeProfile, emptyProfile, AGE_BAND } = require('../services/matching');
@@ -46,12 +46,13 @@ const adoptedAt = (a) => a.history?.find((h) => h.status === 'Adopted')?.at;
 async function scopedData(req) {
   const scope = shelterScope(req);
   const within = (list) => (scope ? list.filter((x) => x.shelterId === scope) : list);
-  const [pets, apps, enquiries, favs, events, searches, mails] = await Promise.all([db.find('pets'), db.find('applications'),
-    db.find('enquiries'), db.find('favourites'), db.find('events'), db.find('searches'), db.find('emails')]);
+  const [pets, apps, enquiries, favs, events, searches, mails, payments] = await Promise.all([db.find('pets'), db.find('applications'),
+    db.find('enquiries'), db.find('favourites'), db.find('events'), db.find('searches'), db.find('emails'), db.find('payments')]);
   const myPets = within(pets);
   const petIds = new Set(myPets.map((p) => p.id));
   return { pets: myPets, apps: within(apps), enquiries: within(enquiries), favs: favs.filter((f) => petIds.has(f.petId)),
-    views: events.filter((e) => e.type === 'pet_view' && petIds.has(e.petId)), events, searches, mails };
+    views: events.filter((e) => e.type === 'pet_view' && petIds.has(e.petId)), events, searches, mails,
+    payments: (() => { const appIds = new Set(within(apps).map((a) => a.id)); return payments.filter((p) => appIds.has(p.applicationId)); })() };
 }
 
 router.get('/analytics/dashboard', requireStaff, asyncHandler(async (req, res) => {
@@ -85,7 +86,7 @@ router.get('/analytics/dashboard', requireStaff, asyncHandler(async (req, res) =
 }));
 
 function buildAnalytics(data, from, to) {
-  const { pets, apps, enquiries, favs, views, events, searches } = data;
+  const { pets, apps, enquiries, favs, views, events, searches, payments = [] } = data;
   const span = to - from;
   const R = (list, key) => list.filter((x) => inRange(x[key], from, to));
   const P = (list, key) => list.filter((x) => inRange(x[key], from - span, from - 1));
@@ -149,7 +150,13 @@ function buildAnalytics(data, from, to) {
     avgDaysToFirstAction: avg(firstAction), avgDaysToDecision: avg(toDecision),
     averageScore: appsIn.length ? Math.round(appsIn.reduce((t, a) => t + (a.score || 0), 0) / appsIn.length) : null,
   };
-  return { stats, funnel, byAge, byType, bySize, trend,
+  // Adoption fees (simulated payments): collected in the period, and what is still owed on completed adoptions
+  const paidIn = payments.filter((p) => p.status === 'succeeded' && inRange(p.paidAt, from, to));
+  const owed = apps.filter((a) => a.status === 'Adopted' && a.feeDue > 0 && ['due', 'pay_in_person'].includes(a.paymentStatus));
+  const fees = { collected: paidIn.reduce((t, p) => t + Number(p.amount || 0), 0), payments: paidIn.length,
+    collectedAllTime: payments.filter((p) => p.status === 'succeeded').reduce((t, p) => t + Number(p.amount || 0), 0),
+    outstanding: owed.reduce((t, a) => t + a.feeDue, 0), outstandingCount: owed.length, payAtShelter: owed.filter((a) => a.paymentStatus === 'pay_in_person').length };
+  return { stats, fees, funnel, byAge, byType, bySize, trend,
     topKeywords: Object.entries(kw).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([keyword, n]) => ({ keyword, count: n })),
     zeroResultKeywords: Object.entries(zero).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([keyword, n]) => ({ keyword, count: n })),
     statusCounts: APP_STATUSES.map((s) => ({ status: s, count: appsIn.filter((a) => a.status === s).length })) };
@@ -236,6 +243,18 @@ router.patch('/users/me', requireAuth, asyncHandler(async (req, res) => {
   }
   if (req.body.address !== undefined) patch.address = clean(req.body.address, 160);
   if (req.body.preferences !== undefined) patch.preferences = req.body.preferences ? sanitizeProfile(req.body.preferences, emptyProfile()) : null;
+  // Email settings: adopters choose application emails, staff choose shelter-activity emails (in-app notifications always happen)
+  if (req.body.emailPrefs !== undefined) {
+    const ep = req.body.emailPrefs;
+    if (!ep || typeof ep !== 'object' || Array.isArray(ep)) throw new HttpError(400, 'Email settings are invalid.');
+    const current = { applications: req.user.emailPrefs?.applications !== false, activity: req.user.emailPrefs?.activity !== false };
+    for (const key of ['applications', 'activity']) {
+      if (ep[key] === undefined) continue;
+      if (typeof ep[key] !== 'boolean') throw new HttpError(400, 'Email settings must be on or off.');
+      current[key] = ep[key];
+    }
+    patch.emailPrefs = current;
+  }
   const user = await db.update('users', req.user.id, patch);
   res.json({ user: { ...publicUser(user), address: user.address || '' }, understood: user.preferences ? describeProfile(user.preferences) : [], message: 'Profile saved.' });
 }));
@@ -304,16 +323,21 @@ router.get('/config', (req, res) => res.json({
   contactEmail: config.contactEmail, siteUrl: config.appUrl,
 }));
 
+// Email health for the admin banner: provider, today's count against the daily limit, sign-in problems
+router.get('/system/mail-health', requireAdmin, asyncHandler(async (req, res) => {
+  res.json(await mailHealth());
+}));
+
 router.get('/system/status', requireAdmin, asyncHandler(async (req, res) => {
   const [pets, apps, users, mails, shelters] = await Promise.all([db.count('pets'), db.count('applications'), db.count('users'), db.count('emails'), db.count('shelters')]);
   res.json({ database: db.name,
     email: { gmail: `Gmail API (from ${config.gmail.sender})`, resend: `Resend API (from ${config.mailFrom})`, brevo: `Brevo API (from ${config.mailFrom})`, smtp: `SMTP (${config.smtp.host})`, dev: 'Dev mailbox (no email provider configured)' }[emailMode],
     sms: { twilio: 'Twilio', dev: 'Dev SMS log (no SMS provider configured)', disabled: 'Not configured' }[smsMode],
     ai: llm.providerLabel, maps: maps.mapsEnabled ? 'Google Places API' : 'Keyless Google Maps embed',
-    counts: { pets, apps, users, mails, shelters }, allowDemoReset: config.allowDemoReset,
+    counts: { pets, apps, users, mails, shelters }, allowDemoReset: config.allowDemoReset, mail: await mailHealth(),
     // The last emails PawPal tried to send, so delivery problems can be seen without the server logs
-    recentEmails: (await db.find('emails')).sort((a, b) => new Date(b.sentAt) - new Date(a.sentAt)).slice(0, 15)
-      .map((m) => ({ to: m.to, type: m.type, subject: m.subject, status: m.status, error: m.error || null, mode: m.mode, sentAt: m.sentAt })) });
+    recentEmails: (await db.find('emails')).sort((a, b) => new Date(b.sentAt) - new Date(a.sentAt)).slice(0, 20)
+      .map((m) => ({ to: m.to, type: m.type, subject: m.subject, status: m.status, error: m.error || null, mode: m.mode, retried: !!m.retried, sentAt: m.sentAt })) });
 }));
 
 router.post('/system/reset', requireAdmin, asyncHandler(async (req, res) => {

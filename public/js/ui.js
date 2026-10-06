@@ -140,6 +140,9 @@ const PawPal = (() => {
   };
   const icon = (name) => icons[name] || '';
 
+  // Toast colour for a response that reports an email: sent → success, skipped (demo address / turned off) → info, failed → error
+  const emailToastType = (r) => ({ failed: 'error', skipped: 'info' }[r?.emailStatus] || 'success');
+
   // ---------- toasts ----------
   function toast(message, type = 'success') {
     let wrap = $('#toastWrap');
@@ -280,8 +283,83 @@ const PawPal = (() => {
     if (Number(pet.energyLevel) === 1) tags.push('Calm');
     return tags.slice(0, 3);
   }
-  // `index` staggers the entrance animation when cards are rendered as a group
-  function petCardHTML(pet, { match, reason, index = 0 } = {}) {
+  // ---------- language for machine translation (pet profiles and chat) ----------
+  const LANGUAGES = [['en', 'English'], ['ne', 'नेपाली · Nepali'], ['hi', 'हिन्दी · Hindi'], ['zh', '简体中文 · Chinese'], ['es', 'Español · Spanish']];
+  const HTML_LANG = { en: 'en', ne: 'ne', hi: 'hi', zh: 'zh-Hans', es: 'es' };
+  const lang = {
+    list: LANGUAGES,
+    get() { try { const v = localStorage.getItem('pp_lang'); return HTML_LANG[v] ? v : 'en'; } catch { return 'en'; } },
+    set(v) { try { localStorage.setItem('pp_lang', HTML_LANG[v] ? v : 'en'); } catch { /* ignore */ } },
+    html: (v) => HTML_LANG[v] || 'en',
+  };
+  const langSelectHTML = (id, current = lang.get(), cls = '') => `<select class="select lang-select ${cls}" id="${id}" aria-label="Language">
+    ${LANGUAGES.map(([v, label]) => `<option value="${v}" ${v === current ? 'selected' : ''}>${esc(label)}</option>`).join('')}</select>`;
+
+  // ---------- compare (up to 3 pets, remembered in this browser) ----------
+  const COMPARE_KEY = 'pp_compare';
+  const COMPARE_MAX = 3;
+  let compareList = [];
+  try {
+    const saved = JSON.parse(localStorage.getItem(COMPARE_KEY) || '[]');
+    compareList = (Array.isArray(saved) ? saved : []).filter((x) => x && typeof x.id === 'string' && /^[\w-]{1,40}$/.test(x.id)).slice(0, COMPARE_MAX);
+  } catch { compareList = []; }
+  const compareURL = () => `compare.html?ids=${compareList.map((x) => encodeURIComponent(x.id)).join(',')}`;
+  function saveCompare() {
+    try { localStorage.setItem(COMPARE_KEY, JSON.stringify(compareList)); } catch { /* private mode: keep for this page only */ }
+    $$('input[data-compare]').forEach((cb) => { cb.checked = compare.has(cb.dataset.compare); });
+    renderCompareBar();
+  }
+  const compare = {
+    max: COMPARE_MAX,
+    has: (id) => compareList.some((x) => x.id === id),
+    list: () => compareList.map((x) => ({ ...x })),
+    url: compareURL,
+    add(item) {
+      if (compare.has(item.id)) return true;
+      if (compareList.length >= COMPARE_MAX) return false;
+      compareList.push({ id: String(item.id), name: String(item.name || '').slice(0, 40), img: String(item.img || '').slice(0, 400) });
+      saveCompare();
+      return true;
+    },
+    remove(id) { compareList = compareList.filter((x) => x.id !== id); saveCompare(); },
+    set(items) { compareList = items.slice(0, COMPARE_MAX); saveCompare(); },
+    clear() { compareList = []; saveCompare(); },
+  };
+  const compareToggleHTML = (pet) => `<label class="compare-toggle"><input type="checkbox" data-compare="${esc(pet.id)}" data-name="${esc(pet.name)}" data-img="${esc(sized(photo(pet), 200))}" ${compare.has(pet.id) ? 'checked' : ''}><span>Compare</span></label>`;
+  document.addEventListener('change', (e) => {
+    const cb = e.target.closest?.('input[data-compare]');
+    if (!cb) return;
+    if (!cb.checked) return compare.remove(cb.dataset.compare);
+    if (!compare.add({ id: cb.dataset.compare, name: cb.dataset.name, img: cb.dataset.img })) {
+      cb.checked = false;
+      toast(`You can compare up to ${COMPARE_MAX} pets. Remove one from the compare bar first.`, 'info');
+    }
+  });
+  function renderCompareBar() {
+    let bar = $('#compareBar');
+    if (!compareList.length || page === 'compare.html' || !['public', 'account'].includes(layout)) { if (bar) bar.remove(); document.body.classList.remove('has-compare'); return; }
+    if (!bar) {
+      bar = document.createElement('div');
+      bar.id = 'compareBar'; bar.className = 'compare-bar'; bar.setAttribute('role', 'region'); bar.setAttribute('aria-label', 'Pets to compare');
+      bar.addEventListener('click', (e) => {
+        const rm = e.target.closest('[data-compare-remove]');
+        if (rm) compare.remove(rm.dataset.compareRemove);
+        if (e.target.closest('[data-compare-clear]')) compare.clear();
+      });
+      document.body.appendChild(bar);
+    }
+    document.body.classList.add('has-compare');
+    const n = compareList.length;
+    bar.innerHTML = `<div class="compare-bar-pets">${compareList.map((x) => `<span class="compare-chip">
+        <img src="${esc(x.img || PLACEHOLDER)}" alt="" data-fallback="${PLACEHOLDER}"><span>${esc(x.name)}</span>
+        <button type="button" data-compare-remove="${esc(x.id)}" aria-label="Remove ${esc(x.name)} from compare">${icons.close}</button></span>`).join('')}
+        ${Array.from({ length: COMPARE_MAX - n }, () => '<span class="compare-chip compare-empty" aria-hidden="true">Add a pet</span>').join('')}</div>
+      <div class="compare-bar-actions"><button type="button" class="link-btn small" data-compare-clear>Clear</button>
+        ${n >= 2 ? `<a class="btn btn-primary btn-sm" id="compareGo" href="${compareURL()}">Compare ${n} pets</a>` : '<span class="small muted">Pick at least 2 to compare</span>'}</div>`;
+  }
+
+  // `index` staggers the entrance animation when cards are rendered as a group; `compare` adds the compare checkbox
+  function petCardHTML(pet, { match, reason, index = 0, compare: withCompare = false } = {}) {
     const fav = favIds.has(pet.id);
     const staff = isStaffUser(user);
     const img = photo(pet);
@@ -300,6 +378,7 @@ const PawPal = (() => {
         ${pet.location ? `<div class="pet-card-loc">${icons.pin}${esc(pet.location)}</div>` : ''}
         ${reason ? `<div class="pet-card-reason">${esc(reason)}</div>` : ''}
         <div class="pet-card-tags">${petTags(pet).map((t) => `<span class="tag">${esc(t)}</span>`).join('')}</div>
+        ${withCompare && !staff ? compareToggleHTML(pet) : ''}
       </div>
       <span class="pet-card-go" aria-hidden="true">${icons.arrowRight}</span>
     </article>`;
@@ -406,8 +485,21 @@ const PawPal = (() => {
   // Dashboard sidebars
   const ADOPTER_SIDE = [['dashboard.html', 'grid', 'Overview'], ['my-applications.html', 'file', 'My applications'], ['dashboard.html#favourites', 'heart', 'Favourites'],
     ['ai-matching.html', 'sparkle', 'Find my PawPal'], ['notifications.html', 'bell', 'Notifications'], ['profile.html', 'user', 'Profile & preferences']];
-  const STAFF_SIDE = [['index.html', 'grid', 'Overview'], ['pets.html', 'paw', 'Pets'], ['applications.html', 'file', 'Applications', 'apps'], ['enquiries.html', 'message', 'Enquiries', 'enq'],
+  const STAFF_SIDE = [['index.html', 'grid', 'Overview'], ['pets.html', 'paw', 'Pets'], ['applications.html', 'file', 'Applications', 'apps'], ['enquiries.html', 'message', 'Enquiries', 'enq'], ['availability.html', 'calendar', 'Availability'],
     ['analytics.html', 'chart', 'Analytics'], ['assistant.html', 'sparkle', 'AI assistant'], ['notifications.html', 'bell', 'Notifications'], ['settings.html', 'gear', 'Settings']];
+
+  // Administrators see a banner on every portal page when email needs attention (Gmail sign-in expired, daily limit reached)
+  function mailBanner(main) {
+    PawPalAPI.get('/system/mail-health').then((h) => {
+      if (!h.problems?.length) return;
+      const box = document.createElement('div');
+      box.className = 'alert alert-warn mail-banner';
+      box.setAttribute('role', 'alert');
+      box.innerHTML = `${icons.mail}<div>${h.problems.map((p) => `<b>${p.code === 'auth' ? 'Email is not being sent.' : 'Email paused for today.'}</b> ${esc(p.message)}`).join('<br>')}
+        <a href="settings.html#systemCard">Email status</a></div>`;
+      main.prepend(box);
+    }).catch(() => {});
+  }
 
   function renderShell(u) {
     const main = $('#main');
@@ -433,6 +525,7 @@ const PawPal = (() => {
         const s = shelters.find((x) => x.id === u?.shelterId);
         $('#sideShelter').innerHTML = s ? `<b>${esc(s.name)}</b><span class="muted">${esc(s.suburb)}, ${esc(s.state)}</span>` : `<b>All shelters</b><span class="muted">${u?.role === 'admin' ? 'Administrator view' : 'No shelter assigned'}</span>`;
       }).catch(() => {});
+      if (u?.role === 'admin') mailBanner(main);
       Promise.all([PawPalAPI.get('/applications', { status: 'Submitted', limit: 1 }), PawPalAPI.get('/enquiries', { status: 'Open' })]).then(([a, e]) => {
         const set = (key, n) => { const el = $(`[data-count="${key}"]`); if (el && n) { el.hidden = false; el.textContent = n > 99 ? '99+' : n; } };
         set('apps', a.total); set('enq', e.open);
@@ -442,7 +535,7 @@ const PawPal = (() => {
 
   // ---------- notifications ----------
   const NOTE_ICON = { application: 'file', status: 'refresh', info: 'help', appointment: 'calendar', approved: 'checkCircle', declined: 'info', adopted: 'home',
-    enquiry: 'message', pet: 'paw', match: 'sparkle', account: 'user', staff: 'inbox' };
+    enquiry: 'message', pet: 'paw', match: 'sparkle', account: 'user', staff: 'inbox', booking: 'calendar', careplan: 'clipboard', payment: 'checkCircle' };
   const noteHTML = (n) => `<a class="notif-item ${n.read ? '' : 'unread'}" href="${esc(n.link || '#')}" data-note="${esc(n.id)}">
       <span class="n-icon">${icons[NOTE_ICON[n.type] || 'bell']}</span><div><b>${esc(n.title)}</b><span>${esc(n.message)}</span><small>${timeAgo(n.at)}</small></div></a>`;
   async function loadBell(render = false) {
@@ -717,6 +810,7 @@ const PawPal = (() => {
     if (u) loadBell(false);
     fillContactLinks();
     if (layout === 'public') cookieNotice();
+    renderCompareBar();
     try {
       if (!sessionStorage.getItem('pp_visit') && layout === 'public') { sessionStorage.setItem('pp_visit', '1'); PawPalAPI.post('/events', { type: 'visit' }).catch(() => {}); }
     } catch { /* ignore */ }
@@ -725,6 +819,6 @@ const PawPal = (() => {
 
   return { $, $$, params, page, layout, esc, fmtDate, fmtDateTime, timeAgo, initials, ageText, ageLong, energyText, money, photo, sized, srcset, icons, icon, aiLabel,
     FALLBACK, PLACEHOLDER, statusBadge, statusClass, scoreBadge, toast, modal, confirm: confirmDialog, setBusy, errorHTML, emptyHTML, skeletonCards,
-    favs, petCardHTML, petTags, ready, booted, get user() { return user; }, isStaffUser, logout, loadBell, noteHTML, hydrateIcons, reveal, reduceMotion,
+    favs, lang, langSelectHTML, compare, compareToggleHTML, petCardHTML, petTags, ready, booted, emailToastType, get user() { return user; }, isStaffUser, logout, loadBell, noteHTML, hydrateIcons, reveal, reduceMotion,
     finePointer, countUp, carousel, hscroll, accordion, siteConfig, fillContactLinks };
 })();

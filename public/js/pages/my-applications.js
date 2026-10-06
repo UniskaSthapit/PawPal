@@ -79,6 +79,29 @@
         <form id="replyForm" style="margin-top:12px"><label class="sr-only" for="replyText">Your reply</label><textarea class="textarea" id="replyText" maxlength="2000" placeholder="Type your reply to the shelter…" required></textarea>
           <button class="btn btn-primary" style="margin-top:10px" type="submit">${icons.send}Send reply</button></form></div>` : ''}
 
+      ${a.payment ? (a.payment.status === 'paid' ? `<div class="card card-pad fee-card fee-paid" id="feeCard"><span class="src-label">${icons.checkCircle}Adoption fee paid</span>
+        <p class="small" style="margin-top:6px">Thank you — the $${esc(a.payment.amount)} adoption fee for ${esc(a.petName)} is paid.</p>
+        <a class="btn btn-sm" style="margin-top:10px" href="receipt.html?id=${encodeURIComponent(a.payment.paymentId || '')}">${icons.file}View receipt</a></div>`
+        : `<div class="card card-pad fee-card" id="feeCard"><span class="src-label" style="color:var(--honey-ink)">${icons.alert}Adoption fee due: $${esc(a.payment.amount)}</span>
+        <p class="small muted" style="margin-top:6px">${a.payment.status === 'pay_in_person' ? 'You chose to pay at the shelter. You can also pay online now.' : 'Pay online (payment simulation — no real money is taken), or choose to pay at the shelter.'}</p>
+        <a class="btn btn-primary btn-sm" style="margin-top:10px" id="payFeeBtn" href="checkout.html?app=${encodeURIComponent(a.id)}">${icons.checkCircle}Pay adoption fee</a></div>`) : ''}
+
+      ${a.carePlanReady ? `<div class="card card-pad care-cta" id="carePlanCard"><span class="src-label src-ai">${icons.clipboard}Your first 30 days</span>
+        <h3 style="font-size:20px;margin-top:6px">A care plan to help ${esc(a.petName)} settle in</h3>
+        <p class="small muted" style="margin-top:4px">What to prepare, the first few days, feeding, exercise, the vet and warning signs — ready to print.</p>
+        <a class="btn btn-primary btn-sm" style="margin-top:12px" id="viewCarePlan" href="care-plan.html?id=${encodeURIComponent(a.id)}">${icons.file}View care plan</a></div>`
+        : ['Approved', 'Adoption Scheduled', 'Adopted'].includes(a.status) ? `<div class="card card-pad"><span class="src-label src-ai">${icons.clipboard}Your first 30 days</span>
+        <p class="small muted" style="margin-top:6px">Your care plan for ${esc(a.petName)} is being prepared — we'll let you know when it's ready.</p></div>` : ''}
+
+      ${a.booking ? `<div class="card card-pad" id="booking"><span class="src-label" style="color:var(--sky)">${icons.calendar}Meet &amp; greet</span>
+        ${a.booking.slotId ? `<h3 style="font-size:20px;margin-top:6px">You're booked to meet ${esc(a.petName)}</h3>
+          <p class="small muted" style="margin-top:4px">${a.booking.canChange ? 'You can change or cancel this time until 24 hours before.' : 'It\'s less than 24 hours away — message the shelter if you can\'t make it.'}</p>
+          ${a.booking.canChange ? `<div class="row" style="margin-top:12px"><button class="btn btn-sm" type="button" data-booking="change">${icons.edit}Change time</button>
+            <button class="btn btn-sm btn-ghost" type="button" data-booking="cancel" style="color:var(--danger)">${icons.x}Cancel</button></div>` : ''}`
+          : `<h3 style="font-size:20px;margin-top:6px">Choose a time to meet ${esc(a.petName)}</h3>
+          ${a.booking.message ? `<div class="tl-note" style="margin-top:8px"><b>Shelter:</b> ${esc(a.booking.message)}</div>` : ''}`}
+        <div id="slotPicker" style="margin-top:14px" ${a.booking.slotId ? 'hidden' : ''}></div></div>` : ''}
+
       ${a.appointmentAt && !closed && new Date(a.appointmentAt) > new Date(Date.now() - 86400000) ? `<div class="card card-pad" style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
         <span class="k-ic" style="width:52px;height:52px;border-radius:14px;display:grid;place-items:center;background:var(--sky-soft);color:var(--sky)">${icons.calendar}</span>
         <div style="flex:1;min-width:200px"><span class="small muted">${esc(a.status)}</span><h3 style="font-size:21px">${esc(fmtDateTime(a.appointmentAt))}</h3>
@@ -105,7 +128,50 @@
       ${closed ? '' : `<div><button class="btn btn-ghost" id="withdrawBtn" style="color:var(--danger)">${icons.x}Withdraw application</button></div>`}
     </div>`;
     PawPal.hydrateIcons($('#appDetail'));
+    if (a.booking && !a.booking.slotId) loadSlots(a);
+    if (location.hash === '#booking' && $('#booking')) setTimeout(() => $('#booking').scrollIntoView({ block: 'start', behavior: 'smooth' }), 150);
   }
+
+  // ---------- meet & greet booking ----------
+  async function loadSlots(a) {
+    const box = $('#slotPicker'); box.hidden = false;
+    box.innerHTML = '<div class="skeleton" style="height:90px"></div>';
+    let slots;
+    try { ({ slots } = await PawPalAPI.get(`/applications/${encodeURIComponent(a.id)}/slots`)); } catch (err) { box.innerHTML = errorHTML(err.message); return; }
+    if (!slots.length) { box.innerHTML = '<p class="small muted">There are no free times right now — the shelter will add more soon, or you can message them below.</p>'; return; }
+    const days = new Map();
+    slots.forEach((sl) => { const k = new Date(sl.start).toDateString(); if (!days.has(k)) days.set(k, []); days.get(k).push(sl); });
+    box.innerHTML = `<div class="slot-picker" role="group" aria-label="Free meet and greet times">${[...days].map(([, list]) => `<div><h4>${esc(new Date(list[0].start).toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long' }))}</h4>
+      <div class="slot-choices">${list.map((sl) => `<button type="button" class="slot-choice" data-slot="${esc(sl.id)}" data-start="${esc(sl.start)}" aria-pressed="false">${esc(new Date(sl.start).toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit' }))}</button>`).join('')}</div></div>`).join('')}</div>
+      <div class="row" style="margin-top:14px"><button class="btn btn-primary" type="button" id="bookBtn" disabled>Choose a time above</button>
+        ${a.booking.slotId ? '<button class="btn btn-ghost" type="button" data-booking="keep">Keep my current time</button>' : ''}</div>`;
+  }
+  $('#appDetail').addEventListener('click', async (e) => {
+    const choice = e.target.closest('.slot-choice[data-slot]');
+    if (choice) {
+      $$('#slotPicker [data-slot]').forEach((b) => b.setAttribute('aria-pressed', String(b === choice)));
+      const btn = $('#bookBtn'); btn.disabled = false; btn.dataset.slot = choice.dataset.slot;
+      btn.textContent = `Book ${new Date(choice.dataset.start).toLocaleString('en-AU', { weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })}`;
+      return;
+    }
+    const a = apps.find((x) => x.id === selected);
+    if (e.target.closest('#bookBtn')) {
+      const btn = $('#bookBtn'); setBusy(btn, true, 'Booking…');
+      try {
+        const r = await PawPalAPI.post(`/applications/${encodeURIComponent(a.id)}/book`, { slotId: btn.dataset.slot });
+        toast(r.message); apps[apps.findIndex((x) => x.id === a.id)] = r.application; renderList(); renderDetail();
+      } catch (err) { setBusy(btn, false); toast(err.message, 'error'); if (err.status === 409) loadSlots(a); }
+      return;
+    }
+    const action = e.target.closest('[data-booking]')?.dataset.booking;
+    if (action === 'change') loadSlots(a);
+    if (action === 'keep') { $('#slotPicker').hidden = true; }
+    if (action === 'cancel') {
+      if (!(await confirm({ title: 'Cancel your meet & greet?', message: `The time will be freed for someone else. Your application for ${a.petName} stays open and you can book another time.`, confirmText: 'Cancel meet & greet', danger: true }))) return;
+      try { const r = await PawPalAPI.post(`/applications/${encodeURIComponent(a.id)}/cancel-booking`); toast(r.message, 'info'); apps[apps.findIndex((x) => x.id === a.id)] = r.application; renderList(); renderDetail(); }
+      catch (err) { toast(err.message, 'error'); }
+    }
+  });
 
   document.addEventListener('click', async (e) => {
     const item = e.target.closest('[data-app]');

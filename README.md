@@ -25,16 +25,16 @@ No database, email, SMS or AI keys are needed to try everything: PawPal uses a f
 | Role | Email | Password |
 |---|---|---|
 | Administrator | `admin@pawpal.com` | `Admin@123` |
-
-These demo logins are for local use. In production they are deactivated automatically while they still use these
-passwords; set `ADMIN_EMAIL` to create your real administrator account.
 | Shelter staff (Melbourne) | `staff@pawpal.com` | `Staff@123` |
 | Adopter | `user@pawpal.com` | `User@123` |
 
+These demo logins are for local use. In production they are deactivated automatically while they still use these
+passwords; set `ADMIN_EMAIL` to create your real administrator account.
+
 ```bash
 npm run dev        # auto-restart on changes
-npm test           # 115 end-to-end API checks (throwaway database)
-npm run test:ui    # 28 real-browser journeys (needs Playwright — see the script header)
+npm test           # ~300 end-to-end API checks + 18 email-delivery checks (throwaway database, simulated Gmail)
+npm run test:ui    # ~75 real-browser journeys (needs Playwright — see the script header)
 npm run seed       # wipe and reload the demo data
 ```
 
@@ -91,6 +91,23 @@ npm run seed       # wipe and reload the demo data
 - **Administration** — users (role, shelter assignment, deactivate/reactivate — takes effect immediately),
   staff invitations, shelter management, system status, demo reset.
 
+### Extras (adopters, staff and administrators)
+Each one works without any extra keys (AI features fall back to PawPal's rules engine), and the demo data is set up
+so you can try them straight away.
+
+| Feature | What it does | Try it |
+|---|---|---|
+| **Reliable application emails** | Every in-app notification also sends an email. Failed sends are retried once and logged with their status. Staff see in a toast whether the email was sent, skipped or failed. Adopters can turn off application emails and staff can turn off activity emails. | Change an application's status as staff and read the toast. *Profile → Email me about my applications*. *Settings → System status* lists the last 20 emails. |
+| **Gmail safety** | A daily limit (`MAIL_DAILY_LIMIT`), duplicate suppression, demo/typo addresses never emailed, a plain-text part and Reply-To on every email. An admin banner appears if Gmail sign-in expires or the limit is reached. | *Settings → System status → Email*. `GET /api/system/mail-health` (admin). |
+| **Two-factor login (TOTP)** | Optional authenticator-app codes for staff and admins, with a QR code, 8 one-time backup codes and lockout after 5 wrong codes. Admins can require 2FA for all staff and reset it for someone who lost their phone. | *Settings → Two-factor authentication*. *Users & shelters → Security*. |
+| **Printable QR flyers** | An A4 flyer with photo, public facts and a QR code to the pet's profile. | *Pets → Flyer* (or *Print flyer* on the edit page) → *Print or save as PDF*. |
+| **Meet & greet booking** | Staff publish time slots for their shelter and invite an applicant. The adopter books, changes or cancels (up to 24 h before). A slot can never be double-booked. | Staff: *Availability*, then an application → *Invite to book*. Adopter (`user@pawpal.com`): *My applications* → *Choose a time*. |
+| **Social post maker** | An Instagram/Facebook caption and hashtags in a chosen tone from public fields only, plus a 1080×1080 PNG card. Short links `/p/<petId>`. | *Pets → Promote*. |
+| **Compare pets** | Tick *Compare* on up to 3 pets (Adopt, Find My PawPal, Favourites) to see them side by side, with your match score and an explanation of the differences. | Adopt → tick 2–3 pets → *Compare*. |
+| **Machine translation** | Pet profiles and chat replies in Nepali, Hindi, Chinese (Simplified) or Spanish, labelled *Machine translated* and cached so each text is translated once. Without AI the page stays in English with a notice. | Pet profile → language picker. The chat header has its own picker. |
+| **First 30 days care plan** | Created when an application is Approved, from the pet's public facts and the adopter's lifestyle answers. Species-specific, printable, and *general guidance, not veterinary advice*. Staff can regenerate it. | `user@pawpal.com` → *My applications* → the adopted pet → *View care plan* → *Download PDF*. |
+| **Adoption fee (simulation)** | Pay the fee by test card or choose to pay at the shelter. You get a printable receipt and email. Staff see the payment status and can record a payment taken in person. *Analytics* shows the fees collected. **No real money is taken.** | `user@pawpal.com` → *My applications* → *Pay adoption fee*. Use `4242 4242 4242 4242` (success), `4000 0000 0000 0002` (declined) or `4000 0000 0000 9995` (insufficient funds), with any future expiry and 3-digit CVC. |
+
 ### Adoption workflow
 `Submitted → Under Review → (Info Requested) → Interview → Meet & Greet → Approved → Adoption Scheduled → Adopted`,
 or `Declined` / `Withdrawn`. Interview, Meet & Greet and Adoption Scheduled require a date. The pet is placed
@@ -131,25 +148,31 @@ src/
   constants.js            Roles, pet statuses, adoption workflow
   db/                     MongoDB or file database behind the same interface (+ indexes)
   middleware/auth.js      JWT in httpOnly cookie; adopter / staff / admin; shelter scoping
-  routes/                 auth · pets · images · applications · favourites · enquiries · ai · admin · misc
+  routes/                 auth · pets · images · applications · favourites · enquiries · slots · payments · ai · admin · misc
   services/
     matching.js           Lifestyle parser + explainable compatibility engine
     ai.js / llm.js        AI features (Anthropic/OpenAI/Gemini) with grounded prompts and rules fallback
     knowledge.js          FAQ + application question explanations
-    mailer.js / sms.js    Email (Resend/Brevo/SMTP/dev) and SMS (Twilio/dev)
+    mailer.js / sms.js    Email (Gmail API/Resend/Brevo/SMTP/dev, daily limit, retry, de-duplication) and SMS (Twilio/dev)
+    totp.js · settings.js Two-factor codes (RFC 6238, encrypted secrets) and site-wide admin settings
+    careplan.js           "First 30 days" care plans (AI or species templates)
+    payments.js           Test-card validation for the payment simulation (no provider, nothing stored but last 4)
     bootstrap.js          Owner administrator (ADMIN_EMAIL) and production demo-account lockout
-    notify.js             In-app notifications
+    notify.js             In-app notifications (each also emailed, respecting the person's email settings)
     migrate.js / seed.js  Schema upgrades and demo data
 public/                   Vanilla HTML/CSS/JS (no build step)
   css/pawpal.css          The design system
-  js/ui.js · chat.js      Shared layout, components, assistant widget
+  js/ui.js · chat.js      Shared layout, components (incl. compare bar, language picker), assistant widget
+  js/qr.js · promote.js   QR codes (vendored qrcode-generator, MIT) and the social post maker
+  vendor/                 Third-party browser libraries, served locally (CSP)
   js/pages/*.js           One script per page
   fonts/                  Self-hosted Fraunces + Plus Jakarta Sans (OFL)
 scripts/                  smoke-test.js · ui-test.js · reset-data.js
 ```
 
 **Collections:** users, shelters, pets, images, applications (with history + messages), favourites, enquiries,
-notifications, conversations, matches, phoneCodes, emails, sms, searches, events, messages, meta.
+notifications, conversations, matches, phoneCodes, emails, mailStats, sms, searches, events, messages, meta, settings,
+slots, translations, payments.
 
 ## Design system (v6 "Hearth")
 
@@ -184,5 +207,13 @@ The interface is a premium redesign built on the same pages, scripts, API and da
 - Internal pet fields (medical, rescue, behaviour notes) are stripped from every public response and never sent
   to AI. AI prompts contain only public pet data and, when asked, the user's own application statuses. Any pet a
   model mentions is validated against the database.
-- Strict Content-Security-Policy (no inline scripts), rate limits on auth, AI, contact, SMS and events, input
-  length caps and output escaping everywhere. The dev mailbox is disabled in production.
+- Strict Content-Security-Policy (no inline scripts), rate limits on auth, 2FA, AI, translation, payments, contact,
+  SMS and events, input length caps and output escaping everywhere. The dev mailbox is disabled in production.
+- Optional TOTP two-factor login for staff and admins. Secrets are encrypted with AES-256-GCM (key derived from
+  `JWT_SECRET`) and backup codes are stored only as bcrypt hashes. Codes can't be reused, and 5 wrong codes lock
+  sign-in for 15 minutes.
+- Payment simulation: only published test cards are accepted. The card number and CVC are never stored or logged:
+  a payment record holds only id, application, user, amount, brand, last 4, status, receipt number and date. A paid
+  adoption can't be charged twice.
+- Care plans, translations, comparisons and social posts send only public pet fields (and, for care plans, the
+  adopter's lifestyle answers — never names or contact details) to AI. AI JSON is validated and falls back to rules.
