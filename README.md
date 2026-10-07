@@ -36,6 +36,7 @@ npm run dev        # auto-restart on changes
 npm test           # ~300 end-to-end API checks + 18 email-delivery checks (throwaway database, simulated Gmail)
 npm run test:ui    # ~75 real-browser journeys (needs Playwright — see the script header)
 npm run seed       # wipe and reload the demo data
+npm run import-live  # copy the live site's pets and uploaded photos into your local database (read-only on the live site)
 ```
 
 ---
