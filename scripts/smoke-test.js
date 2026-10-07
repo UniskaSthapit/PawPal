@@ -550,22 +550,25 @@ const mailFor = async (anon, email, type) => (await anon('GET', `/api/dev/emails
   const bApp = r.body.application.id;
   r = await adopter('POST', '/api/applications', { ...form, petId: bPet2.id, declaration: true });
   const cApp = r.body.application.id;
-  const at = (days, hours = 10, mins = 0) => { const d = new Date(Date.now() + days * 86400000); d.setHours(hours, mins, 0, 0); return d.toISOString(); };
-  r = await anon('POST', '/api/slots', { windows: [{ start: at(3), end: at(3, 12) }], durationMins: 30 });
+  const at = (days, hours = 7, mins = 0) => { const d = new Date(Date.now() + days * 86400000); d.setHours(hours, mins, 0, 0); return d.toISOString(); };
+  // Test times are Tuesday mornings (07:00): the demo data's meet & greet times are Saturdays 10:00–13:00, so the
+  // two can never overlap, whatever day of the week or time zone the tests are run in
+  const T = (() => { for (let d = 3; ; d++) if (new Date(Date.now() + d * 86400000).getDay() === 2) return d; })();
+  r = await anon('POST', '/api/slots', { windows: [{ start: at(T), end: at(T, 9) }], durationMins: 30 });
   check('Creating times needs a login', r.status === 401);
-  r = await adopter('POST', '/api/slots', { windows: [{ start: at(3), end: at(3, 12) }], durationMins: 30 });
+  r = await adopter('POST', '/api/slots', { windows: [{ start: at(T), end: at(T, 9) }], durationMins: 30 });
   check('Adopters cannot create times', r.status === 403);
-  r = await admin('POST', '/api/slots', { shelterId: bShelter, windows: [{ start: at(3), end: at(3, 12) }], durationMins: 25 });
+  r = await admin('POST', '/api/slots', { shelterId: bShelter, windows: [{ start: at(T), end: at(T, 9) }], durationMins: 25 });
   check('Slot length is validated', r.status === 400);
-  r = await admin('POST', '/api/slots', { shelterId: bShelter, windows: [{ start: at(3, 12), end: at(3, 10) }], durationMins: 30 });
+  r = await admin('POST', '/api/slots', { shelterId: bShelter, windows: [{ start: at(T, 9), end: at(T, 7) }], durationMins: 30 });
   check('End must be after start', r.status === 400);
-  r = await admin('POST', '/api/slots', { shelterId: bShelter, windows: [{ start: at(-1), end: at(-1, 12) }], durationMins: 30 });
+  r = await admin('POST', '/api/slots', { shelterId: bShelter, windows: [{ start: at(-1), end: at(-1, 9) }], durationMins: 30 });
   check('Times must be in the future', r.status === 400);
-  r = await admin('POST', '/api/slots', { windows: [{ start: at(3), end: at(3, 12) }], durationMins: 30 });
+  r = await admin('POST', '/api/slots', { windows: [{ start: at(T), end: at(T, 9) }], durationMins: 30 });
   check('Admins must choose a shelter', r.status === 400);
-  r = await admin('POST', '/api/slots', { shelterId: bShelter, windows: [{ start: at(3), end: at(3, 12) }, { start: at(10), end: at(10, 11) }], durationMins: 30 });
+  r = await admin('POST', '/api/slots', { shelterId: bShelter, windows: [{ start: at(T), end: at(T, 9) }, { start: at(T + 7), end: at(T + 7, 8) }], durationMins: 30 });
   check('Repeating times are generated back to back (4 + 2 slots)', r.status === 201 && r.body.created === 6);
-  r = await admin('POST', '/api/slots', { shelterId: bShelter, windows: [{ start: at(3), end: at(3, 12) }], durationMins: 30 });
+  r = await admin('POST', '/api/slots', { shelterId: bShelter, windows: [{ start: at(T), end: at(T, 9) }], durationMins: 30 });
   check('Existing times are not duplicated', r.status === 201 && r.body.created === 0 && r.body.skipped === 4);
   r = await admin('GET', `/api/slots?shelterId=${bShelter}`);
   const bSlots = r.body.slots.filter((x) => !x.bookedBy).sort((x, y) => new Date(x.start) - new Date(y.start));
