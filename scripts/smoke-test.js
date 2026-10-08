@@ -201,6 +201,21 @@ const mailFor = async (anon, email, type) => (await anon('GET', `/api/dev/emails
     hasChildren: true, hasOtherPets: false, experience: 'Experienced', motivation: 'I work from home and would love a small companion for walks.' };
   r = await adopter('POST', '/api/applications', form);
   check('Declaration must be confirmed', r.status === 400);
+  const appCount = (await db.find('applications')).length;
+  for (const phone of ['04ABC12345', '0412345', '0412345678901234', '0412#345#678']) {
+    r = await adopter('POST', '/api/applications', { ...form, phone, declaration: true });
+    check(`Invalid mobile number "${phone}" is rejected`, r.status === 400 && /mobile number/.test(r.body.error), JSON.stringify(r.body));
+  }
+  check('Rejected applications are not saved', (await db.find('applications')).length === appCount);
+  {
+    const res = await fetch(`${base}/api/auth/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{"email":' });
+    const body = await res.json();
+    check('Invalid JSON gets a clear 400 error', res.status === 400 && /invalid JSON/.test(body.error), JSON.stringify(body));
+  }
+  r = await adopter('POST', '/api/applications', { ...form, email: 'not-an-email', declaration: true });
+  check('Invalid email address is rejected', r.status === 400);
+  r = await adopter('POST', '/api/applications', { ...form, petId: 'pet_doesnotexist', declaration: true });
+  check('Application for an unknown pet is rejected', r.status === 400);
   r = await adopter('POST', '/api/applications', { ...form, declaration: true });
   check('Application is submitted', r.status === 201 && r.body.application.status === 'Submitted');
   check('Adopter does not see the suitability score', !('score' in r.body.application));
@@ -232,6 +247,11 @@ const mailFor = async (anon, email, type) => (await anon('GET', `/api/dev/emails
   check('Status → Under Review', r.status === 200 && r.body.application.status === 'Under Review');
   check('Status change is emailed and reported to staff', r.body.emailSent === true && /We emailed/.test(r.body.message) && Boolean(await mailFor(anon, email, 'status-update')));
   // Email settings: adopters can turn application emails off; the in-app notification still happens
+  for (const [phone, ok] of [['12345678', true], ['123456789012345', true], ['+61 (412) 345-678', true], ['1234567', false],
+    ['1234567890123456', false], ['04ABC12345', false], ['', true]]) {
+    r = await adopter('PATCH', '/api/users/me', { phone });
+    check(`Profile mobile number "${phone}" is ${ok ? 'accepted' : 'rejected'}`, r.status === (ok ? 200 : 400), JSON.stringify(r.body));
+  }
   r = await anon('PATCH', '/api/users/me', { emailPrefs: { applications: false } });
   check('Email settings need a login', r.status === 401);
   r = await adopter('PATCH', '/api/users/me', { emailPrefs: 'off' });

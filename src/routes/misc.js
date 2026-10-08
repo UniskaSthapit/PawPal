@@ -14,7 +14,7 @@ const { sanitizeProfile, describeProfile, emptyProfile, AGE_BAND } = require('..
 const { FAQ, APPLICATION_QUESTIONS } = require('../services/knowledge');
 const { requireAuth, requireStaff, requireAdmin, publicUser, shelterScope, setAuthCookie } = require('../middleware/auth');
 const { APP_CLOSED, APP_STATUSES } = require('../constants');
-const { newId, now, asyncHandler, clean, toInt, isEmail, passwordProblem, HttpError, escapeHtml } = require('../utils');
+const { newId, now, asyncHandler, clean, toInt, isEmail, passwordProblem, phoneProblem, HttpError, escapeHtml } = require('../utils');
 
 const router = express.Router();
 
@@ -239,6 +239,8 @@ router.patch('/users/me', requireAuth, asyncHandler(async (req, res) => {
   }
   if (req.body.phone !== undefined) {
     const phone = clean(req.body.phone, 30);
+    const phoneIssue = phoneProblem(phone);
+    if (phoneIssue) throw new HttpError(400, phoneIssue);
     if (phone !== (req.user.phone || '')) { patch.phone = phone; patch.phoneVerified = false; }
   }
   if (req.body.address !== undefined) patch.address = clean(req.body.address, 160);
