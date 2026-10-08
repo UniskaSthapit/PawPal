@@ -102,6 +102,7 @@ app.use((req, res) => res.status(404).sendFile(path.join(__dirname, 'public', '4
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
   if (err.type === 'entity.too.large') return res.status(413).json({ error: 'That upload is too large. Try fewer or smaller photos.' });
+  if (err.type === 'entity.parse.failed') return res.status(400).json({ error: 'The request could not be read (invalid JSON).' });
   const status = err.status || 500;
   // Never log request bodies (they can hold passwords or test card numbers): body-parser errors carry the raw body
   if (status >= 500) console.error(Object.assign(err, { body: undefined }));
