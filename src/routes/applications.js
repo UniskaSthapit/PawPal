@@ -8,7 +8,7 @@ const { notify, notifyStaff, emailPrefs } = require('../services/notify');
 const { calculateSuitabilityScore, LIVING_TYPES, EXPERIENCE } = require('../services/scoring');
 const { requireAuth, requireAdopter, requireStaff, isStaff, shelterScope, inScope } = require('../middleware/auth');
 const { APP_STATUSES, APP_CLOSED, APP_NEEDS_DATE, APP_HOLDS_PET, APP_FLOW, APP_STATUS_INFO } = require('../constants');
-const { newId, now, asyncHandler, clean, toBool, toInt, isEmail, HttpError } = require('../utils');
+const { newId, now, asyncHandler, clean, toBool, toInt, isEmail, phoneProblem, HttpError } = require('../utils');
 const { generateCarePlan } = require('../services/careplan');
 
 const router = express.Router();
@@ -76,6 +76,8 @@ function readForm(b) {
   };
   if (form.name.length < 2) throw new HttpError(400, 'Please enter your full name.');
   if (!isEmail(form.email)) throw new HttpError(400, 'Please enter a valid email address.');
+  const phoneIssue = phoneProblem(form.phone);
+  if (phoneIssue) throw new HttpError(400, phoneIssue);
   if (form.motivation.length < 20) throw new HttpError(400, 'Please tell the shelter a little more about why you want to adopt (at least 20 characters).');
   return form;
 }
