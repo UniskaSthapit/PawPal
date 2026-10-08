@@ -64,8 +64,17 @@
   syncConditional();
 
   // ---------- steps ----------
+  // Same rule as phoneProblem() on the server: optional; digits, spaces, brackets, dashes and a leading +; 8–15 digits
+  const phoneIssue = (p) => {
+    const s = String(p ?? '').trim();
+    if (!s) return null;
+    if (!/^\+?[\d\s()-]+$/.test(s)) return 'Please enter a valid mobile number using digits only (for example 0412 345 678).';
+    const digits = s.replace(/\D/g, '').length;
+    if (digits < 8 || digits > 15) return 'Please enter a valid mobile number with 8 to 15 digits.';
+    return null;
+  };
   const REQUIRED = {
-    1: (v) => (v.name.length < 2 ? 'Please enter your full name.' : !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.email) ? 'Please enter a valid email.' : null),
+    1: (v) => (v.name.length < 2 ? 'Please enter your full name.' : !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.email) ? 'Please enter a valid email.' : phoneIssue(v.phone)),
     2: (v) => (!v.livingType ? 'Tell us what type of home you live in.' : !v.ownership ? 'Tell us whether you own or rent.' : v.hasChildren === '' ? 'Tell us whether there are children in the home.' : v.hasOtherPets === '' ? 'Tell us whether you have other pets.' : null),
     3: (v) => (!v.activityLevel ? 'Choose how active your household is.' : v.hoursAlone === '' ? 'Tell us how long the pet would be alone each day.' : !v.experience ? 'Tell us about your experience with pets.' : null),
     4: (v) => (v.motivation.length < 20 ? 'Please write at least 20 characters about why you\'d like to adopt.' : null),

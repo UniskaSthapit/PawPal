@@ -34,8 +34,18 @@ const passwordProblem = (pw) => {
   return null;
 };
 
+// Optional phone number: digits with spaces, brackets or dashes and an optional leading +, 8–15 digits in total
+const phoneProblem = (v) => {
+  const s = String(v ?? '').trim();
+  if (!s) return null;
+  if (!/^\+?[\d\s()-]+$/.test(s)) return 'Please enter a valid mobile number using digits only (for example 0412 345 678).';
+  const digits = s.replace(/\D/g, '').length;
+  if (digits < 8 || digits > 15) return 'Please enter a valid mobile number with 8 to 15 digits.';
+  return null;
+};
+
 const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => (
   { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 module.exports = { newId, now, randomToken, hashToken, HttpError, asyncHandler, clean, toBool, toInt,
-  isEmail, passwordProblem, escapeHtml };
+  isEmail, passwordProblem, phoneProblem, escapeHtml };
