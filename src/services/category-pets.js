@@ -1,8 +1,8 @@
 // Pets for the four adoption categories (Rescue & Rehabilitation, Domestic Pets, Exotic Pets, Rare & Special Breeds).
 // Added by the seed for fresh installs and by the v5 migration for existing databases (matched by name + breed, so
-// nothing is duplicated). All animals are fictional demo content; photos are PawPal's own illustrations until staff
-// upload real ones from Edit pet. Care facts are general guidance — profiles tell adopters to confirm with the shelter.
-const art = (file) => `images/pets/${file}.svg`;
+// nothing is duplicated). All animals are fictional demo content with photos in public/images/pets/photos. Care facts are general guidance — profiles tell adopters to confirm with the shelter.
+// Real photos (supplied for these animals), served from public/images/pets/photos
+const photo = (file) => `images/pets/photos/${file}.jpg`;
 const DOG_CAT_HEALTH = ['Vet health check on intake', 'Vaccinated, desexed and microchipped', 'Flea, tick and worm treatment up to date'];
 const REHAB_HEALTH = ['Full vet assessment and treatment after rescue', 'Vaccinated, desexed and microchipped', 'Signed off as healthy by the shelter vet'];
 const EXOTIC_HEALTH = ['Health check by an exotics vet', 'Eating and behaving normally in care', 'Setup advice included on adoption day'];
@@ -54,30 +54,30 @@ const MORE_CARE = {
 
 const CATEGORY_PETS = [
   // ---------- Rescue & Rehabilitation ----------
-  { category: 'rescue', name: 'Hope', type: 'Dog', breed: 'Staffordshire Bull Terrier Cross', age: 3, gender: 'Female', size: 'Medium', colour: 'Brindle', location: 'Footscray, VIC', adoptionFee: 250,
+  { category: 'rescue', name: 'Hope', type: 'Dog', breed: 'Staffordshire Bull Terrier Cross', age: 3, gender: 'Female', size: 'Medium', colour: 'Tan', location: 'Footscray, VIC', adoptionFee: 250,
     traits: ['Affectionate', 'Resilient', 'Food Motivated'], energyLevel: 2, requiresYard: true, goodWithChildren: true, goodWithOtherPets: false,
     vaccinated: true, desexed: true, microchipped: true, healthChecks: REHAB_HEALTH,
     idealHome: 'A patient home with a secure yard and no other dogs, where she can be the centre of attention.',
     description: 'Hope was found tied up in a backyard, underweight and frightened. After four months of vet care and foster love she has transformed into a cheerful, cuddly girl who adores belly rubs and anyone holding a treat. She still startles at sudden noises, so a calm household and a few gentle routines will help her finish settling. Hope walks well on a lead, knows sit and drop, and is ready for a family to call her own.',
-    photos: [art('dog-c')] },
-  { category: 'rescue', name: 'Bramble', type: 'Dog', breed: 'Greyhound (retired racer)', age: 4, gender: 'Male', size: 'Large', colour: 'Black', location: 'Parramatta, NSW', adoptionFee: 200,
+    photos: [photo('hope')] },
+  { category: 'rescue', name: 'Bramble', type: 'Dog', breed: 'Greyhound (retired racer)', age: 4, gender: 'Male', size: 'Large', colour: 'Brindle', location: 'Parramatta, NSW', adoptionFee: 200,
     traits: ['Gentle', 'Quiet', 'Couch Lover'], energyLevel: 1, requiresYard: false, goodWithChildren: true, goodWithOtherPets: false, firstTimeFriendly: true,
     vaccinated: true, desexed: true, microchipped: true, healthChecks: REHAB_HEALTH,
     idealHome: 'An apartment or house without cats or small pets, with a soft bed and a short walk twice a day.',
     description: 'Bramble raced for two years before he was retired and handed to our rehabilitation program. Like most greyhounds he is a gentle giant who would rather sleep 18 hours a day than run. He has learned to climb stairs, ride in a car and relax in a home, and now he is ready for a sofa of his own. Bramble is quiet, polite with children and happy in an apartment, but he has a strong chase instinct, so he must live without cats or small pets and wear a muzzle at off-lead parks.',
-    photos: [art('dog-a')] },
-  { category: 'rescue', name: 'Willow', type: 'Cat', breed: 'Domestic Shorthair', age: 6, gender: 'Female', size: 'Small', colour: 'Grey & white', location: 'Woolloongabba, QLD', adoptionFee: 100,
+    photos: [photo('bramble')] },
+  { category: 'rescue', name: 'Willow', type: 'Cat', breed: 'Domestic Longhair', age: 6, gender: 'Female', size: 'Medium', colour: 'Cream & grey, blue eyes', location: 'Woolloongabba, QLD', adoptionFee: 100,
     traits: ['Shy', 'Sweet', 'Quiet'], energyLevel: 1, requiresYard: false, goodWithChildren: false, goodWithOtherPets: true,
     vaccinated: true, desexed: true, microchipped: true, healthChecks: REHAB_HEALTH,
     idealHome: 'A calm, adults-only home where she can take her time and choose when to come for a cuddle.',
     description: 'Willow was one of more than forty cats rescued from a hoarding situation. She arrived matted and nervous, and our carers spent weeks earning her trust. Today she purrs the moment you sit down beside her, loves a warm windowsill and gets along with other calm cats. She still needs a few days to hide and explore when she moves, so she is best suited to a quiet home with patient adults.',
-    photos: [art('cat-c')] },
+    photos: [photo('willow')] },
   { category: 'rescue', name: 'Henny, Penny & Dot', type: 'Farm Animal', breed: 'Ex-battery hens (bonded trio)', age: 2, gender: 'Female', size: 'Small', colour: 'Brown', location: 'Osborne Park, WA', adoptionFee: 30,
     traits: ['Curious', 'Friendly', 'Bonded Trio'], energyLevel: 2, requiresYard: true, goodWithChildren: true, goodWithOtherPets: false, firstTimeFriendly: true,
     vaccinated: true, desexed: false, microchipped: false, healthChecks: ['Checked by a poultry vet', 'Feathers regrowing well', 'Treated for mites and worms'],
     idealHome: 'A backyard with a fox-proof coop, room to scratch and dust-bathe, and no dogs that chase birds.',
     description: 'Henny, Penny and Dot spent their first year in a commercial cage farm and had never felt grass until they were rescued. They arrived with patchy feathers and pale combs, and now they are bright, chatty and feathered again. They follow people around the yard hoping for treats, love dust baths, and still lay the odd egg. The three are bonded and will only be adopted together.',
-    care: MORE_CARE.hens, photos: [art('bird-c')] },
+    care: MORE_CARE.hens, photos: [photo('henny-penny-dot')] },
 
   // ---------- Domestic Pets ----------
   { category: 'domestic', name: 'Pudding & Truffle', type: 'Guinea Pig', breed: 'American Guinea Pig (bonded pair)', age: 1, gender: 'Male', size: 'Small', colour: 'Ginger & tri-colour', location: 'Footscray, VIC', adoptionFee: 60,
@@ -85,13 +85,13 @@ const CATEGORY_PETS = [
     vaccinated: false, desexed: true, microchipped: false, healthChecks: EXOTIC_HEALTH,
     idealHome: 'A family with a big indoor enclosure and kids who love sitting on the floor for gentle cuddles.',
     description: 'Pudding and Truffle are brothers who "wheek" loudly whenever they hear the fridge open. They are relaxed with handling, love floor time and tunnels, and are a great first pet for a family with school-aged children. They have always lived together and must be adopted as a pair.',
-    care: MORE_CARE.guineapig, photos: [art('small-d')] },
-  { category: 'domestic', name: 'Marshmallow', type: 'Rabbit', breed: 'Mini Lop', age: 2, gender: 'Female', size: 'Small', colour: 'White & fawn', location: 'Parramatta, NSW', adoptionFee: 120,
+    care: MORE_CARE.guineapig, photos: [photo('pudding-truffle')] },
+  { category: 'domestic', name: 'Marshmallow', type: 'Rabbit', breed: 'Mini Lop', age: 2, gender: 'Female', size: 'Small', colour: 'Fawn', location: 'Parramatta, NSW', adoptionFee: 120,
     traits: ['Playful', 'Litter Trained', 'Affectionate'], energyLevel: 2, requiresYard: false, goodWithChildren: true, goodWithOtherPets: true, firstTimeFriendly: true,
     vaccinated: true, desexed: true, microchipped: true, healthChecks: ['Vaccinated against calicivirus', 'Desexed and microchipped', 'Teeth and nails checked'],
     idealHome: 'An indoor home with a bunny-proofed room or pen and someone home to give her daily playtime.',
     description: 'Marshmallow is a floppy-eared Mini Lop who is fully litter trained and loves to "binky" across the room when she is happy. She enjoys gentle pats on the floor, cardboard castles and her daily bowl of herbs. She would suit an indoor family home, and she could be bonded with a desexed male rabbit later on.',
-    photos: [art('rabbit-c')] },
+    photos: [photo('marshmallow')] },
 
   // ---------- Exotic Pets ----------
   { category: 'exotic', name: 'Rio', type: 'Bird', breed: 'Galah', age: 8, gender: 'Male', size: 'Medium', colour: 'Pink & grey', location: 'Woolloongabba, QLD', adoptionFee: 180,
@@ -99,39 +99,39 @@ const CATEGORY_PETS = [
     vaccinated: false, desexed: false, microchipped: false, healthChecks: [...EXOTIC_HEALTH, 'Tested clear of psittacine beak and feather disease'],
     idealHome: 'An experienced bird keeper who is home most of the day and can offer a large aviary and lots of company.',
     description: 'Rio is a cheeky eight-year-old galah who says "hello darling" and laughs at his own jokes. He was surrendered when his owner moved into aged care, and he misses having a person to follow around. Rio needs several hours of company every day, plenty of things to chew, and a keeper ready for a bird who could live another forty years.',
-    care: MORE_CARE.galah, photos: [art('bird-d')] },
+    care: MORE_CARE.galah, photos: [photo('rio')] },
   { category: 'exotic', name: 'Shelly', type: 'Reptile', breed: 'Eastern Long-necked Turtle', age: 12, gender: 'Female', size: 'Small', colour: 'Dark brown', location: 'Parramatta, NSW', adoptionFee: 90,
     traits: ['Calm', 'Curious', 'Low Maintenance'], energyLevel: 1, requiresYard: false, goodWithChildren: true, goodWithOtherPets: false,
     vaccinated: false, desexed: false, microchipped: false, healthChecks: EXOTIC_HEALTH,
     idealHome: 'A licensed keeper with space for a large tank and the long-term commitment a turtle needs.',
     description: 'Shelly is a gentle long-necked turtle who stretches her neck out to see who is visiting her tank. She eats well, basks every afternoon and is easy to care for once her setup is right. Her previous family could no longer keep her, and she is looking for a keeper who knows that turtles can live for decades.',
-    care: MORE_CARE.turtle, photos: [art('reptile-c')] },
+    care: MORE_CARE.turtle, photos: [photo('shelly')] },
   { category: 'exotic', name: 'Axel', type: 'Other', breed: 'Axolotl', age: 2, gender: 'Male', size: 'Small', colour: 'Leucistic pink', location: 'Osborne Park, WA', adoptionFee: 40,
     traits: ['Calm', 'Unusual', 'Easy Going'], energyLevel: 1, requiresYard: false, goodWithChildren: true, goodWithOtherPets: false, firstTimeFriendly: true,
     vaccinated: false, desexed: false, microchipped: false, healthChecks: EXOTIC_HEALTH,
     idealHome: 'A home with a cool, quiet spot for an aquarium and someone happy to keep up with water care.',
     description: 'Axel is a pink axolotl with feathery gills and a permanent smile. Axolotls are amphibians that stay in the water their whole lives, and Axel spends his days wandering the bottom of his tank and waiting for dinner. He is a fascinating, low-noise companion, but he needs cool water, so a calm room away from windows is ideal.',
-    care: MORE_CARE.axolotl, photos: [art('fish-d')] },
+    care: MORE_CARE.axolotl, photos: [photo('axel')] },
 
   // ---------- Rare & Special Breeds ----------
-  { category: 'rare', name: 'Saffron', type: 'Cat', breed: 'Sphynx', age: 3, gender: 'Female', size: 'Small', colour: 'Peach (hairless)', location: 'Footscray, VIC', adoptionFee: 350,
+  { category: 'rare', name: 'Saffron', type: 'Cat', breed: 'Sphynx', age: 3, gender: 'Female', size: 'Small', colour: 'Grey & cream (hairless), green eyes', location: 'Footscray, VIC', adoptionFee: 350,
     traits: ['Social', 'Warm Seeker', 'Playful'], energyLevel: 2, requiresYard: false, goodWithChildren: true, goodWithOtherPets: true,
     vaccinated: true, desexed: true, microchipped: true, healthChecks: [...DOG_CAT_HEALTH, 'Heart screening completed'],
     idealHome: 'An indoor home with someone around most of the day, warm blankets and a weekly bath routine.',
     description: 'Saffron is a Sphynx, one of the few hairless cat breeds. She feels like warm suede, follows people from room to room and loves to burrow under the covers. Without fur she needs to stay indoors, wear a jumper in winter and have a gentle bath each week to remove skin oils. She is outgoing and affectionate and gets along with other friendly cats.',
-    photos: [art('cat-d')] },
-  { category: 'rare', name: 'Kona', type: 'Dog', breed: 'Lagotto Romagnolo', age: 2, gender: 'Male', size: 'Medium', colour: 'Brown roan, curly', location: 'Woolloongabba, QLD', adoptionFee: 600,
+    photos: [photo('saffron')] },
+  { category: 'rare', name: 'Kona', type: 'Dog', breed: 'Lagotto Romagnolo', age: 2, gender: 'Male', size: 'Medium', colour: 'White & brown, curly', location: 'Woolloongabba, QLD', adoptionFee: 600,
     traits: ['Smart', 'Low Shedding', 'Loves to Sniff'], energyLevel: 3, requiresYard: true, goodWithChildren: true, goodWithOtherPets: true,
     vaccinated: true, desexed: true, microchipped: true, healthChecks: [...DOG_CAT_HEALTH, 'Hips scored by the breeder before surrender'],
     idealHome: 'An active family who enjoys training games, sniffing walks and a yard to explore.',
     description: 'Kona is a Lagotto Romagnolo, an old Italian breed traditionally used to sniff out truffles. His curly, low-shedding coat makes him popular with families who have allergies, and his clever nose means he loves scent games and puzzle feeders. Kona was surrendered by a family whose work hours changed. He is friendly with children and other dogs, and needs daily exercise and regular grooming.',
-    photos: [art('dog-d')] },
-  { category: 'rare', name: 'Pippin', type: 'Farm Animal', breed: 'Miniature Highland Cow', age: 3, gender: 'Male', size: 'Large', colour: 'Red, shaggy', location: 'Osborne Park, WA', adoptionFee: 900,
+    photos: [photo('kona')] },
+  { category: 'rare', name: 'Pippin', type: 'Farm Animal', breed: 'Miniature Highland Cow', age: 1, gender: 'Male', size: 'Medium', colour: 'Cream, shaggy', location: 'Osborne Park, WA', adoptionFee: 900,
     traits: ['Gentle', 'Fluffy', 'Easy Going'], energyLevel: 1, requiresYard: true, goodWithChildren: true, goodWithOtherPets: true,
     vaccinated: true, desexed: true, microchipped: false, healthChecks: ['Checked by a large-animal vet', 'Vaccinated and drenched', 'NLIS tagged'],
     idealHome: 'A small acreage with good pasture, shelter and another cow or a goat for company.',
-    description: 'Pippin is a miniature Highland steer with a shaggy red fringe that covers his eyes. Highlands are a hardy Scottish breed known for their calm, friendly nature. Pippin is halter trained, loves a brush and stands patiently for the farrier. He came to us when his farm was sold, and he is looking for a small acreage where he can graze with a companion.',
-    care: MORE_CARE.highland, photos: [art('cow-a')] },
+    description: 'Pippin is a young miniature Highland steer with a shaggy cream fringe that falls over his eyes. Highlands are a hardy Scottish breed known for their calm, friendly nature. Pippin is learning to walk on a halter, loves a brush and is curious about everyone who visits. He came to us when his farm was sold, and he is looking for a small acreage where he can graze with a companion.',
+    care: MORE_CARE.highland, photos: [photo('pippin')] },
 ];
 
 // Starting categories for the original demo pets (by name + breed); everything else uses defaultCategory()
