@@ -387,6 +387,7 @@ const PawPal = (() => {
   // ---------- navigation ----------
   const PUBLIC_LINKS = [
     ['Adopt a pet', 'adopt.html'],
+    ['Rescue animals', 'rescue.html'],
     ['Find my PawPal', 'ai-matching.html', true],
     ['How it works', 'home.html#how'],
     ['About', 'about.html'],
@@ -471,7 +472,7 @@ const PawPal = (() => {
               <a href="https://www.linkedin.com" target="_blank" rel="noopener" aria-label="PawPal on LinkedIn">${icons.linkedin}</a>
             </div>
           </div>
-          <div><h3>Adopt</h3><a href="adopt.html">All pets</a><a href="adopt.html?type=dog">Dogs</a><a href="adopt.html?type=cat">Cats</a><a href="adopt.html?type=small">Rabbits & small pets</a><a href="adopt.html?type=bird">Birds</a><a href="adopt.html?type=reptile">Reptiles</a><a href="adopt.html?type=fish">Fish</a><a href="adopt.html?type=farm">Goats & cows</a></div>
+          <div><h3>Adopt</h3><a href="adopt.html">All pets</a><a href="rescue.html">Rescue animals</a><a href="adopt.html?type=dog">Dogs</a><a href="adopt.html?type=cat">Cats</a><a href="adopt.html?type=small">Rabbits & small pets</a><a href="adopt.html?type=bird">Birds</a><a href="adopt.html?type=reptile">Reptiles</a><a href="adopt.html?type=fish">Fish</a><a href="adopt.html?type=farm">Goats & cows</a></div>
           <div><h3>Help & advice</h3><a href="home.html#how">How adoption works</a><a href="home.html#faq">Adoption FAQ</a><a href="vet-finder.html">Find a vet</a><a href="ending-animal-cruelty.html">Report animal cruelty</a></div>
           <div><h3>PawPal</h3><a href="about.html">About us</a><a href="about.html#stories">Rescue stories</a><a href="contact.html">Contact</a><a href="login.html?role=staff">Shelter staff login</a>
             <a data-contact-email href="mailto:pawpaladmin@gmail.com">${icons.mail} pawpaladmin@gmail.com</a><a data-site-url href="home.html">${icons.globe} Website</a></div>

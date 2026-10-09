@@ -42,6 +42,12 @@
     $('#heroCount').textContent = `${s.availablePets} pets waiting for a home near you`;
   } else $('#stats').hidden = true;
 
+  // Adoption categories: how many animals are waiting in each
+  if (petsRes.status === 'fulfilled') {
+    const byKind = petsRes.value.pets.reduce((m, p) => ((m[p.category] = (m[p.category] || 0) + 1), m), {});
+    $$('[data-kind-count]').forEach((el) => { const n = byKind[el.dataset.kindCount] || 0; el.textContent = n ? `${n} available now` : 'New animals arrive every week'; });
+  }
+
   if (petsRes.status === 'fulfilled') {
     const pets = petsRes.value.pets;
     // Each photo links to the real pet pictured (while they're still available) and shows their name on hover

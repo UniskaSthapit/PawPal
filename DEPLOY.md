@@ -105,6 +105,13 @@ the next start (schema v4 gives every pet an adoption fee if it had none; new co
   Translations are cached in the database, so each text uses the AI only once per language.
 - **Adoption fee payments are a simulation.** No payment provider is connected and no real money is taken; only the
   published test cards work. Every checkout page and receipt says so. Set each pet's real fee on the pet form.
+- **Top 5 vets with Google ratings:** set `GOOGLE_MAPS_API_KEY` in Render. In your Google Cloud project (the same one as Gmail), go to
+  *APIs & Services → Library → Places API (New) → Enable*, then *Credentials → Create credentials → API key*. Restrict it to
+  *Places API (New)*. Google needs a billing account on the project, but it includes a free monthly allowance that is far
+  more than a small site uses. Each vet search makes one Places request (with ratings and reviews). Without the key,
+  the vet finder still shows the map and a link to the top-rated vets on Google Maps.
+- **Adoption categories** are added to existing pets automatically on the next start (schema v5), along with 12 new
+  demo animals across the four categories, each with a photo (staff can change photos from *Pets → Edit*).
 - **Flyers and short links** use `APP_URL` for the QR code and `/p/<petId>` links — make sure it is your real URL.
 - **Meet & greet times** are entered in the browser's local time; set your shelters' availability under
   *Availability* after deploying (the demo times only exist in the demo data).

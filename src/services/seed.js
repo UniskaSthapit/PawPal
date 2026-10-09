@@ -8,6 +8,8 @@ const { templateDescription } = require('./ai');
 const { DEFAULT_SHELTERS, SCHEMA_VERSION, shelterFor, addExtraPets } = require('./migrate');
 const { parseProfile } = require('./matching');
 const { rulesPlan, DISCLAIMER } = require('./careplan');
+const { demoCategory } = require('./category-pets');
+const { defaultCategory } = require('../constants');
 
 // A wall-clock time in Melbourne (handles daylight saving) as a Date
 function melbourneTime(day, hour, minute = 0) {
@@ -150,7 +152,7 @@ async function seedIfEmpty({ force = false } = {}) {
     preferences: parseProfile(demoText, {}, ['Footscray, VIC']), preferencesText: demoText, preferencesAt: daysAgo(3) };
   for (const u of [admin, staff, demo]) await db.insert('users', u);
 
-  const pets = PETS.map((p, i) => ({ id: newId('pet'), ...p, status: 'Available', description: templateDescription(p),
+  const pets = PETS.map((p, i) => ({ id: newId('pet'), ...p, category: demoCategory(p) || defaultCategory(p.type), status: 'Available', description: templateDescription(p),
     shelterId: shelterFor(p.location, shelters).id, medicalHistory: MEDICAL[i % MEDICAL.length], rescueBackground: RESCUE[i % RESCUE.length],
     internalNotes: i % 3 === 0 ? 'Reactive to loud trucks on walks — mention at meet & greet.' : '',
     createdBy: admin.id, createdAt: daysAgo(70 - i * 3), updatedAt: daysAgo(70 - i * 3) }));
