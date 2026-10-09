@@ -29,6 +29,7 @@
   const photos = pet.photos?.length ? pet.photos : [photo(pet)];
   const paragraphs = (text) => String(text || `${pet.name} is waiting to meet you. Contact the shelter to learn more.`).split(/\n+/).map((p) => `<p>${esc(p)}</p>`).join('');
   const traitTags = (traits) => traits.map((t) => `<span class="tag">${esc(t)}</span>`).join('');
+  const KIND = { rescue: ['Rescue & Rehabilitation', 'heart'], domestic: ['Domestic Pet', 'home'], exotic: ['Exotic Pet', 'turtle'], rare: ['Rare & Special Breed', 'star'] };
   const pronoun = pet.gender === 'Female' ? 'her' : pet.gender === 'Male' ? 'him' : 'them';
   const energy = Number(pet.energyLevel) || 2;
 
@@ -62,7 +63,8 @@
       </div>
       <div class="profile-side"><div class="profile-card" data-reveal>
         <div class="row">${pet.status === 'On Hold' ? '<span class="badge badge-honey">On hold — meeting an adopter</span>' : adopted ? '<span class="badge badge-dark">Adopted</span>' : '<span class="badge badge-sage">Available for adoption</span>'}
-          <span class="badge">${icons.pin}${esc(pet.location || 'Location on request')}</span></div>
+          <span class="badge">${icons.pin}${esc(pet.location || 'Location on request')}</span>
+          ${KIND[pet.category] ? `<a class="badge badge-brand category-badge" href="${pet.category === 'rescue' ? 'rescue.html' : `adopt.html?category=${pet.category}`}">${icons[KIND[pet.category][1]]}${esc(KIND[pet.category][0])}</a>` : ''}</div>
         <h1 class="profile-name" style="margin-top:18px">${esc(pet.name)}</h1>
         <p class="lead" style="margin-top:6px">${esc(pet.breed)} · ${esc(pet.gender === 'Unknown' ? pet.type : pet.gender)}</p>
         <dl class="key-facts">

@@ -75,6 +75,15 @@
       </aside>
 
       <div>
+        <!-- What kind of animal: the four adoption categories (Rescue & Rehabilitation, Domestic, Exotic, Rare & Special) -->
+        <div class="kind-picker" role="group" aria-label="What kind of animal are you adopting?">
+          <button class="kind" type="button" data-kind="" aria-pressed="true"><span class="kind-ic" data-icon="paw"></span><span><b>All kinds</b><small>Every animal looking for a home</small></span></button>
+          <button class="kind kind-rescue" type="button" data-kind="rescue" aria-pressed="false"><span class="kind-ic" data-icon="heart"></span><span><b>Rescue &amp; Rehabilitation</b><small>A second chance after a hard start</small></span></button>
+          <button class="kind kind-domestic" type="button" data-kind="domestic" aria-pressed="false"><span class="kind-ic" data-icon="home"></span><span><b>Domestic Pets</b><small>Dogs, cats, rabbits &amp; small pets</small></span></button>
+          <button class="kind kind-exotic" type="button" data-kind="exotic" aria-pressed="false"><span class="kind-ic" data-icon="turtle"></span><span><b>Exotic Pets</b><small>Birds, reptiles, fish &amp; more</small></span></button>
+          <button class="kind kind-rare" type="button" data-kind="rare" aria-pressed="false"><span class="kind-ic" data-icon="star"></span><span><b>Rare &amp; Special Breeds</b><small>Uncommon breeds &amp; farm friends</small></span></button>
+        </div>
+        <p class="kind-note small muted" id="kindNote" hidden></p>
         <!-- Category bar: a quick species switcher kept in sync with the Species filter -->
         <div class="cat-bar" role="group" aria-label="Show species">
           <button class="cat" type="button" data-cat="" aria-pressed="true"><span class="ic" data-icon="paw"></span>All pets</button>
