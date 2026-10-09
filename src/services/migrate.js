@@ -1,13 +1,14 @@
 // One-time data upgrades so an existing PawPal database (e.g. the live MongoDB) keeps working
 // after the workflow, roles and shelters were added. Safe to run on every start: it is versioned and idempotent.
 const db = require('../db');
-const { LEGACY_APP_STATUS, LEGACY_PET_STATUS, DEFAULT_FEES } = require('../constants');
+const { LEGACY_APP_STATUS, LEGACY_PET_STATUS, DEFAULT_FEES, CATEGORY_KEYS, defaultCategory } = require('../constants');
+const { CATEGORY_PETS, demoCategory } = require('./category-pets');
 const { newId, now } = require('../utils');
 const config = require('../config');
 const { EXTRA_PETS } = require('./extra-pets');
 
 // v3: real contact email on shelters, and reptiles, birds, fish, hamsters and farm animals added to the catalogue
-const SCHEMA_VERSION = 4;
+const SCHEMA_VERSION = 5;
 
 const DEFAULT_SHELTERS = [
   { key: 'VIC', name: 'PawPal Melbourne Rescue Centre', suburb: 'Footscray', state: 'VIC', address: '14 Hopkins Street, Footscray VIC 3011',
@@ -48,6 +49,7 @@ async function migrate() {
     const patch = {};
     if (!pet.shelterId) patch.shelterId = shelterFor(pet.location, shelters).id;
     if (LEGACY_PET_STATUS[pet.status]) patch.status = LEGACY_PET_STATUS[pet.status];
+    if (!CATEGORY_KEYS.includes(pet.category)) patch.category = demoCategory(pet) || defaultCategory(pet.type); // v5: adoption categories
     if (pet.adoptionFee === undefined || pet.adoptionFee === null) patch.adoptionFee = DEFAULT_FEES[pet.type] ?? DEFAULT_FEES.Other; // v4: every pet has a fee
     // Move inline base64 photos into the images collection so pet lists stay light
     if ((pet.photos || []).some((p) => p.startsWith('data:'))) {
@@ -97,11 +99,11 @@ async function addExtraPets(shelters, { createdBy = null } = {}) {
   const existing = new Set((await db.find('pets')).map((p) => `${p.name}|${p.breed}`.toLowerCase()));
   const { templateDescription } = require('./ai');
   let added = 0;
-  for (const [i, p] of EXTRA_PETS.entries()) {
+  for (const [i, p] of [...EXTRA_PETS, ...CATEGORY_PETS].entries()) {
     if (existing.has(`${p.name}|${p.breed}`.toLowerCase())) continue;
     const at = new Date(Date.now() - (i + 1) * 36e5 * 20).toISOString(); // spread over recent days
-    await db.insert('pets', { id: newId('pet'), ...p, description: p.description || templateDescription(p), status: 'Available',
-      shelterId: shelterFor(p.location, shelters).id, medicalHistory: 'Health check completed on intake. See care notes.', rescueBackground: 'Surrendered to the shelter.',
+    await db.insert('pets', { id: newId('pet'), ...p, category: p.category || defaultCategory(p.type), description: p.description || templateDescription(p), status: 'Available',
+      shelterId: shelterFor(p.location, shelters).id, medicalHistory: 'Health check completed on intake. See care notes.', rescueBackground: p.rescueBackground || 'Surrendered to the shelter.',
       internalNotes: '', createdBy, createdAt: at, updatedAt: at });
     added++;
   }

@@ -6,7 +6,7 @@
   const editId = params.get('id');
   let photos = []; let current = null; let dirty = false;
   const BOOL = ['goodWithChildren', 'goodWithOtherPets', 'requiresYard', 'firstTimeFriendly', 'specialNeeds', 'vaccinated', 'desexed', 'microchipped'];
-  const TEXT = ['name', 'type', 'breed', 'colour', 'age', 'gender', 'size', 'adoptionFee', 'location', 'energyLevel', 'idealHome', 'description', 'medicalHistory', 'rescueBackground', 'internalNotes'];
+  const TEXT = ['name', 'type', 'category', 'breed', 'colour', 'age', 'gender', 'size', 'adoptionFee', 'location', 'energyLevel', 'idealHome', 'description', 'medicalHistory', 'rescueBackground', 'internalNotes'];
 
   if (u.role === 'admin') {
     try {
@@ -23,6 +23,12 @@
     const suggest = () => { if (!feeTouched && SUGGESTED_FEES[$('#type').value] !== undefined) $('#adoptionFee').value = SUGGESTED_FEES[$('#type').value]; };
     $('#adoptionFee').addEventListener('input', () => { feeTouched = true; });
     $('#type').addEventListener('change', suggest);
+    // Category follows the species (Farm animals → Rare & special, birds/reptiles/fish → Exotic) until staff choose one
+    let categoryTouched = false;
+    const suggestCategory = () => { if (!categoryTouched) $('#category').value = ['Dog', 'Cat', 'Rabbit', 'Guinea Pig', 'Hamster'].includes($('#type').value) ? 'domestic' : $('#type').value === 'Farm Animal' ? 'rare' : 'exotic'; };
+    $('#category').addEventListener('change', () => { categoryTouched = true; });
+    $('#type').addEventListener('change', suggestCategory);
+    suggestCategory();
     suggest();
   }
 

@@ -5,6 +5,17 @@ const ROLES = ['user', 'staff', 'admin'];
 const ROLE_LABELS = { user: 'Adopter', staff: 'Shelter staff', admin: 'Administrator' };
 
 const PET_TYPES = ['Dog', 'Cat', 'Rabbit', 'Guinea Pig', 'Hamster', 'Bird', 'Reptile', 'Fish', 'Farm Animal', 'Other'];
+// The kind of companion an adopter is looking for. Every pet belongs to one category (staff can change it on the pet form).
+const PET_CATEGORIES = {
+  rescue: { label: 'Rescue & Rehabilitation', short: 'Rescue & rehab', blurb: 'Animals rescued from neglect, cruelty, racing or hoarding, now healthy and ready for a patient home.' },
+  domestic: { label: 'Domestic Pets', short: 'Domestic pets', blurb: 'Family dogs, cats, rabbits and small pets that settle easily into everyday home life.' },
+  exotic: { label: 'Exotic Pets', short: 'Exotic pets', blurb: 'Birds, reptiles, fish and unusual companions for keepers who love something different.' },
+  rare: { label: 'Rare & Special Breeds', short: 'Rare & special', blurb: 'Uncommon breeds and special animals, from heritage dogs to miniature cattle.' },
+};
+const CATEGORY_KEYS = Object.keys(PET_CATEGORIES);
+// Starting category from the species (used for new pets and existing pets without one)
+const defaultCategory = (type) => (['Dog', 'Cat', 'Rabbit', 'Guinea Pig', 'Hamster'].includes(type) ? 'domestic' : type === 'Farm Animal' ? 'rare' : 'exotic');
+
 // Suggested adoption fees (AUD) by species — staff can change each pet's fee on the pet form
 const DEFAULT_FEES = { Dog: 400, Cat: 180, Rabbit: 90, 'Guinea Pig': 50, Hamster: 25, Bird: 70, Reptile: 130, Fish: 20, 'Farm Animal': 300, Other: 50 };
 // Groups used by the species filters (?type=small etc.). Any other value matches a single type, e.g. ?type=reptile.
@@ -40,5 +51,5 @@ const APP_STATUS_INFO = {
 const LEGACY_APP_STATUS = { Pending: 'Submitted', Shortlisted: 'Under Review', 'Visit Scheduled': 'Meet & Greet', Rejected: 'Declined' };
 const LEGACY_PET_STATUS = { 'Pending Adoption': 'On Hold' };
 
-module.exports = { ROLES, ROLE_LABELS, PET_TYPES, DEFAULT_FEES, TYPE_GROUPS, PET_SIZES, PET_STATUSES, PUBLIC_PET_STATUSES, APP_FLOW, APP_STATUSES,
+module.exports = { ROLES, ROLE_LABELS, PET_TYPES, DEFAULT_FEES, PET_CATEGORIES, CATEGORY_KEYS, defaultCategory, TYPE_GROUPS, PET_SIZES, PET_STATUSES, PUBLIC_PET_STATUSES, APP_FLOW, APP_STATUSES,
   APP_CLOSED, APP_NEEDS_DATE, APP_HOLDS_PET, APP_STATUS_INFO, LEGACY_APP_STATUS, LEGACY_PET_STATUS };

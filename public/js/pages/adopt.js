@@ -4,7 +4,8 @@
   const { $, $$, esc, icons, petCardHTML, emptyHTML, errorHTML, skeletonCards, params } = PawPal;
   const PAGE = 12;
   const MULTI = ['age', 'size', 'energy'];
-  const LABELS = { type: { dog: 'Dogs', cat: 'Cats', small: 'Small pets', bird: 'Birds', reptile: 'Reptiles', fish: 'Fish', farm: 'Goats & cows', other: 'Other pets' }, age: { baby: 'Under 1', young: '1–2 yrs', adult: '3–7 yrs', senior: '8+ yrs' },
+  const KINDS = { rescue: 'Rescue & Rehabilitation', domestic: 'Domestic Pets', exotic: 'Exotic Pets', rare: 'Rare & Special Breeds' };
+  const LABELS = { category: KINDS, type: { dog: 'Dogs', cat: 'Cats', small: 'Small pets', bird: 'Birds', reptile: 'Reptiles', fish: 'Fish', farm: 'Goats & cows', other: 'Other pets' }, age: { baby: 'Under 1', young: '1–2 yrs', adult: '3–7 yrs', senior: '8+ yrs' },
     size: { small: 'Small', medium: 'Medium', large: 'Large' }, gender: { female: 'Female', male: 'Male' }, energy: { 1: 'Calm', 2: 'Moderate energy', 3: 'Very active' },
     apartment: 'Apartment OK', kids: 'Good with kids', otherPets: 'Good with pets', firstTime: 'First-time friendly', available: 'Hide on hold' };
   let state = readUrl();
@@ -12,7 +13,7 @@
   let pets = [];
 
   function readUrl() {
-    const s = { type: params.get('type') || '', gender: params.get('gender') || '', location: params.get('location') || '', breed: params.get('breed') || '',
+    const s = { category: KINDS[params.get('category')] ? params.get('category') : '', type: params.get('type') || '', gender: params.get('gender') || '', location: params.get('location') || '', breed: params.get('breed') || '',
       sort: params.get('sort') || 'newest', ask: params.get('ask') || params.get('q') || '' };
     MULTI.forEach((k) => { s[k] = (params.get(k) || '').split(',').filter(Boolean); });
     ['apartment', 'kids', 'otherPets', 'firstTime', 'available'].forEach((k) => { s[k] = params.get(k) === '1'; });
@@ -34,13 +35,17 @@
       else el.value = state[k] || '';
     });
     $$('[data-cat]').forEach((b) => b.setAttribute('aria-pressed', String(!state.ask && (b.dataset.cat || '') === state.type)));
+    $$('[data-kind]').forEach((b) => b.setAttribute('aria-pressed', String(!state.ask && (b.dataset.kind || '') === state.category)));
+    $('#kindNote').hidden = state.category !== 'rescue' || Boolean(state.ask);
+    $('#kindNote').innerHTML = `These animals were rescued from neglect, cruelty, racing or hoarding and have been through vet care and rehabilitation. <a href="rescue.html">Why adopt a rescue animal?</a>`;
     $('#sort').value = state.sort;
     $('#nlInput').value = state.ask;
-    const n = ['type', 'gender', 'location', 'breed'].filter((k) => state[k]).length + MULTI.reduce((t, k) => t + state[k].length, 0)
+    const n = ['category', 'type', 'gender', 'location', 'breed'].filter((k) => state[k]).length + MULTI.reduce((t, k) => t + state[k].length, 0)
       + ['apartment', 'kids', 'otherPets', 'firstTime', 'available'].filter((k) => state[k]).length;
     $('#filterCount').textContent = n ? `(${n})` : '';
     // Active filter chips (removable)
     const chips = [];
+    if (state.category) chips.push(['category', state.category, KINDS[state.category]]);
     if (state.type) chips.push(['type', state.type, LABELS.type[state.type]]);
     if (state.gender) chips.push(['gender', state.gender, LABELS.gender[state.gender]]);
     MULTI.forEach((k) => state[k].forEach((v) => chips.push([k, v, LABELS[k][v]])));
@@ -66,12 +71,13 @@
     $('#grid').innerHTML = skeletonCards(6);
     $('#nlResult').hidden = true;
     try {
-      const q = { type: state.type, gender: state.gender, location: state.location.toLowerCase(), breed: state.breed.toLowerCase(), sort: state.sort,
+      const q = { category: state.category, type: state.type, gender: state.gender, location: state.location.toLowerCase(), breed: state.breed.toLowerCase(), sort: state.sort,
         apartment: state.apartment ? 1 : '', kids: state.kids ? 1 : '', otherPets: state.otherPets ? 1 : '', firstTime: state.firstTime ? 1 : '', available: state.available ? 1 : '' };
       MULTI.forEach((k) => { q[k] = state[k].join(','); });
       const res = await PawPalAPI.get('/pets', q);
       pets = res.pets;
-      $('#resultCount').textContent = `${res.total} pet${res.total === 1 ? '' : 's'} available`;
+      const noun = { rescue: 'rescue pet', domestic: 'domestic pet', exotic: 'exotic pet', rare: 'rare & special pet' }[state.category] || 'pet';
+      $('#resultCount').textContent = `${res.total} ${noun}${res.total === 1 ? '' : 's'} available`;
       render();
     } catch (err) {
       $('#resultCount').textContent = 'Pets';
@@ -126,10 +132,10 @@
     e.preventDefault();
     const q = $('#nlInput').value.trim();
     if (q.length < 2) return $('#nlInput').focus();
-    state = { ...readUrl(), type: '', gender: '', location: '', breed: '', age: [], size: [], energy: [], apartment: false, kids: false, otherPets: false, firstTime: false, available: false, sort: state.sort, ask: q };
+    state = { ...readUrl(), category: '', type: '', gender: '', location: '', breed: '', age: [], size: [], energy: [], apartment: false, kids: false, otherPets: false, firstTime: false, available: false, sort: state.sort, ask: q };
     refresh();
   });
-  const clearAll = () => { state = { type: '', gender: '', location: '', breed: '', sort: state.sort, ask: '', age: [], size: [], energy: [], apartment: false, kids: false, otherPets: false, firstTime: false, available: false }; refresh(); };
+  const clearAll = () => { state = { category: '', type: '', gender: '', location: '', breed: '', sort: state.sort, ask: '', age: [], size: [], energy: [], apartment: false, kids: false, otherPets: false, firstTime: false, available: false }; refresh(); };
   $('#clearFilters').addEventListener('click', clearAll);
   $('#clearFilters2').addEventListener('click', clearAll);
   document.addEventListener('click', (e) => {
@@ -147,6 +153,13 @@
     const from = shown; shown += PAGE;
     $('#grid').insertAdjacentHTML('beforeend', pets.slice(from, shown).map((p, i) => (p.pet ? petCardHTML(p.pet, { match: p.score, reason: p.summary, index: i, compare: true }) : petCardHTML(p, { index: i, compare: true }))).join(''));
     $('#loadMore').hidden = shown >= pets.length;
+  });
+  // What kind of animal (adoption category)
+  $('.kind-picker').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-kind]');
+    if (!b) return;
+    state.category = b.dataset.kind; state.ask = '';
+    refresh();
   });
   // Category bar mirrors the Species chips
   $('.cat-bar').addEventListener('click', (e) => {

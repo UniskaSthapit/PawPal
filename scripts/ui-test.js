@@ -56,6 +56,21 @@ const ok = (name, cond) => { if (cond) { pass++; console.log('  ✅ ' + name); }
   ok('The compare list is remembered across pages', (await p.$$('#compareBar .compare-chip:not(.compare-empty)')).length === 2);
   await p.click('#compareBar [data-compare-clear]');
   ok('Clear empties the compare bar', !(await p.$('#compareBar')));
+  await p.goto(BASE + 'home.html'); await p.waitForSelector('[data-kind-count="rescue"]:not(:empty)');
+  ok('Home shows the four kinds of animal with live counts', (await p.$$('.kind-card')).length === 4 && /\d+ available now/.test(await p.textContent('[data-kind-count="rescue"]')));
+  ok('Home has a "Why adopt a rescue animal?" section', /Why adopt a rescue animal/.test(await p.textContent('#why-rescue')) && (await p.$$('#why-rescue .why-list li')).length === 6);
+  await p.click('.kind-card.kind-rescue'); await p.waitForURL(/category=rescue/); await p.waitForSelector('#grid .pet-card');
+  ok('Choosing Rescue & Rehabilitation shows only rescue animals', await p.getAttribute('[data-kind="rescue"]', 'aria-pressed') === 'true' && /rescue pets? available/.test(await p.textContent('#resultCount')) && await p.isVisible('#kindNote'));
+  await p.click('[data-kind="exotic"]'); await p.waitForURL(/category=exotic/); await p.waitForSelector('#grid .pet-card');
+  ok('The category picker switches to Exotic Pets', /exotic pets? available/.test(await p.textContent('#resultCount')) && /Exotic Pets/.test(await p.textContent('#activeFilters')));
+  await p.click('[data-kind=""]'); await p.waitForFunction(() => !location.search.includes('category'));
+  await p.goto(BASE + 'rescue.html'); await p.waitForSelector('#rescueGrid .pet-card');
+  ok('Rescue page explains rescue adoption and lists rescue animals', /Why adopt a/.test(await p.textContent('main')) && (await p.$$('.journey li')).length === 5 && (await p.$$('#rescueGrid .pet-card')).length >= 3);
+  ok('Rescue animals is in the main navigation', (await p.$$('.site-header a[href="rescue.html"]')).length >= 1);
+  await p.click('#rescueGrid .pet-card h3 a'); await p.waitForSelector('.category-badge');
+  ok('Pet profile shows its adoption category', /Rescue & Rehabilitation/.test(await p.textContent('.category-badge')));
+  await p.goto(BASE + 'vet-finder.html'); await p.waitForSelector('#topVetsBody a[href*="google.com/maps/search"]');
+  ok('Vet finder: without a Maps key, the top-rated list links to Google instead of inventing ratings', /Top-rated vets near/.test(await p.textContent('#topVetsLabel')) && !(await p.$('.vet-top')));
   await p.goto(BASE + 'ai-matching.html'); await p.fill('#about', 'I work 9 to 5, live in an apartment, never owned a dog and want a friendly dog that does not need loads of exercise');
   await p.click('#matchBtn'); await p.waitForSelector('.match-card');
   ok('Find My PawPal returns explained matches', (await p.$$('.match-card')).length >= 3 && /Why/.test(await p.textContent('.match-card')));
@@ -192,7 +207,9 @@ const ok = (name, cond) => { if (cond) { pass++; console.log('  ✅ ' + name); }
   await p.goto(BASE + 'login.html'); await p.fill('#lEmail', email); await p.fill('#lPassword', 'Paws12345'); await p.click('#loginBtn'); await p.waitForURL(/dashboard/);
   await p.goto(BASE + `my-applications.html?id=${uiApp.id}#booking`); await p.waitForSelector('#slotPicker .slot-choice');
   ok('The adopter sees the free times grouped by day', (await p.$$('#slotPicker .slot-choice')).length >= 16 && (await p.$$('#slotPicker h4')).length >= 2 && /Looking forward/.test(await p.textContent('#booking')));
-  await p.click('#slotPicker .slot-choice >> nth=2'); await p.click('#bookBtn');
+  // Pick a time more than 2 days away (the soonest demo times can be under 24 hours away, when changes are no longer allowed)
+  const farSlot = await p.$$eval('#slotPicker .slot-choice', (els) => els.findIndex((e) => new Date(e.dataset.start) - Date.now() > 48 * 3600e3));
+  await p.click(`#slotPicker .slot-choice >> nth=${farSlot}`); await p.click('#bookBtn');
   await p.waitForSelector('#booking [data-booking="change"]');
   ok('Booking shows the confirmed time with change and cancel options', /booked to meet/.test(await p.textContent('#booking')) && await p.isVisible('[data-booking="cancel"]'));
   ok('…and the Add to calendar file is still offered', (await p.$$('a[download$=".ics"]')).length === 1);

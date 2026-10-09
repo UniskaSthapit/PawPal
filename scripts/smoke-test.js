@@ -591,7 +591,8 @@ const mailFor = async (anon, email, type) => (await anon('GET', `/api/dev/emails
   r = await admin('POST', '/api/slots', { shelterId: bShelter, windows: [{ start: at(T), end: at(T, 9) }], durationMins: 30 });
   check('Existing times are not duplicated', r.status === 201 && r.body.created === 0 && r.body.skipped === 4);
   r = await admin('GET', `/api/slots?shelterId=${bShelter}`);
-  const bSlots = r.body.slots.filter((x) => !x.bookedBy).sort((x, y) => new Date(x.start) - new Date(y.start));
+  // Only this test's Tuesday times (the demo data's Saturday times can be less than 24 hours away, which would change what's allowed)
+  const bSlots = r.body.slots.filter((x) => !x.bookedBy && new Date(x.start).getDay() === 2).sort((x, y) => new Date(x.start) - new Date(y.start));
   check('Staff see the free times', r.status === 200 && bSlots.length >= 6);
   r = await staff('GET', '/api/slots');
   check('Staff only see their own shelter\'s times', r.status === 200 && r.body.slots.every((x) => x.shelterId === melbourneId));
@@ -701,6 +702,50 @@ const mailFor = async (anon, email, type) => (await anon('GET', `/api/dev/emails
   r = await adopter('POST', '/api/ai/compare', { ids: [c1.id, c2.id] });
   check('Adopters with a saved lifestyle get a match score per pet', r.status === 200 && r.body.hasProfile
     && [c1.id, c2.id].every((id) => Number.isInteger(r.body.scores[id].score)) && /\d+%/.test(r.body.summary), JSON.stringify(r.body).slice(0, 300));
+
+  console.log('\nAdoption categories, rescue page and vet ranking');
+  const allPublic = (await anon('GET', '/api/pets')).body.pets;
+  check('Every public pet has an adoption category', allPublic.every((x) => ['rescue', 'domestic', 'exotic', 'rare'].includes(x.category)));
+  for (const kind of ['rescue', 'domestic', 'exotic', 'rare']) {
+    r = await anon('GET', `/api/pets?category=${kind}`);
+    check(`Browse by category: ${kind}`, r.status === 200 && r.body.total >= 3 && r.body.pets.every((x) => x.category === kind), `${r.body.total}`);
+  }
+  r = await anon('GET', '/api/pets?category=nonsense');
+  check('An unknown category is ignored', r.body.total === allPublic.length);
+  r = await anon('GET', '/api/pets?category=rescue&type=dog');
+  check('Category and species filters combine', r.body.pets.length >= 2 && r.body.pets.every((x) => x.category === 'rescue' && x.type === 'Dog'));
+  check('New rescue, exotic and rare animals are listed', ['Hope', 'Bramble', 'Rio', 'Axel', 'Saffron', 'Pippin'].every((n) => allPublic.some((x) => x.name === n)));
+  r = await staff('POST', '/api/pets', { name: 'Kiki', type: 'Bird', breed: 'Rainbow Lorikeet', category: 'rescue', status: 'Draft' });
+  check('Staff can set a pet\'s category', r.status === 201 && r.body.pet.category === 'rescue');
+  r = await staff('POST', '/api/pets', { name: 'Gus', type: 'Farm Animal', breed: 'Pig', category: 'bogus', status: 'Draft' });
+  check('An invalid category falls back to the species default', r.status === 201 && r.body.pet.category === 'rare');
+  r = await staff('POST', '/api/pets', { name: 'Tiny', type: 'Hamster', breed: 'Dwarf', status: 'Draft' });
+  check('New pets get a category from their species', r.status === 201 && r.body.pet.category === 'domestic');
+  r = await anon('GET', '/rescue.html');
+  check('Rescue animals page is public', r.status === 200);
+  {
+    // An existing database (schema v4) gets categories and the new animals, without duplicates
+    const { migrate } = require('../src/services/migrate');
+    const old = (await db.find('pets')).find((x) => x.type === 'Reptile');
+    await db.update('pets', old.id, { category: null });
+    check('(test setup) the pet really has no category', (await db.findOne('pets', { id: old.id })).category === null);
+    const hope = (await db.find('pets')).find((x) => x.name === 'Hope');
+    await db.remove('pets', hope.id);
+    await db.update('meta', 'schema', { version: 4 });
+    const before = (await db.find('pets')).length;
+    await migrate();
+    const after = await db.find('pets');
+    check('Migration v5 gives existing pets a category', after.find((x) => x.id === old.id).category === 'exotic');
+    check('Migration v5 adds missing category animals once', after.length === before + 1 && after.filter((x) => x.name === 'Hope').length === 1 && after.find((x) => x.name === 'Hope').category === 'rescue');
+  }
+  {
+    const { topRated } = require('../src/services/maps');
+    const ranked = topRated([{ id: 'a', rating: 4.9, reviews: 8 }, { id: 'b', rating: 4.8, reviews: 600 }, { id: 'c', rating: null, reviews: 0 }, { id: 'd', rating: 4.2, reviews: 300 },
+      { id: 'e', rating: 4.6, reviews: 120 }, { id: 'f', rating: 3.9, reviews: 50 }, { id: 'g', rating: 4.4, reviews: 90 }]);
+    check('Top vets: 5 rated clinics, weighted by number of reviews', ranked.length === 5 && ranked[0].id === 'b' && ranked.every((v) => v.rating) && !ranked.some((v) => v.id === 'f'));
+  }
+  r = await anon('GET', '/api/vets?q=Footscray');
+  check('Vet search without a Maps key returns no made-up ratings', r.status === 200 && r.body.enabled === false && r.body.top.length === 0);
 
   console.log('\nTranslation');
   const trPet = (await db.find('pets')).find((x) => x.status === 'Available' && x.medicalHistory && x.traits?.length && x.description);
