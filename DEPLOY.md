@@ -111,7 +111,7 @@ the next start (schema v4 gives every pet an adoption fee if it had none; new co
   more than a small site uses. Each vet search makes one Places request (with ratings and reviews). Without the key,
   the vet finder still shows the map and a link to the top-rated vets on Google Maps.
 - **Adoption categories** are added to existing pets automatically on the next start (schema v5), along with 12 new
-  demo animals across the four categories. Their photos are PawPal illustrations; upload real photos from *Pets → Edit*.
+  demo animals across the four categories, each with a photo (staff can change photos from *Pets → Edit*).
 - **Flyers and short links** use `APP_URL` for the QR code and `/p/<petId>` links — make sure it is your real URL.
 - **Meet & greet times** are entered in the browser's local time; set your shelters' availability under
   *Availability* after deploying (the demo times only exist in the demo data).
