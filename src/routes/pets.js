@@ -3,7 +3,7 @@
 const express = require('express');
 const db = require('../db');
 const { requireStaff, isStaff, shelterScope, inScope } = require('../middleware/auth');
-const { PET_TYPES, PET_SIZES, PET_STATUSES, PUBLIC_PET_STATUSES, TYPE_GROUPS } = require('../constants');
+const { PET_TYPES, PET_SIZES, PET_STATUSES, PUBLIC_PET_STATUSES, TYPE_GROUPS, CATEGORY_KEYS, defaultCategory } = require('../constants');
 const config = require('../config');
 const { notify } = require('../services/notify');
 const { storeDataUrl } = require('./images');
@@ -42,6 +42,7 @@ async function readPetInput(body, existing = {}) {
   ['requiresYard', 'goodWithChildren', 'goodWithOtherPets', 'goodWithCats', 'vaccinated', 'desexed', 'microchipped',
     'firstTimeFriendly', 'specialNeeds'].forEach((k) => pick(k, toBool));
   pick('adoptionFee', (v) => toInt(v, 0, 5000, 0));
+  pick('category', (v) => (CATEGORY_KEYS.includes(v) ? v : defaultCategory(pet.type || existing.type)));
   pick('description', (v) => clean(v, 2500));
   pick('idealHome', (v) => clean(v, 600));
   pick('medicalHistory', (v) => clean(v, 2000));
@@ -88,6 +89,7 @@ const matchesType = (pet, type) => {
 function applyFilters(pets, f) {
   return pets.filter((p) => {
     if (f.type && !matchesType(p, f.type)) return false;
+    if (f.category && (p.category || defaultCategory(p.type)) !== f.category) return false;
     if (f.breed && !p.breed.toLowerCase().includes(f.breed)) return false;
     if (f.gender && p.gender.toLowerCase() !== f.gender) return false;
     if (f.size?.length && !f.size.includes(p.size.toLowerCase())) return false;
@@ -128,6 +130,7 @@ function readFilters(q) {
     otherPets: toBool(q.otherPets),
     firstTime: toBool(q.firstTime),
     shelterId: clean(q.shelterId, 40),
+    category: CATEGORY_KEYS.includes(q.category) ? q.category : '',
     traits: csv(q.traits),
   };
 }
@@ -210,7 +213,7 @@ router.post('/', requireStaff, asyncHandler(async (req, res) => {
     goodWithOtherPets: true, vaccinated: false, desexed: false, microchipped: false, status: 'Available', age: 1,
     gender: 'Unknown', size: 'Medium', location: shelter ? `${shelter.suburb}, ${shelter.state}` : '', description: '',
     medicalHistory: '', rescueBackground: '', internalNotes: '', adoptionFee: 0,
-    ...input, shelterId, createdBy: req.user.id, createdAt: now(), updatedAt: now() };
+    ...input, category: input.category || defaultCategory(input.type), shelterId, createdBy: req.user.id, createdAt: now(), updatedAt: now() };
   await db.insert('pets', pet);
   if (pet.status === 'Available') require('../services/matching').notifyNewMatches(pet).catch((e) => console.warn('Match notify failed:', e.message));
   res.status(201).json({ pet, message: pet.status === 'Draft' ? 'Draft saved.' : `${pet.name} is now live on PawPal.` });
