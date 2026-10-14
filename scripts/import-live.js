@@ -1,4 +1,4 @@
-// npm run import-live — copy the live site's pets and their uploaded photos into your LOCAL database,
+// npm run import-live, copy the live site's pets and their uploaded photos into your LOCAL database,
 // so pets and photos you added on the live site also show on http://localhost:3000.
 //
 //   npm run import-live                                  (uses https://pawpal-5o98.onrender.com)

@@ -34,7 +34,7 @@ const passwordProblem = (pw) => {
   return null;
 };
 
-// Optional phone number: digits with spaces, brackets or dashes and an optional leading +, 8–15 digits in total
+// Optional phone number: digits with spaces, brackets or dashes and an optional leading +, 8 to 15 digits in total
 const phoneProblem = (v) => {
   const s = String(v ?? '').trim();
   if (!s) return null;
@@ -44,8 +44,16 @@ const phoneProblem = (v) => {
   return null;
 };
 
+// PawPal's text style has no dashes: ranges read "10 to 15", and a dash between phrases becomes a comma
+const noDashes = (v) => String(v ?? '')
+  .replace(/(\d)\s*[\u2013\u2014]\s*(\d)/g, '$1 to $2')
+  .replace(/(\w)\u2013(\w)/g, '$1 to $2')
+  .replace(/\s*[\u2013\u2014]\s*/g, ', ')
+  .replace(/,\s*([.,!?])/g, '$1')
+  .replace(/^,\s*/, '');
+
 const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => (
   { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 module.exports = { newId, now, randomToken, hashToken, HttpError, asyncHandler, clean, toBool, toInt,
-  isEmail, passwordProblem, phoneProblem, escapeHtml };
+  isEmail, passwordProblem, phoneProblem, escapeHtml, noDashes };

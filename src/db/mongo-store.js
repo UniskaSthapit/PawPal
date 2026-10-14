@@ -1,4 +1,4 @@
-// MongoDB (Atlas) database — used automatically when MONGODB_URI is set.
+// MongoDB (Atlas) database, used automatically when MONGODB_URI is set.
 // Documents use our own string "id" field so both database modes behave the same.
 const { MongoClient } = require('mongodb');
 
@@ -54,7 +54,7 @@ function createMongoStore(uri, dbName) {
     async update(name, id, patch) {
       return col(name).findOneAndUpdate({ id }, { $set: patch }, { returnDocument: 'after', ...noMongoId });
     },
-    // Atomic conditional update (findOneAndUpdate with the full filter) — null when nothing matched
+    // Atomic conditional update (findOneAndUpdate with the full filter), null when nothing matched
     async updateWhere(name, filter, patch) {
       return col(name).findOneAndUpdate(filter, { $set: patch }, { returnDocument: 'after', ...noMongoId });
     },

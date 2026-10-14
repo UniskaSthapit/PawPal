@@ -65,7 +65,7 @@
       <img src="${esc(PawPal.sized(PawPal.photo(p), 160))}" alt="" data-fallback="${PawPal.FALLBACK[p.type]}"></a>`).join('')
       + (pets.length > 5 ? `<span>+${pets.length - 5} more waiting</span>` : '');
 
-    // Featured rail: a varied mix — take the newest pet of each kind in turn (dog, cat, reptile, bird…) — plus a closing "see everyone" card
+    // Featured rail: a varied mix, take the newest pet of each kind in turn (dog, cat, reptile, bird…), plus a closing "see everyone" card
     const byType = new Map();
     pets.forEach((p) => { if (!byType.has(p.type)) byType.set(p.type, []); byType.get(p.type).push(p); });
     const order = ['Dog', 'Cat', 'Reptile', 'Bird', 'Farm Animal', 'Rabbit', 'Fish', 'Hamster'].filter((t) => byType.has(t)).concat([...byType.keys()].filter((t) => !['Dog', 'Cat', 'Reptile', 'Bird', 'Farm Animal', 'Rabbit', 'Fish', 'Hamster'].includes(t)));
@@ -76,7 +76,7 @@
     $('#featured').innerHTML = featured.length
       ? featured.map((p, i) => petCardHTML(p, { index: i })).join('')
         + `<a class="rail-end" href="adopt.html"><b>${pets.length > featured.length ? `${pets.length - featured.length} more pets are waiting` : 'Meet every pet looking for a home'}</b><span>Browse all pets ${icons.arrowRight}</span></a>`
-      : emptyHTML({ title: 'No pets listed right now', text: 'New animals arrive every week — check back soon.' });
+      : emptyHTML({ title: 'No pets listed right now', text: 'New animals arrive every week, check back soon.' });
   } else {
     $('#featured').innerHTML = PawPal.errorHTML('We couldn\'t load pets right now. Please refresh the page.');
   }

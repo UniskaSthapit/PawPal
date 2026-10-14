@@ -4,7 +4,7 @@
   const u = await PawPal.booted;
   const hour = new Date().getHours();
   $('#hello').textContent = `${hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening'}, ${u.name.split(' ')[0]}`;
-  if (u.role === 'admin') $('#helloSub').textContent = 'Administrator view — data across all shelters.';
+  if (u.role === 'admin') $('#helloSub').textContent = 'Administrator view, data across all shelters.';
   $('#askForm').addEventListener('submit', (e) => { e.preventDefault(); location.href = `assistant.html?q=${encodeURIComponent($('#askQ').value.trim() || 'Which applications need review?')}`; });
 
   let d;

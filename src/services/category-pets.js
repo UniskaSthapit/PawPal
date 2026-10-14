@@ -1,6 +1,6 @@
 // Pets for the four adoption categories (Rescue & Rehabilitation, Domestic Pets, Exotic Pets, Rare & Special Breeds).
 // Added by the seed for fresh installs and by the v5 migration for existing databases (matched by name + breed, so
-// nothing is duplicated). All animals are fictional demo content with photos in public/images/pets/photos. Care facts are general guidance — profiles tell adopters to confirm with the shelter.
+// nothing is duplicated). All animals are fictional demo content with photos in public/images/pets/photos. Care facts are general guidance, profiles tell adopters to confirm with the shelter.
 // Real photos (supplied for these animals), served from public/images/pets/photos
 const photo = (file) => `images/pets/photos/${file}.jpg`;
 const DOG_CAT_HEALTH = ['Vet health check on intake', 'Vaccinated, desexed and microchipped', 'Flea, tick and worm treatment up to date'];
@@ -9,42 +9,42 @@ const EXOTIC_HEALTH = ['Health check by an exotics vet', 'Eating and behaving no
 
 const MORE_CARE = {
   hens: {
-    lifespan: 'Around 3–6 more years',
+    lifespan: 'Around 3 to 6 more years',
     home: 'A secure, fox-proof coop with a perch and nesting box, plus a run or yard with shade, dust-bathing spots and grass to scratch.',
     diet: 'Layer pellets as the main food, fresh water, shell grit, and greens or vegetable scraps as treats (never avocado or mouldy food).',
     routine: 'Let out in the morning and locked in at dusk, eggs collected daily, coop cleaned weekly and checked for mites.',
     note: 'Check your council\'s rules on keeping poultry. Hens are flock animals and must live with at least one other hen.',
   },
   guineapig: {
-    lifespan: '5–7 years',
+    lifespan: '5 to 7 years',
     home: 'A large indoor enclosure (at least 120 × 60 cm for a pair) with hides, deep bedding and daily floor time.',
     diet: 'Unlimited fresh hay, a cup of leafy greens each day, a little pellet food and a source of vitamin C.',
     routine: 'Fresh hay, greens and water daily, spot-clean daily and a full clean weekly, nails trimmed monthly.',
     note: 'Guinea pigs are very social and must live in pairs or groups.',
   },
   galah: {
-    lifespan: '40–60 years — a lifelong commitment',
+    lifespan: '40 to 60 years, a lifelong commitment',
     home: 'A very large aviary or cage with natural branches to chew, plus several hours of supervised time out every day.',
     diet: 'Quality pellets, fresh vegetables, sprouted seed and a little fruit; seed-only diets cause serious health problems.',
     routine: 'Daily company and enrichment, new things to chew and forage, and a bath or misting a few times a week.',
     note: 'Galahs are native birds: check your state\'s licence rules. They are loud at dawn and dusk and need a lot of attention.',
   },
   turtle: {
-    lifespan: '30–50 years',
+    lifespan: '30 to 50 years',
     home: 'A large tank (at least 300 litres for an adult) with strong filtration, a heated water area, a dry basking platform and UVB lighting.',
     diet: 'Carnivorous: turtle pellets, small fish, insects, worms and yabbies.',
-    routine: 'Feed every 1–2 days as an adult, partial water changes weekly, filter maintenance monthly.',
+    routine: 'Feed every 1 to 2 days as an adult, partial water changes weekly, filter maintenance monthly.',
     note: 'Native turtles need a keeper licence in most states. Never release a pet turtle into waterways.',
   },
   axolotl: {
-    lifespan: '10–15 years',
-    home: 'A cool freshwater aquarium (at least 75 litres) kept around 14–20°C, gentle filtration, fine sand or a bare floor and hides.',
-    diet: 'Earthworms, axolotl pellets and bloodworms, fed every 2–3 days.',
+    lifespan: '10 to 15 years',
+    home: 'A cool freshwater aquarium (at least 75 litres) kept around 14 to 20°C, gentle filtration, fine sand or a bare floor and hides.',
+    diet: 'Earthworms, axolotl pellets and bloodworms, fed every 2 to 3 days.',
     routine: 'Weekly partial water changes, regular water testing, and keeping the tank cool in summer.',
     note: 'Axolotls are amphibians with delicate skin, so avoid handling and never house them with fish that nip.',
   },
   highland: {
-    lifespan: '15–20 years',
+    lifespan: '15 to 20 years',
     home: 'At least half a hectare of good pasture with shelter and shade, secure fencing and another cow for company.',
     diet: 'Pasture or quality hay, fresh water and a mineral lick; very little grain.',
     routine: 'Daily checks and water, regular hoof trimming, drenching and vaccinations as your large-animal vet advises.',

@@ -29,7 +29,7 @@ router.get('/', requireStaff, asyncHandler(async (req, res) => {
 }));
 
 // Create one slot, or a repeating series. The browser sends each day's window ({ start, end } as ISO times,
-// already converted from local time — so daylight-saving changes are handled where the times were chosen)
+// already converted from local time, so daylight-saving changes are handled where the times were chosen)
 // and the slot length; slots are generated back-to-back inside each window.
 router.post('/', requireStaff, asyncHandler(async (req, res) => {
   const scope = shelterScope(req);
@@ -51,7 +51,7 @@ router.post('/', requireStaff, asyncHandler(async (req, res) => {
     if (end - start < durationMins * 60 * 1000) throw new HttpError(400, 'The time range is shorter than one slot.');
     for (let t = start.getTime(); t + durationMins * 60 * 1000 <= end.getTime(); t += durationMins * 60 * 1000) starts.push(t);
   }
-  if (starts.length > MAX_SLOTS) throw new HttpError(400, `That would create ${starts.length} slots — the most at once is ${MAX_SLOTS}.`);
+  if (starts.length > MAX_SLOTS) throw new HttpError(400, `That would create ${starts.length} slots, the most at once is ${MAX_SLOTS}.`);
 
   const existing = new Set((await db.find('slots', { shelterId })).map((s) => new Date(s.start).getTime()));
   let created = 0;

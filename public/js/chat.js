@@ -1,11 +1,11 @@
 // ============================================================
-// chat.js — PawPal's adoption assistant widget.
+// chat.js: PawPal's adoption assistant widget.
 // Answers come from /api/ai/chat, which only uses real pets and the adopter's own applications.
 // Logged-in adopters get their conversation saved to their account; visitors keep it for this tab only.
 // ============================================================
 const PawPalChat = (() => {
   const { esc, icons, photo, toast } = PawPal;
-  const SUGGESTIONS = ['Which dogs would suit apartment living?', 'I work full time — which pets cope well?', 'What happens after I apply?',
+  const SUGGESTIONS = ['Which dogs would suit apartment living?', 'I work full time, which pets cope well?', 'What happens after I apply?',
     'What\'s the status of my application?', 'Show me calm cats', 'How much does adopting cost?'];
   const SESSION_KEY = 'pp_chat';
   let state = { messages: [], profile: null, conversationId: null, lastPetIds: [] };
@@ -36,7 +36,7 @@ const PawPalChat = (() => {
 
   function render() {
     const body = panel.querySelector('.chat-body');
-    const greeting = `<div class="msg msg-bot">Hi${PawPal.user?.role === 'user' ? ` ${esc(PawPal.user.name.split(' ')[0])}` : ''}! I'm PawPal's adoption assistant. Tell me about your home and routine and I'll suggest pets that could suit you — or ask about a pet, the adoption process, or your application.</div>`;
+    const greeting = `<div class="msg msg-bot">Hi${PawPal.user?.role === 'user' ? ` ${esc(PawPal.user.name.split(' ')[0])}` : ''}! I'm PawPal's adoption assistant. Tell me about your home and routine and I'll suggest pets that could suit you, or ask about a pet, the adoption process, or your application.</div>`;
     body.innerHTML = greeting + state.messages.map(messageHTML).join('') +
       (mtNotice && chatLang !== 'en' ? `<div class="mt-note mt-warn chat-mt">${icons.info}<span>${esc(mtNotice)}</span></div>` : '') +
       (state.messages.length ? '' : `<div class="chat-suggest" aria-label="Suggested questions">${SUGGESTIONS.map((s) => `<button type="button" data-suggest="${esc(s)}">${esc(s)}</button>`).join('')}</div>`);
@@ -104,7 +104,7 @@ const PawPalChat = (() => {
       render();
     } catch (err) {
       body.querySelector('.typing')?.remove();
-      state.messages.push({ role: 'assistant', content: err.status === 429 ? err.message : `Sorry — I couldn't answer that just now (${err.message}). Please try again in a moment.` });
+      state.messages.push({ role: 'assistant', content: err.status === 429 ? err.message : `Sorry, I couldn't answer that just now (${err.message}). Please try again in a moment.` });
       render();
     } finally {
       busy = false; save();
@@ -112,7 +112,7 @@ const PawPalChat = (() => {
     }
   }
 
-  const autosize = (ta) => { ta.style.height = 'auto'; ta.style.height = `${Math.min(ta.scrollHeight, 120)}px`; };
+  const autosize = (ta) => { ta.style.height = 'auto'; ta.style.height = `${Math.min(ta.scrollHeight, 110)}px`; ta.style.overflowY = ta.scrollHeight > 110 ? 'auto' : 'hidden'; };
 
   async function restoreFromServer() {
     if (loadedFromServer || PawPal.user?.role !== 'user') return;
@@ -144,9 +144,9 @@ const PawPalChat = (() => {
         <button class="icon-btn" data-chat-close aria-label="Close assistant">${icons.close}</button></div>
       <div class="chat-body" aria-live="polite"></div>
       <form class="chat-form"><label class="sr-only" for="chatInput">Message PawPal</label>
-        <textarea id="chatInput" rows="1" maxlength="800" placeholder="Ask about pets, adoption or your application…"></textarea>
+        <textarea id="chatInput" rows="1" maxlength="800" placeholder="Hey, ask me!"></textarea>
         <button class="btn btn-primary" type="submit" aria-label="Send">${icons.send}</button></form>
-      <div class="chat-note">PawPal can make mistakes. Compatibility is guidance — the shelter team makes the final decision.</div>`;
+      <div class="chat-note">PawPal can make mistakes. Compatibility is guidance, the shelter team makes the final decision.</div>`;
     document.body.appendChild(panel);
     panel.querySelector('.chat-head .ai-orb svg').style.cssText = 'width:18px;height:18px;color:#fff';
     const form = panel.querySelector('form'); const ta = panel.querySelector('textarea');

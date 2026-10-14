@@ -3,22 +3,22 @@
 const db = require('../db');
 const { LEGACY_APP_STATUS, LEGACY_PET_STATUS, DEFAULT_FEES, CATEGORY_KEYS, defaultCategory } = require('../constants');
 const { CATEGORY_PETS, demoCategory } = require('./category-pets');
-const { newId, now } = require('../utils');
+const { newId, now, noDashes } = require('../utils');
 const config = require('../config');
 const { EXTRA_PETS } = require('./extra-pets');
 
 // v3: real contact email on shelters, and reptiles, birds, fish, hamsters and farm animals added to the catalogue
-const SCHEMA_VERSION = 5;
+const SCHEMA_VERSION = 6;
 
 const DEFAULT_SHELTERS = [
   { key: 'VIC', name: 'PawPal Melbourne Rescue Centre', suburb: 'Footscray', state: 'VIC', address: '14 Hopkins Street, Footscray VIC 3011',
-    phone: '(03) 9000 4120', email: config.contactEmail, hours: 'Tue–Sun 10am–5pm', about: 'Our largest centre, caring for dogs, cats and small animals from across Melbourne\'s west.' },
+    phone: '(03) 9000 4120', email: config.contactEmail, hours: 'Tue to Sun 10am to 5pm', about: 'Our largest centre, caring for dogs, cats and small animals from across Melbourne\'s west.' },
   { key: 'NSW', name: 'PawPal Sydney Adoption Centre', suburb: 'Parramatta', state: 'NSW', address: '80 Church Street, Parramatta NSW 2150',
-    phone: '(02) 9000 7730', email: config.contactEmail, hours: 'Wed–Sun 10am–4pm', about: 'A foster-based centre working with volunteer carers across Greater Sydney.' },
+    phone: '(02) 9000 7730', email: config.contactEmail, hours: 'Wed to Sun 10am to 4pm', about: 'A foster-based centre working with volunteer carers across Greater Sydney.' },
   { key: 'QLD', name: 'PawPal Brisbane Haven', suburb: 'Woolloongabba', state: 'QLD', address: '22 Logan Road, Woolloongabba QLD 4102',
-    phone: '(07) 3000 2285', email: config.contactEmail, hours: 'Tue–Sat 9am–4pm', about: 'Specialising in cats, kittens and senior pets looking for quiet homes.' },
+    phone: '(07) 3000 2285', email: config.contactEmail, hours: 'Tue to Sat 9am to 4pm', about: 'Specialising in cats, kittens and senior pets looking for quiet homes.' },
   { key: 'WA', name: 'PawPal Perth Rehoming Centre', suburb: 'Osborne Park', state: 'WA', address: '5 Hutton Street, Osborne Park WA 6017',
-    phone: '(08) 9000 6641', email: config.contactEmail, hours: 'Thu–Sun 10am–4pm', about: 'A small team rehoming dogs and rabbits across Perth.' },
+    phone: '(08) 9000 6641', email: config.contactEmail, hours: 'Thu to Sun 10am to 4pm', about: 'A small team rehoming dogs and rabbits across Perth.' },
 ];
 
 async function ensureShelters() {
@@ -49,6 +49,10 @@ async function migrate() {
     const patch = {};
     if (!pet.shelterId) patch.shelterId = shelterFor(pet.location, shelters).id;
     if (LEGACY_PET_STATUS[pet.status]) patch.status = LEGACY_PET_STATUS[pet.status];
+    // v6: no dashes in public text (descriptions, care guides, health notes)
+    for (const k of ['description', 'idealHome', 'colour', 'breed', 'name']) if (/[\u2013\u2014]/.test(pet[k] || '')) patch[k] = noDashes(pet[k]);
+    for (const k of ['traits', 'healthChecks']) if ((pet[k] || []).some((x) => /[\u2013\u2014]/.test(x))) patch[k] = pet[k].map(noDashes);
+    if (pet.care && /[\u2013\u2014]/.test(JSON.stringify(pet.care))) patch.care = Object.fromEntries(Object.entries(pet.care).map(([k, v]) => [k, noDashes(v)]));
     if (!CATEGORY_KEYS.includes(pet.category)) patch.category = demoCategory(pet) || defaultCategory(pet.type); // v5: adoption categories
     if (pet.adoptionFee === undefined || pet.adoptionFee === null) patch.adoptionFee = DEFAULT_FEES[pet.type] ?? DEFAULT_FEES.Other; // v4: every pet has a fee
     // Move inline base64 photos into the images collection so pet lists stay light
@@ -59,6 +63,19 @@ async function migrate() {
       patch.photos = patch.photos.filter(Boolean);
     }
     if (Object.keys(patch).length) await db.update('pets', pet.id, patch);
+  }
+
+  // v6: no dashes in shelter details (e.g. opening hours "Tue to Sun 10am to 5pm") or saved care plans
+  for (const sh of await db.find('shelters')) {
+    const patch = {};
+    for (const k of ['name', 'hours', 'about', 'address']) if (/[\u2013\u2014]/.test(sh[k] || '')) patch[k] = noDashes(sh[k]);
+    if (Object.keys(patch).length) await db.update('shelters', sh.id, patch);
+  }
+  for (const a of await db.find('applications')) {
+    if (!a.carePlan || !/[\u2013\u2014]/.test(JSON.stringify(a.carePlan))) continue;
+    const cp = a.carePlan;
+    await db.update('applications', a.id, { carePlan: { ...cp, intro: noDashes(cp.intro), disclaimer: noDashes(cp.disclaimer),
+      sections: (cp.sections || []).map((x) => ({ ...x, title: noDashes(x.title), items: (x.items || []).map(noDashes) })) } });
   }
 
   const pets = new Map((await db.find('pets')).map((p) => [p.id, p]));
@@ -83,7 +100,7 @@ async function migrate() {
     if (!u.shelterId) await db.update('users', u.id, { shelterId: shelters[0].id });
   }
 
-  // v3 — the original demo shelter addresses (@pawpal.app) can't receive mail; point them at the real contact address
+  // v3, the original demo shelter addresses (@pawpal.app) can't receive mail; point them at the real contact address
   for (const s of shelters) {
     if (/@pawpal\.app$/i.test(s.email || '')) await db.update('shelters', s.id, { email: config.contactEmail });
   }

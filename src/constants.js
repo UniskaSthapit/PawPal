@@ -16,7 +16,7 @@ const CATEGORY_KEYS = Object.keys(PET_CATEGORIES);
 // Starting category from the species (used for new pets and existing pets without one)
 const defaultCategory = (type) => (['Dog', 'Cat', 'Rabbit', 'Guinea Pig', 'Hamster'].includes(type) ? 'domestic' : type === 'Farm Animal' ? 'rare' : 'exotic');
 
-// Suggested adoption fees (AUD) by species — staff can change each pet's fee on the pet form
+// Suggested adoption fees (AUD) by species, staff can change each pet's fee on the pet form
 const DEFAULT_FEES = { Dog: 400, Cat: 180, Rabbit: 90, 'Guinea Pig': 50, Hamster: 25, Bird: 70, Reptile: 130, Fish: 20, 'Farm Animal': 300, Other: 50 };
 // Groups used by the species filters (?type=small etc.). Any other value matches a single type, e.g. ?type=reptile.
 const TYPE_GROUPS = { small: ['Rabbit', 'Guinea Pig', 'Hamster', 'Other'], farm: ['Farm Animal'] };
@@ -24,7 +24,7 @@ const PET_SIZES = ['Small', 'Medium', 'Large'];
 const PET_STATUSES = ['Available', 'On Hold', 'Adopted', 'Draft', 'Archived'];
 const PUBLIC_PET_STATUSES = ['Available', 'On Hold'];
 
-// Adoption workflow — ordered happy path, plus the terminal states
+// Adoption workflow, ordered happy path, plus the terminal states
 const APP_FLOW = ['Submitted', 'Under Review', 'Interview', 'Meet & Greet', 'Approved', 'Adoption Scheduled', 'Adopted'];
 const APP_STATUSES = ['Submitted', 'Under Review', 'Info Requested', 'Interview', 'Meet & Greet', 'Approved',
   'Adoption Scheduled', 'Adopted', 'Declined', 'Withdrawn'];
@@ -40,7 +40,7 @@ const APP_STATUS_INFO = {
   'Info Requested': 'The shelter needs a little more information from you before continuing.',
   Interview: 'A short phone or video chat so the team can get to know you.',
   'Meet & Greet': 'Come and meet your potential new companion in person.',
-  Approved: 'Your application has been approved — the team will arrange the adoption with you.',
+  Approved: 'Your application has been approved, the team will arrange the adoption with you.',
   'Adoption Scheduled': 'Your go-home day is booked.',
   Adopted: 'Adoption complete. Welcome home!',
   Declined: 'The shelter could not proceed with this application.',

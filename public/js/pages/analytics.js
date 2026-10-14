@@ -10,7 +10,7 @@
     const max = Math.max(1, ...rows.map(value));
     el.innerHTML = rows.length ? rows.map((r) => `<div class="bar-row"><span>${esc(label(r))}</span><div class="bar"><i style="width:${(value(r) / max) * 100}%"></i></div><b>${value(r)}</b></div>`).join('') : '<p class="muted small">No data in this period.</p>';
   };
-  const delta = (n) => (n ? `<span class="delta ${n > 0 ? 'up' : 'down'}">${n > 0 ? '▲' : '▼'} ${Math.abs(n)}%</span>` : '<span class="delta muted">—</span>');
+  const delta = (n) => (n ? `<span class="delta ${n > 0 ? 'up' : 'down'}">${n > 0 ? '▲' : '▼'} ${Math.abs(n)}%</span>` : '<span class="delta muted">N/A</span>');
   async function load() {
     const range = { from: $('#from').value, to: $('#to').value };
     $('#csvApps').href = `/api/analytics/export${PawPalAPI.qs({ ...range, type: 'applications' })}`;
@@ -20,7 +20,7 @@
     const s = a.stats;
     $('#kpis').innerHTML = [['paw', s.activePets, 'Active pets', `<span class="delta muted">${s.adoptedPets} adopted all-time</span>`], ['file', s.applications, 'Applications', delta(s.applicationsChange)],
       ['message', s.enquiries, 'Enquiries', delta(s.enquiriesChange)], ['eye', s.views, 'Profile views', delta(s.viewsChange)], ['heart', s.favourites, 'Favourites saved', ''],
-      ['home', s.adoptions, 'Adoptions', delta(s.adoptionsChange)], ['clock', s.avgDaysToFirstAction ?? '—', 'Avg days to first review', ''], ['checkCircle', s.completionRate === null ? '—' : `${s.completionRate}%`, 'Complete applications', '']]
+      ['home', s.adoptions, 'Adoptions', delta(s.adoptionsChange)], ['clock', s.avgDaysToFirstAction ?? 'N/A', 'Avg days to first review', ''], ['checkCircle', s.completionRate === null ? 'N/A' : `${s.completionRate}%`, 'Complete applications', '']]
       .map(([ic, n, l, d]) => `<div class="kpi"><div class="k-top"><span class="k-ic">${icons[ic]}</span>${d}</div><b>${n}</b><span>${l}</span></div>`).join('');
     const f = a.fees; const aud = (n) => `$${Number(n || 0).toLocaleString('en-AU')}`;
     $('#fees').innerHTML = `<div><b id="feesCollected">${aud(f.collected)}</b><span>Collected in this period · ${f.payments} payment${f.payments === 1 ? '' : 's'}</span></div>
@@ -30,7 +30,7 @@
     $('#funnel').innerHTML = a.funnel.map((f) => `<div class="funnel-row"><span class="small">${esc(f.stage)}</span><div><div class="f-bar" style="width:${Math.min(100, Math.max(2, (f.count / fmax) * 100))}%"></div></div><b>${f.count}</b></div>`).join('');
     bars($('#byAge'), a.byAge); bars($('#byType'), a.byType); bars($('#bySize'), a.bySize);
     bars($('#keywords'), a.topKeywords, (r) => r.keyword, (r) => r.count);
-    $('#zero').innerHTML = a.zeroResultKeywords.length ? `<ul class="plain stack" style="--stack:8px">${a.zeroResultKeywords.map((k) => `<li class="row-between"><span>“${esc(k.keyword)}”</span><span class="badge badge-honey">${k.count}×</span></li>`).join('')}</ul><p class="tiny muted" style="margin-top:12px">What adopters want but couldn't find — useful when accepting transfers.</p>` : '<p class="muted small">Every search found something. 🎉</p>';
+    $('#zero').innerHTML = a.zeroResultKeywords.length ? `<ul class="plain stack" style="--stack:8px">${a.zeroResultKeywords.map((k) => `<li class="row-between"><span>“${esc(k.keyword)}”</span><span class="badge badge-honey">${k.count}×</span></li>`).join('')}</ul><p class="tiny muted" style="margin-top:12px">What adopters want but couldn't find, useful when accepting transfers.</p>` : '<p class="muted small">Every search found something. 🎉</p>';
     if (window.Chart) {
       Chart.defaults.font.family = css('--font-ui'); Chart.defaults.color = css('--muted');
       charts.trend?.destroy(); charts.status?.destroy();

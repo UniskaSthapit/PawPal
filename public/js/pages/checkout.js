@@ -1,4 +1,4 @@
-// Adoption-fee checkout — a PAYMENT SIMULATION. Only test cards are accepted and the card details are sent once to
+// Adoption-fee checkout, a PAYMENT SIMULATION. Only test cards are accepted and the card details are sent once to
 // PawPal's server, which keeps just the brand and last 4 digits. Nothing is saved in the browser.
 (async () => {
   const { $, $$, esc, icons, params, sized, toast, setBusy, errorHTML } = PawPal;
@@ -16,7 +16,7 @@
     const digits = v.number.replace(/[\s-]/g, '');
     if (v.name.trim().length < 2 || !/^[\p{L}][\p{L}' .-]*$/u.test(v.name.trim())) errors.name = 'Enter the name on the card.';
     if (!/^\d{12,19}$/.test(digits)) errors.number = 'Enter the card number (digits only).';
-    else if (!luhn(digits)) errors.number = 'That card number isn\'t valid — check the digits.';
+    else if (!luhn(digits)) errors.number = 'That card number isn\'t valid, check the digits.';
     else if (!TEST[digits]) errors.number = 'Use a test card for this simulation (for example 4242 4242 4242 4242).';
     const m = /^(\d{2})\/(\d{2})$/.exec(v.expiry.replace(/\s/g, ''));
     if (!m) errors.expiry = 'Enter the expiry date as MM/YY.';
@@ -46,7 +46,7 @@
     return `<aside class="card card-pad pay-summary">
       <img src="${esc(sized(a.petPhoto || PawPal.PLACEHOLDER, 600))}" alt="${esc(a.petName)}" data-fallback="${PawPal.PLACEHOLDER}">
       <div><span class="src-label src-shelter">${icons.building}${esc(data.shelter?.name || 'Shelter')}</span><h2 class="h3" style="margin-top:6px">Adopting ${esc(a.petName)}</h2></div>
-      <div class="pay-total"><span>Adoption fee</span><b id="amount">${data.amount !== null ? aud(data.amount) : '—'}</b></div>
+      <div class="pay-total"><span>Adoption fee</span><b id="amount">${data.amount !== null ? aud(data.amount) : 'N/A'}</b></div>
       <p class="tiny muted">The fee helps cover vaccinations, desexing, microchipping and care while ${esc(a.petName)} waited for you.</p></aside>`;
   }
 

@@ -1,9 +1,9 @@
 // ============================================================
-// PawPal server — Node.js + Express
+// PawPal server, Node.js + Express
 // Serves the website (public/) and the REST API (/api/*).
 // ============================================================
 // Some hosts (Render's free plan included) advertise IPv6 but can't actually
-// route it, so anything that connects out — like sending email via Gmail —
+// route it, so anything that connects out, like sending email via Gmail, 
 // fails with ENETUNREACH/timeout unless Node is 
 // told to prefer IPv4 addresses
 // when it resolves a hostname. This must run before anything else connects out.
@@ -123,7 +123,7 @@ async function start() {
     console.log(`   SMS:      ${{ twilio: 'Twilio', dev: 'dev SMS log → ' + config.appUrl + '/dev-mailbox.html', disabled: 'not configured (phone verification unavailable)' }[smsMode]}`);
     console.log(`   AI:       ${llm.providerLabel}`);
     console.log(`   Maps:     ${config.mapsKey ? 'Google Places API' : 'keyless Google Maps embed'}`);
-    if (owner) console.log(`   Admin:    ${owner.user.email} — ${{ ok: 'administrator', promoted: 'promoted to administrator', created: `account created; set-password email ${owner.emailed ? 'sent' : 'NOT sent (check email settings, or use Forgot password)'}` }[owner.status]}`);
+    if (owner) console.log(`   Admin:    ${owner.user.email}, ${{ ok: 'administrator', promoted: 'promoted to administrator', created: `account created; set-password email ${owner.emailed ? 'sent' : 'NOT sent (check email settings, or use Forgot password)'}` }[owner.status]}`);
     if (disabledDemo.length) console.log(`   Security: deactivated demo accounts still using their published passwords: ${disabledDemo.join(', ')}`);
     if (!config.isProd) console.log('   Demo logins → admin@pawpal.com / Admin@123 · staff@pawpal.com / Staff@123 · user@pawpal.com / User@123\n');
   });

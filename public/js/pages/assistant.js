@@ -15,7 +15,7 @@
       body.querySelector('.typing')?.remove();
       add(`<div class="msg msg-bot">${esc(r.reply)}</div>${r.items?.length ? `<div class="msg-pets">${r.items.slice(0, 10).map((it) => `<a class="mini-pet" href="${esc(it.link)}" style="grid-template-columns:1fr auto"><div><b>${esc(it.label)}</b><span>${esc(it.sub)}</span></div>${icons.chevronRight}</a>`).join('')}</div>` : ''}
         <div class="msg-meta">${icons.sparkle}${esc(PawPal.aiLabel(r.source, 'PawPal rules engine'))} · your shelter's live data</div>`);
-    } catch (err) { body.querySelector('.typing')?.remove(); add(`<div class="msg msg-bot">Sorry — ${esc(err.message)}</div>`); }
+    } catch (err) { body.querySelector('.typing')?.remove(); add(`<div class="msg msg-bot">Sorry, ${esc(err.message)}</div>`); }
     busy = false;
   }
   $('#asstForm').addEventListener('submit', (e) => { e.preventDefault(); ask($('#asstQ').value); });

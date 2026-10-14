@@ -29,7 +29,7 @@ async function sendVerification(user) {
   await emails.verify(user, `${config.appUrl}/verify.html?token=${token}`);
 }
 
-// ---- Sign up (adopters only — staff accounts are created by staff in Settings) ----
+// ---- Sign up (adopters only, staff accounts are created by staff in Settings) ----
 router.post('/register', authLimiter, asyncHandler(async (req, res) => {
   const name = clean(req.body.name, 80);
   const email = clean(req.body.email, 120).toLowerCase();
@@ -200,7 +200,7 @@ router.post('/2fa/enable', requireAuth, twoFactorLimiter, asyncHandler(async (re
     twoFactor: { enabled: true, secret: pendingSetup.secret, enabledAt: now(), lastStep: step, backupCodes: await totp.hashBackupCodes(backupCodes), failures: 0, lockedUntil: null } });
   await notify(req.user.id, { type: 'account', title: 'Two-factor authentication is on',
     message: 'Your PawPal account now asks for a code from your authenticator app when you sign in.', link: 'settings.html#twofactor' });
-  res.json({ enabled: true, backupCodes, message: 'Two-factor authentication is on. Save your backup codes somewhere safe — they are shown only once.' });
+  res.json({ enabled: true, backupCodes, message: 'Two-factor authentication is on. Save your backup codes somewhere safe, they are shown only once.' });
 }));
 
 // Turning it off needs the password and a current code (or a backup code)
