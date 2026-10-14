@@ -57,6 +57,10 @@ let geminiModel = config.geminiModel;
 // field at all) and allow a longer wait (GEMINI_TIMEOUT_MS) so slow-but-valid answers aren't thrown away.
 let geminiReasoning = String(process.env.GEMINI_REASONING || 'low').trim().toLowerCase();
 const geminiTimeoutMs = Number(process.env.GEMINI_TIMEOUT_MS) || 45000;
+// When Google is overloaded (HTTP 503 "model unavailable" — common on free Flash-Lite at busy times) we wait briefly and
+// try once more, then try this second model for that request, before falling back to PawPal's rules engine
+const geminiBackupModel = String(process.env.GEMINI_FALLBACK_MODEL || 'gemini-flash-latest').trim();
+const GEMINI_BUSY_WAIT_MS = Number(process.env.GEMINI_BUSY_WAIT_MS ?? 2000);
 async function pickGeminiModel() {
   const res = await fetch(`${GEMINI}/models?pageSize=200`, { headers: { 'x-goog-api-key': config.geminiKey }, signal: AbortSignal.timeout(15000) });
   if (!res.ok) throw new Error(`Gemini models ${res.status}`);
@@ -74,7 +78,8 @@ async function pickGeminiModel() {
   console.log(`🤖 Gemini model "${geminiModel}" unavailable — using "${pick}" instead.`);
   return pick;
 }
-async function callGemini(system, messages, maxTokens, retried = false) {
+// `busy` counts overloaded (503) retries for this request; `model` overrides the model for a backup attempt
+async function callGemini(system, messages, maxTokens, retried = false, { busy = 0, model = geminiModel } = {}) {
   const started = Date.now();
   const size = system.length + messages.reduce((t, m) => t + String(m.content || '').length, 0);
   let res;
@@ -83,7 +88,7 @@ async function callGemini(system, messages, maxTokens, retried = false) {
       method: 'POST',
       headers: { Authorization: `Bearer ${config.geminiKey}`, 'Content-Type': 'application/json' },
       // Flash models may "think" before answering, which uses output tokens — leave generous headroom
-      body: JSON.stringify({ model: geminiModel, max_tokens: maxTokens + 2048, temperature: 0.5,
+      body: JSON.stringify({ model, max_tokens: maxTokens + 2048, temperature: 0.5,
         messages: [{ role: 'system', content: system }, ...normaliseTurns(messages)],
         // Low reasoning keeps replies fast (see geminiReasoning above)
         ...(geminiReasoning !== 'off' ? { reasoning_effort: geminiReasoning } : {}) }),
@@ -92,23 +97,35 @@ async function callGemini(system, messages, maxTokens, retried = false) {
   } catch (err) {
     // Say which model timed out, after how long and how big the request was, so slow replies can be diagnosed from the logs
     if (err.name === 'TimeoutError' || err.name === 'AbortError') {
-      throw new Error(`Gemini ${geminiModel} gave no reply within ${geminiTimeoutMs / 1000}s (request ~${size} characters, reasoning ${geminiReasoning})`);
+      throw new Error(`Gemini ${model} gave no reply within ${geminiTimeoutMs / 1000}s (request ~${size} characters, reasoning ${geminiReasoning})`);
     }
     throw err;
   }
   const seconds = ((Date.now() - started) / 1000).toFixed(1);
-  if (Date.now() - started > 15000) console.warn(`🤖 Slow Gemini reply: ${seconds}s from ${geminiModel} (request ~${size} characters, reasoning ${geminiReasoning})`);
+  if (Date.now() - started > 15000) console.warn(`🤖 Slow Gemini reply: ${seconds}s from ${model} (request ~${size} characters, reasoning ${geminiReasoning})`);
   if (!res.ok) {
     const body = await res.text();
     // Some models reject reasoning_effort: stop sending it for the rest of this process and retry once without it
     if (res.status === 400 && geminiReasoning !== 'off' && /reasoning|thinking/i.test(body)) {
-      console.warn(`🤖 ${geminiModel} does not accept reasoning_effort — sending requests without it`);
+      console.warn(`🤖 ${model} does not accept reasoning_effort — sending requests without it`);
       geminiReasoning = 'off';
-      return callGemini(system, messages, maxTokens, retried);
+      return callGemini(system, messages, maxTokens, retried, { busy, model });
+    }
+    // Google overloaded: wait and retry the same model once, then try the backup model once (this request only)
+    if (res.status === 503) {
+      if (busy === 0) {
+        console.warn(`🤖 Gemini ${model} is busy (503) — trying again in ${GEMINI_BUSY_WAIT_MS / 1000}s`);
+        await new Promise((r) => setTimeout(r, GEMINI_BUSY_WAIT_MS));
+        return callGemini(system, messages, maxTokens, retried, { busy: 1, model });
+      }
+      if (busy === 1 && geminiBackupModel && geminiBackupModel !== model) {
+        console.warn(`🤖 Gemini ${model} is still busy — trying ${geminiBackupModel} for this request`);
+        return callGemini(system, messages, maxTokens, retried, { busy: 2, model: geminiBackupModel });
+      }
     }
     const retryInfo = (/"retryDelay":\s*"[^"]+"/.exec(body) || [''])[0];
     const detail = `${body.slice(0, 300)}${/PerDay/.test(body) ? ' PerDay' : ''} ${retryInfo}`.trim();
-    if (!retried && (res.status === 404 || /model/i.test(detail) && res.status === 400)) {
+    if (!retried && model === geminiModel && (res.status === 404 || /model/i.test(detail) && res.status === 400)) {
       geminiModel = await pickGeminiModel();
       return callGemini(system, messages, maxTokens, true);
     }
