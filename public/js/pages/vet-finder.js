@@ -1,6 +1,6 @@
 // Vet finder: the top 5 Google-rated clinics under the search bar (Google Places, when a Maps key is set),
 // the rest of the clinics beside the map, and the keyless Google Maps embed when there is no key.
-// Ratings and reviews are only ever Google's own — nothing is invented when live data isn't available.
+// Ratings and reviews are only ever Google's own, nothing is invented when live data isn't available.
 (async () => {
   const { $, esc, icons, errorHTML } = PawPal;
   await PawPal.booted;
@@ -23,7 +23,7 @@
         <span class="vet-rank" aria-label="Number ${i + 1}">${i + 1}</span>
         <div style="min-width:0"><h3>${esc(v.name)}</h3><p class="addr">${esc(v.address)}</p>
           <div class="vet-meta">${stars(v.rating, v.reviews)}${openBadge(v)}</div>
-          ${v.review ? `<p class="small" style="margin-top:8px">"${esc(v.review.text)}${v.review.text.length >= 220 ? '…' : ''}" <span class="muted">— ${v.review.authorUrl ? `<a href="${esc(v.review.authorUrl)}" target="_blank" rel="noopener">${esc(v.review.author)}</a>` : esc(v.review.author)}${v.review.when ? `, ${esc(v.review.when)}` : ''}</span></p>` : ''}</div>
+          ${v.review ? `<p class="small" style="margin-top:8px">"${esc(v.review.text)}${v.review.text.length >= 220 ? '…' : ''}" <span class="muted">by ${v.review.authorUrl ? `<a href="${esc(v.review.authorUrl)}" target="_blank" rel="noopener">${esc(v.review.author)}</a>` : esc(v.review.author)}${v.review.when ? `, ${esc(v.review.when)}` : ''}</span></p>` : ''}</div>
         <div class="vet-actions">${v.mapsUrl ? `<a class="btn btn-sm btn-primary" href="${esc(v.mapsUrl)}" target="_blank" rel="noopener">${icons.pin}Directions</a><a class="btn btn-sm" href="${esc(v.mapsUrl)}" target="_blank" rel="noopener">${icons.star}Reviews</a>` : ''}
           ${v.phone ? `<a class="btn btn-sm" href="tel:${esc(tel(v.phone))}">${icons.phone}Call</a>` : ''}</div></li>`).join('')}</ol>
       <p class="tiny muted" style="margin-top:8px">Ranked by Google rating and number of reviews. Ratings and reviews from Google.</p>`;

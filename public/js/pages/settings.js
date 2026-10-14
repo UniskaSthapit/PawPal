@@ -9,7 +9,7 @@
   activity.checked = u.emailPrefs?.activity !== false;
   activity.addEventListener('change', async () => {
     activity.disabled = true;
-    try { await PawPalAPI.patch('/users/me', { emailPrefs: { activity: activity.checked } }); toast(activity.checked ? 'Shelter activity emails on' : 'Shelter activity emails off — notifications still appear in PawPal', activity.checked ? 'success' : 'info'); }
+    try { await PawPalAPI.patch('/users/me', { emailPrefs: { activity: activity.checked } }); toast(activity.checked ? 'Shelter activity emails on' : 'Shelter activity emails off, notifications still appear in PawPal', activity.checked ? 'success' : 'info'); }
     catch (err) { activity.checked = !activity.checked; toast(err.message, 'error'); }
     activity.disabled = false;
   });
@@ -20,7 +20,7 @@
   try {
     const { shelters } = await PawPalAPI.get('/shelters');
     const s = shelters.find((x) => x.id === u.shelterId);
-    $('#shelterInfo').innerHTML = s ? `<h3 style="font-size:20px">${esc(s.name)}</h3><dl class="kv" style="margin-top:12px"><dt>Address</dt><dd>${esc(s.address || `${s.suburb}, ${s.state}`)}</dd><dt>Phone</dt><dd>${esc(s.phone || '—')}</dd><dt>Email</dt><dd>${esc(s.email || '—')}</dd><dt>Hours</dt><dd>${esc(s.hours || '—')}</dd></dl>
+    $('#shelterInfo').innerHTML = s ? `<h3 style="font-size:20px">${esc(s.name)}</h3><dl class="kv" style="margin-top:12px"><dt>Address</dt><dd>${esc(s.address || `${s.suburb}, ${s.state}`)}</dd><dt>Phone</dt><dd>${esc(s.phone || 'N/A')}</dd><dt>Email</dt><dd>${esc(s.email || 'N/A')}</dd><dt>Hours</dt><dd>${esc(s.hours || 'N/A')}</dd></dl>
       <p class="tiny muted" style="margin-top:12px">Shelter details are shown on every pet profile. ${u.role === 'admin' ? '<a href="admin.html">Edit shelters</a>' : 'Ask an administrator to update them.'}</p>`
       : `<p class="muted">${u.role === 'admin' ? `You can see all ${shelters.length} shelters. <a href="admin.html">Manage shelters</a>` : 'You are not assigned to a shelter yet. Ask an administrator.'}</p>`;
   } catch { $('#shelterInfo').textContent = ''; }
@@ -86,7 +86,7 @@
       <div class="row"><button class="btn" id="tfCopy" type="button">${icons.clipboard}Copy</button><button class="btn" id="tfDownload" type="button">${icons.download}Download .txt</button>
         <button class="btn btn-primary" id="tfDone" type="button">I've saved them</button></div>`;
     const text = `PawPal backup codes for ${u.email}\nEach code works once.\n\n${codes.join('\n')}\n`;
-    $('#tfCopy').addEventListener('click', () => navigator.clipboard?.writeText(text).then(() => toast('Backup codes copied'), () => toast('Copy failed — select the codes and copy them', 'error')));
+    $('#tfCopy').addEventListener('click', () => navigator.clipboard?.writeText(text).then(() => toast('Backup codes copied'), () => toast('Copy failed, select the codes and copy them', 'error')));
     $('#tfDownload').addEventListener('click', () => {
       const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type: 'text/plain' })); a.download = 'pawpal-backup-codes.txt'; a.click();
       setTimeout(() => URL.revokeObjectURL(a.href), 1000);

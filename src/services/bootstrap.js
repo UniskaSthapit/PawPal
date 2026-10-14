@@ -1,6 +1,6 @@
 // Start-up account safety:
 // 1. ADMIN_EMAIL becomes an administrator. If the account doesn't exist yet it is created and emailed a
-//    single-use link (valid 24 hours) to choose a password — no password is ever set in configuration.
+//    single-use link (valid 24 hours) to choose a password, no password is ever set in configuration.
 // 2. In production, demo accounts that still use their published demo passwords are deactivated,
 //    so the credentials printed in the README can never be used on a live site.
 const bcrypt = require('bcryptjs');
@@ -13,7 +13,7 @@ const DEMO_ACCOUNTS = [['admin@pawpal.com', 'Admin@123'], ['staff@pawpal.com', '
 
 async function ensureOwnerAdmin(email = config.adminEmail) {
   if (!email) return null;
-  if (!isEmail(email)) { console.warn(`⚠️  ADMIN_EMAIL "${email}" is not a valid email address — ignored.`); return null; }
+  if (!isEmail(email)) { console.warn(`⚠️  ADMIN_EMAIL "${email}" is not a valid email address, ignored.`); return null; }
   const existing = await db.findOne('users', { email });
   if (existing) {
     if (existing.role === 'admin' && existing.active !== false) return { status: 'ok', user: existing };

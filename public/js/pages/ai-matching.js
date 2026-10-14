@@ -9,7 +9,7 @@
       if (me.preferencesText) $('#about').value = me.preferencesText;
     } catch { /* ignore */ }
   }
-  if (PawPal.isStaffUser(u)) $('#saveNote').textContent = 'You are signed in as shelter staff — results are not saved.';
+  if (PawPal.isStaffUser(u)) $('#saveNote').textContent = 'You are signed in as shelter staff, results are not saved.';
 
   $$('[data-example]').forEach((b) => b.addEventListener('click', () => { $('#about').value = b.dataset.example; $('#about').focus(); }));
 
@@ -45,7 +45,7 @@
     if ($('#hasOtherPets').checked) body.hasOtherPets = true;
     $('#formError').innerHTML = '';
     if (text.length < 8 && !Object.values(body).some((v) => v && v !== 6 && v !== text)) {
-      $('#formError').innerHTML = errorHTML('Tell PawPal a little about your home and lifestyle first — even one sentence helps.');
+      $('#formError').innerHTML = errorHTML('Tell PawPal a little about your home and lifestyle first, even one sentence helps.');
       return $('#about').focus();
     }
     const btn = $('#matchBtn');
@@ -58,12 +58,12 @@
       $('#results').innerHTML = `
         <div class="ai-panel">
           <div class="row-between"><span class="src-label src-ai">${icons.sparkle}What PawPal understood</span><span class="tiny muted">${esc(engine)}</span></div>
-          <div class="understood" style="margin-top:10px">${res.understood.length ? res.understood.map((x) => `<span class="badge badge-honey">${esc(x)}</span>`).join('') : '<span class="small muted">Not much yet — add a few details for sharper matches.</span>'}</div>
+          <div class="understood" style="margin-top:10px">${res.understood.length ? res.understood.map((x) => `<span class="badge badge-honey">${esc(x)}</span>`).join('') : '<span class="small muted">Not much yet, add a few details for sharper matches.</span>'}</div>
           ${res.saved ? `<p class="small" style="margin-top:10px">${icons.checkCircle} Saved to your profile. We'll notify you when a new pet is a strong match.</p>` : ''}
         </div>
         <div class="row-between" style="margin:24px 0 14px"><h2 class="h3">${res.matches.length ? `Your top ${res.matches.length} matches` : 'No matches yet'}</h2><a class="small" href="adopt.html">Browse all pets</a></div>
         <div class="stack" style="--stack:16px">${res.matches.length ? res.matches.map(matchCardHTML).join('') : emptyHTML({ title: 'No pets available right now', text: 'New animals arrive every week. Create an account and we\'ll let you know when a strong match arrives.' })}</div>
-        <p class="disclaimer" style="margin-top:20px">${icons.info}Compatibility compares what you told us with shelter-provided facts. It's guidance, not a guarantee — meet the pet and talk with the shelter before deciding.</p>`;
+        <p class="disclaimer" style="margin-top:20px">${icons.info}Compatibility compares what you told us with shelter-provided facts. It's guidance, not a guarantee, meet the pet and talk with the shelter before deciding.</p>`;
       $('#results').scrollIntoView({ behavior: PawPal.reduceMotion ? 'auto' : 'smooth', block: 'start' });
     } catch (err) {
       $('#results').innerHTML = errorHTML(err.message);

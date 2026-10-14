@@ -1,5 +1,5 @@
 // ============================================================
-// ui.js — shared layout and helpers used by every page.
+// ui.js, shared layout and helpers used by every page.
 // Pages declare <body data-layout="public|account|staff" data-page="…"> and put content in <main id="main">.
 // This script renders the header, footer and dashboard sidebars, and provides toasts, modals,
 // favourites, pet cards, formatting helpers and the shared motion toolkit
@@ -17,8 +17,8 @@ const PawPal = (() => {
 
   // ---------- formatting ----------
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const fmtDate = (iso) => (iso ? new Date(iso).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' }) : '—');
-  const fmtDateTime = (iso) => (iso ? new Date(iso).toLocaleString('en-AU', { weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }) : '—');
+  const fmtDate = (iso) => (iso ? new Date(iso).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A');
+  const fmtDateTime = (iso) => (iso ? new Date(iso).toLocaleString('en-AU', { weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }) : 'N/A');
   const timeAgo = (iso) => {
     const s = Math.round((Date.now() - new Date(iso)) / 1000);
     if (s < 60) return 'just now';
@@ -253,7 +253,7 @@ const PawPal = (() => {
         toast(on ? `${name} saved to your favourites` : 'Removed from favourites');
       } else {
         writeLocal([...favIds]);
-        toast(on ? `${name} saved on this device — log in to keep your favourites` : 'Removed from favourites', 'info');
+        toast(on ? `${name} saved on this device, log in to keep your favourites` : 'Removed from favourites', 'info');
       }
       $$(`[data-fav="${CSS.escape(id)}"]`).forEach((b) => {
         b.setAttribute('aria-pressed', String(on));
@@ -543,7 +543,8 @@ const PawPal = (() => {
     try {
       const { notifications, unread } = await PawPalAPI.get('/notifications', { limit: 8 });
       const count = $('#bellCount');
-      if (count) { count.hidden = !unread; count.textContent = unread > 9 ? '9+' : unread; }
+      // Always show the count, including a red 0 when everything has been read
+      if (count) { count.hidden = false; count.textContent = unread > 9 ? '9+' : String(unread || 0); count.setAttribute('aria-label', `${unread || 0} unread notifications`); }
       if (render && $('#bellList')) $('#bellList').innerHTML = notifications.length ? notifications.map(noteHTML).join('') : '<p class="muted small" style="padding:16px">You\'re all caught up.</p>';
     } catch { if (render && $('#bellList')) $('#bellList').innerHTML = '<p class="muted small" style="padding:16px">Could not load notifications.</p>'; }
   }
@@ -704,7 +705,7 @@ const PawPal = (() => {
 
   // ---------- scroll-linked horizontal rail ----------
   // As the section travels through the viewport, vertical scrolling glides the rail sideways (smoothed),
-  // so the pets drift past while the page keeps scrolling normally — it never pins or traps the scroll.
+  // so the pets drift past while the page keeps scrolling normally, it never pins or traps the scroll.
   // The moment someone drags, swipes, uses the arrows or the keyboard, the rail is theirs to control.
   function hscroll(section) {
     const rail = $('.rail', section);

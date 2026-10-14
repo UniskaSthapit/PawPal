@@ -1,4 +1,4 @@
-// Rescue stories — fictional demo content written for PawPal. Rendered by PawPalStories.render().
+// Rescue stories, fictional demo content written for PawPal. Rendered by PawPalStories.render().
 const PawPalStories = (() => {
   const STORIES = [
     {
@@ -45,7 +45,7 @@ const PawPalStories = (() => {
       excerpt: 'Mochi came out of a house with twenty-three other cats, pregnant and terrified. She raised five '
         + 'kittens in foster care, and all six of them now live in homes of their own.',
       body: [
-        'Mochi was one of twenty-three cats removed from a single property. The owner had not set out to cause harm — '
+        'Mochi was one of twenty-three cats removed from a single property. The owner had not set out to cause harm, '
         + 'two unneutered cats had become twenty-three in under three years, and by the time anyone intervened the '
         + 'house was beyond managing. That is what most hoarding cases look like: not cruelty, but a situation that '
         + 'outgrew somebody quietly.',
@@ -55,7 +55,7 @@ const PawPalStories = (() => {
         'For six weeks Mochi would not let anyone touch her while the kittens fed. The foster carer sat in the room '
         + 'each evening and read aloud, which sounds sentimental but is simply how a cat learns that a person in the '
         + 'room is not an event. By week seven, Mochi was headbutting her hand for attention.',
-        'The kittens were vaccinated, desexed and listed together, and all five were adopted within a month — kittens '
+        'The kittens were vaccinated, desexed and listed together, and all five were adopted within a month, kittens '
         + 'usually are. Mochi took longer, as adult cats from hoarding situations often do, because her profile said '
         + 'honestly that she needed a calm adult home and time to settle.',
         'She went home with a retired couple who had specifically asked for a cat who would take a while to trust '
@@ -73,7 +73,7 @@ const PawPalStories = (() => {
       photo: 'https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?w=900&h=620&fit=crop&auto=format&q=80',
       art: 'images/pets/rabbit-a.svg',
       excerpt: 'Bought as an Easter present, surrendered by June. Coco is the reason our rabbit profiles now spell out '
-        + 'exactly how much work a rabbit is — and she found the right home because of it.',
+        + 'exactly how much work a rabbit is, and she found the right home because of it.',
       body: [
         'Coco arrived in June, which is the season for surrendered rabbits. She had been bought at Easter for a child '
         + 'who loved her, in a household that had not realised rabbits live eight to twelve years, need several hours '
@@ -87,7 +87,7 @@ const PawPalStories = (() => {
         'That honesty filtered the applications down from eleven to three, which is exactly what it is supposed to do. '
         + 'The family who adopted her had kept rabbits before and had already booked a vet who sees them.',
         'Coco now has a run in a converted spare room and rearranges her hay every night. Her profile is also the '
-        + 'reason every rabbit on PawPal carries a "special needs" line about daily care — a small change that came '
+        + 'reason every rabbit on PawPal carries a "special needs" line about daily care, a small change that came '
         + 'directly from her file.',
       ],
     },

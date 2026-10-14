@@ -12,7 +12,7 @@
           <span class="badge ${e.status === 'Open' ? 'badge-brand' : e.status === 'Answered' ? 'badge-sage' : ''}">${esc(e.status)}</span></div>
         <div class="thread-msg" style="margin-top:12px"><p>${esc(e.message)}</p></div>
         ${e.reply ? `<div class="thread-msg staff" style="margin-top:8px"><div class="who">${esc(e.repliedBy || 'Staff')}<span>${esc(timeAgo(e.repliedAt))}</span></div><p>${esc(e.reply)}</p></div>` : ''}
-        ${e.status === 'Open' ? `<form class="stack" style="--stack:8px;margin-top:12px" data-reply="${esc(e.id)}"><label class="sr-only" for="r-${esc(e.id)}">Reply</label><textarea class="textarea" id="r-${esc(e.id)}" style="min-height:80px" maxlength="2000" placeholder="Write your reply — it will be emailed to ${esc(e.name.split(' ')[0])}"></textarea>
+        ${e.status === 'Open' ? `<form class="stack" style="--stack:8px;margin-top:12px" data-reply="${esc(e.id)}"><label class="sr-only" for="r-${esc(e.id)}">Reply</label><textarea class="textarea" id="r-${esc(e.id)}" style="min-height:80px" maxlength="2000" placeholder="Write your reply, it will be emailed to ${esc(e.name.split(' ')[0])}"></textarea>
           <div class="row"><button class="btn btn-primary btn-sm" type="submit">${icons.send}Send reply</button><button class="btn btn-ghost btn-sm" type="button" data-close="${esc(e.id)}">Close without reply</button></div></form>` : ''}</article>`).join('')
         : emptyHTML({ icon: 'inbox', title: filter === 'Open' ? 'No open enquiries' : 'Nothing here', text: filter === 'Open' ? 'You\'re all caught up.' : '' });
     } catch (err) { $('#enqList').innerHTML = errorHTML(err.message); }

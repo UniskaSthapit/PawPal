@@ -13,7 +13,7 @@
     $('#petRows').innerHTML = list.length ? list.map((p) => `<tr>
       <td class="cell-first"><div class="cell-pet"><img src="${esc(PawPal.sized(PawPal.photo(p), 200))}" alt="" data-fallback="${PawPal.FALLBACK[p.type]}"><div><b>${esc(p.name)}</b><span>${esc(p.breed)} · ${esc(ageText(p.age))}</span></div></div></td>
       <td data-label="Status"><label class="sr-only" for="st-${esc(p.id)}">Status for ${esc(p.name)}</label><select class="select" id="st-${esc(p.id)}" data-status-for="${esc(p.id)}" style="min-height:38px;width:auto">${STATUSES.map((s) => `<option ${s === p.status ? 'selected' : ''}>${s}</option>`).join('')}</select></td>
-      <td data-label="Details"><span class="small">${esc(p.type)} · ${esc(p.size)} · ${esc(p.location || '—')}</span></td>
+      <td data-label="Details"><span class="small">${esc(p.type)} · ${esc(p.size)} · ${esc(p.location || 'N/A')}</span></td>
       <td data-label="Listed"><span class="small muted">${esc(fmtDate(p.createdAt))}</span></td>
       <td data-label="Actions"><div class="row" style="gap:4px;flex-wrap:nowrap"><a class="btn btn-sm" href="add-pet.html?id=${encodeURIComponent(p.id)}">${icons.edit}Edit</a>
         <a class="btn btn-sm" href="flyer.html?id=${encodeURIComponent(p.id)}" aria-label="Print a flyer for ${esc(p.name)}">${icons.download}Flyer</a>

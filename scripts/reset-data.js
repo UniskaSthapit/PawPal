@@ -1,4 +1,4 @@
-// npm run seed — wipes all data and reloads the sample data.
+// npm run seed, wipes all data and reloads the sample data.
 const db = require('../src/db');
 const { seedIfEmpty } = require('../src/services/seed');
 (async () => {

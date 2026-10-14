@@ -19,16 +19,16 @@ function calculateSuitabilityScore(inquiry, pet) {
   if (pet.requiresYard && hasYard) add(25, 'Living situation: ideal match');
   else if (!pet.requiresYard && (inquiry.livingType === 'Apartment' || hasYard || inquiry.livingType === 'House without yard'))
     add(20, 'Living situation: suitable match');
-  else add(5, 'Living situation: poor match — pet needs a yard');
+  else add(5, 'Living situation: poor match, pet needs a yard');
 
-  // 2. Activity level (max 25) — both on a 1 (relaxed) to 3 (very active) scale
+  // 2. Activity level (max 25), both on a 1 (relaxed) to 3 (very active) scale
   const diff = Math.abs(Number(pet.energyLevel || 2) - Number(inquiry.activityLevel));
   if (diff === 0) add(25, 'Activity level: perfect match');
   else if (diff === 1) add(15, 'Activity level: partial match');
   else add(0, 'Activity level: mismatch');
 
   // 3. Children (max 20)
-  if (inquiry.hasChildren && !pet.goodWithChildren) add(0, 'Children: HIGH RISK — pet not good with children');
+  if (inquiry.hasChildren && !pet.goodWithChildren) add(0, 'Children: HIGH RISK, pet not good with children');
   else if (inquiry.hasChildren) add(20, 'Children: compatible');
   else add(20, 'Children: no conflict');
 
@@ -40,7 +40,7 @@ function calculateSuitabilityScore(inquiry, pet) {
   // 5. Experience (max 15)
   if (inquiry.experience === 'Experienced') add(15, 'Experience: experienced owner');
   else if (inquiry.experience === 'Some experience') add(10, 'Experience: some experience');
-  else add(5, 'Experience: first-time owner — may need extra support');
+  else add(5, 'Experience: first-time owner, may need extra support');
 
   total = Math.min(100, total);
   const label = total >= 80 ? 'High Match' : total >= 60 ? 'Medium Match' : 'Low Match';

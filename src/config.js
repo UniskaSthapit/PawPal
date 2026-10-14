@@ -1,4 +1,4 @@
-// Central configuration — reads .env once and exposes typed settings.
+// Central configuration, reads .env once and exposes typed settings.
 require('dotenv').config({ quiet: true });
 
 const env = process.env;
@@ -49,13 +49,13 @@ module.exports = {
   mailRetryDelayMs: Math.max(0, Number(env.MAIL_RETRY_DELAY_MS ?? 3000) || 0),
   mailFrom: env.MAIL_FROM || (env.ADMIN_EMAIL ? `PawPal <${env.ADMIN_EMAIL.trim()}>` : 'PawPal <no-reply@pawpal.app>'),
 
-  // AI — Anthropic is used when its key is set, otherwise OpenAI, then Google Gemini, otherwise
+  // AI, Anthropic is used when its key is set, otherwise OpenAI, then Google Gemini, otherwise
   // PawPal's built-in rules engine (which still works on the real database).
   anthropicKey: env.ANTHROPIC_API_KEY || '',
-  anthropicModel: env.ANTHROPIC_MODEL || 'claude-sonnet-5-5',
+  anthropicModel: env.ANTHROPIC_MODEL || '', // the model ID from your Anthropic console (needed with the key)
   openaiKey: env.OPENAI_API_KEY || '',
   openaiModel: env.OPENAI_MODEL || 'gpt-4o-mini',
-  // Google Gemini — has a free tier (key from https://aistudio.google.com/apikey, no card needed)
+  // Google Gemini, has a free tier (key from https://aistudio.google.com/apikey, no card needed)
   geminiKey: env.GEMINI_API_KEY || '',
   geminiModel: env.GEMINI_MODEL || 'gemini-flash-latest',
 

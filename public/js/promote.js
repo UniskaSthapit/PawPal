@@ -85,7 +85,7 @@ const PawPalPromote = (() => {
         <div class="promote-card"><canvas id="prCanvas" width="1080" height="1080" role="img" aria-label="Shareable picture of ${esc(pet.name)}"></canvas>
           <button class="btn" type="button" id="prDownload">${icons.download}Download PNG (1080×1080)</button></div>
       </div>
-      <p class="tiny muted">Nothing is posted automatically — copy the caption and upload the picture yourself. Only public details are used.</p></div>`;
+      <p class="tiny muted">Nothing is posted automatically, copy the caption and upload the picture yourself. Only public details are used.</p></div>`;
     PawPal.modal({ title: `Promote ${pet.name}`, body, wide: true, onOpen: (m) => {
       const go = $('#prGo', m);
       go.addEventListener('click', async () => {
@@ -93,14 +93,14 @@ const PawPalPromote = (() => {
         try {
           result = await PawPalAPI.post('/ai/promote', { petId: pet.id, platform: $('#prPlatform', m).value, tone: $('#prTone', m).value });
           $('#prCaption', m).value = `${result.caption}\n\n${result.hashtags.map((h) => `#${h}`).join(' ')}`;
-          $('#prSource', m).textContent = result.source === 'rules' ? 'Written from a template' : 'Suggested by the PawPal assistant — check it before posting';
+          $('#prSource', m).textContent = result.source === 'rules' ? 'Written from a template' : 'Suggested by the PawPal assistant, check it before posting';
           $('#prOut', m).hidden = false;
           await drawCard($('#prCanvas', m), pet, result.link);
         } catch (err) { $('#prErr', m).innerHTML = errorHTML(err.message); }
         setBusy(go, false);
       });
       $('#prCopy', m).addEventListener('click', () => navigator.clipboard?.writeText($('#prCaption', m).value)
-        .then(() => toast('Caption copied'), () => toast('Copy failed — select the text and copy it', 'error')));
+        .then(() => toast('Caption copied'), () => toast('Copy failed, select the text and copy it', 'error')));
       $('#prDownload', m).addEventListener('click', () => {
         $('#prCanvas', m).toBlob((blob) => {
           if (!blob) { toast('Could not create the picture', 'error'); return; }

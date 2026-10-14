@@ -22,8 +22,8 @@ const catalogueRow = (p) => ({ id: p.id, name: p.name, type: p.type, breed: p.br
   energy: energyWord(p.energyLevel), kids: p.goodWithChildren, otherPets: p.goodWithOtherPets, yard: p.requiresYard, status: p.status });
 
 const GUARDRAILS = 'Only mention pets that appear in the provided data, using their exact names. Never invent pets, facts, prices, medical details or ' +
-  'behaviour. Never promise how an animal will behave — compatibility is guidance only and the shelter makes the final decision. ' +
-  'Distinguish shelter-provided facts from your own interpretation. Australian English, warm and concise.';
+  'behaviour. Never promise how an animal will behave, compatibility is guidance only and the shelter makes the final decision. ' +
+  'Distinguish shelter-provided facts from your own interpretation. Australian English, warm and concise. Never use dashes (no em dashes or en dashes); use commas or full stops instead.';
 
 // ---------------- Pet description (shelter staff) ----------------
 function templateDescription(pet) {
@@ -46,7 +46,7 @@ async function describePet(pet) {
   if (!llm.llmEnabled) return { text: templateDescription(pet), source: 'rules' };
   try {
     const text = await llm.complete({
-      system: `You write adoption profiles for an Australian animal shelter. 90–140 words, third person, warm and honest, no emojis, no headings. ${GUARDRAILS} Use only the facts given.`,
+      system: `You write adoption profiles for an Australian animal shelter. 90 to 140 words, third person, warm and honest, no emojis, no headings. ${GUARDRAILS} Use only the facts given.`,
       messages: [{ role: 'user', content: `Write a public adoption profile from these shelter-provided facts:\n${JSON.stringify({
         name: pet.name, type: pet.type, breed: pet.breed, ageYears: pet.age, gender: pet.gender, size: pet.size,
         personality: pet.traits, energy: energyWord(pet.energyLevel), goodWithChildren: pet.goodWithChildren,
@@ -71,7 +71,7 @@ function baseHashtags(pet) {
   const city = cleanTag(String(pet.location || '').split(',')[0].replace(/\s+/g, ''));
   return [...new Set(['AdoptDontShop', ...(SPECIES_TAGS[pet.type] || SPECIES_TAGS.Other), 'PawPal', city && `${city}Pets`].filter(Boolean))];
 }
-// Template caption used without an AI key (or when the AI is unavailable) — public facts only
+// Template caption used without an AI key (or when the AI is unavailable), public facts only
 function templatePost(pet, { platform, tone, link }) {
   const age = pet.age === undefined || pet.age === '' ? '' : Number(pet.age) === 0 ? 'young ' : `${Number(pet.age)}-year-old `;
   const traits = (pet.traits || []).slice(0, 3).map((t) => t.toLowerCase());
@@ -95,8 +95,8 @@ async function promotePost(pet, { platform = 'instagram', tone = 'friendly', lin
     const raw = await llm.complete({ json: true, maxTokens: 600,
       system: `You write social media posts for an Australian animal shelter to help a pet get adopted. ${GUARDRAILS}
 Use only the facts given; never mention health, medical or rescue history. Tone: ${tone}. Platform: ${platform}.
-${platform === 'instagram' ? 'Instagram: 60–110 words, short lines, up to 3 emojis, end with "Link in bio to meet NAME".' : `Facebook: 80–140 words, a friendly paragraph or two, up to 2 emojis, end with the profile link ${link}.`}
-Return {"caption": string (no hashtags in it), "hashtags": string[] (6–10, without #, no spaces)}.`,
+${platform === 'instagram' ? 'Instagram: 60 to 110 words, short lines, up to 3 emojis, end with "Link in bio to meet NAME".' : `Facebook: 80 to 140 words, a friendly paragraph or two, up to 2 emojis, end with the profile link ${link}.`}
+Return {"caption": string (no hashtags in it), "hashtags": string[] (6 to 10, without #, no spaces)}.`,
       messages: [{ role: 'user', content: JSON.stringify({ pet: promptPet(pet), profileLink: link }) }] });
     const caption = typeof raw.caption === 'string' ? raw.caption.replace(/(^|\s)#\w+/g, '').trim().slice(0, 2000) : '';
     const hashtags = Array.isArray(raw.hashtags) ? [...new Set(raw.hashtags.map(cleanTag).filter((t) => t.length >= 3))].slice(0, 10) : [];
@@ -142,7 +142,7 @@ function templateCompare(pets, scores = null) {
     if (traits.length) note(p, `Described by the shelter as ${traits.join(' and ')}`);
     if (p.status === 'On Hold') note(p, 'Currently on hold for another adopter');
   });
-  if (!lines.length) lines.push(`${listNames(pets.map((p) => p.name))} have a lot in common — meeting them is the best way to decide.`);
+  if (!lines.length) lines.push(`${listNames(pets.map((p) => p.name))} have a lot in common, meeting them is the best way to decide.`);
   lines.push('Compatibility is guidance only; the shelter team will help you decide.');
   return { summary: lines.join(' '), highlights: pets.map((p) => ({ petId: p.id, points: (highlights[p.id] || []).slice(0, 3) })) };
 }
@@ -153,9 +153,9 @@ async function comparePets(pets, scores = null) {
   try {
     const raw = await llm.complete({ json: true, maxTokens: 700,
       system: `You help someone choose between rescue pets they are comparing. ${GUARDRAILS}
-Compare the pets side by side in 60–120 words: who suits what kind of home, energy and care differences, and anything to ask the shelter.
-${scores ? 'Each pet has a compatibility score with the adopter\'s lifestyle — refer to it, but do not change it.' : 'There is no adopter profile — do not guess one.'}
-Return {"summary": string, "highlights": [{"petId": string, "points": string[] (1–3 short points, max 16 words each)}]}.`,
+Compare the pets side by side in 60 to 120 words: who suits what kind of home, energy and care differences, and anything to ask the shelter.
+${scores ? 'Each pet has a compatibility score with the adopter\'s lifestyle, refer to it, but do not change it.' : 'There is no adopter profile, do not guess one.'}
+Return {"summary": string, "highlights": [{"petId": string, "points": string[] (1 to 3 short points, max 16 words each)}]}.`,
       messages: [{ role: 'user', content: JSON.stringify({ pets: pets.map((p) => ({ ...promptPet(p), ...(scores ? { compatibility: scores[p.id] } : {}) })) }) }] });
     const summary = typeof raw.summary === 'string' ? raw.summary.trim().slice(0, 1500) : '';
     if (summary.length < 40 || !pets.some((p) => summary.includes(p.name))) return { ...fallback, source: 'rules' };
@@ -175,7 +175,7 @@ Return {"summary": string, "highlights": [{"petId": string, "points": string[] (
 // Only public text is translated. Without a model, callers keep English and say so.
 const LANGUAGES = { en: 'English', ne: 'Nepali', hi: 'Hindi', zh: 'Chinese (Simplified)', es: 'Spanish' };
 const sane = (orig, out) => typeof out === 'string' && (!orig || out.trim().length > 0) && out.length <= orig.length * 4 + 200;
-// fields: { description, idealHome, traits: [] } — or texts: string[] (chat replies). Returns the same shape, or null.
+// fields: { description, idealHome, traits: [] }, or texts: string[] (chat replies). Returns the same shape, or null.
 async function translate({ fields = null, texts = null }, lang) {
   if (!LANGUAGES[lang] || lang === 'en' || !llm.llmEnabled) return null;
   const system = `Translate text for an Australian animal adoption website into ${LANGUAGES[lang]}${lang === 'zh' ? ' using Simplified Chinese characters' : ''}.
@@ -209,7 +209,7 @@ async function understandLifestyle(text, prev = {}, locations = []) {
   if (!llm.llmEnabled || !String(text || '').trim()) return { profile: ruled, source: 'rules' };
   try {
     const raw = await llm.complete({ json: true, maxTokens: 400,
-      system: 'Extract a pet adopter\'s lifestyle profile from their message. Use null when not stated — never guess. Schema: ' +
+      system: 'Extract a pet adopter\'s lifestyle profile from their message. Use null when not stated, never guess. Schema: ' +
         '{"homeType":"apartment|house|farm|null","hasYard":bool|null,"activity":1|2|3|null (1 relaxed, 2 moderate, 3 very active),' +
         '"experience":"first|some|experienced|null","hoursAlone":number|null,"hasChildren":bool|null,"hasOtherPets":bool|null,' +
         '"preferredType":"dog|cat|other|any|null","size":["small"|"medium"|"large"],"age":["baby"|"young"|"adult"|"senior"],' +
@@ -227,7 +227,7 @@ async function understandLifestyle(text, prev = {}, locations = []) {
 
 // ---------------- Matching explanations ----------------
 function ruleSummary(m) {
-  if (!m.reasons.length) return `${m.pet.name} could be worth meeting — ask the shelter how they'd suit your routine.`;
+  if (!m.reasons.length) return `${m.pet.name} could be worth meeting, ask the shelter how they'd suit your routine.`;
   const [a, b] = m.reasons;
   return `${a}${b ? `, and ${b.charAt(0).toLowerCase()}${b.slice(1)}` : ''}.`;
 }
@@ -284,8 +284,8 @@ const nameMention = (text, pets) => {
 };
 
 function nextQuestion(p) {
-  if (!p.homeType && p.hasYard === null) return 'What kind of home do you have — an apartment, or a house with a yard?';
-  if (!p.activity) return 'How active is your day-to-day life — relaxed, moderately active, or very active?';
+  if (!p.homeType && p.hasYard === null) return 'What kind of home do you have, an apartment, or a house with a yard?';
+  if (!p.activity) return 'How active is your day-to-day life, relaxed, moderately active, or very active?';
   if (p.hoursAlone === null || p.hoursAlone === undefined) return 'Roughly how many hours would your pet be on their own on a typical day?';
   if (p.hasChildren === null || p.hasChildren === undefined) return 'Are there children in your home?';
   if (p.hasOtherPets === null || p.hasOtherPets === undefined) return 'Do you have other pets at the moment?';
@@ -355,11 +355,11 @@ function unavailableReply(req, pets) {
   const have = `Right now our partner shelters have ${speciesSummary(pets)} looking for homes.`;
   const cta = [{ label: 'See all pets', href: 'adopt.html' }];
   if (req.wild && !req.asked.length) {
-    return { reply: `We don't have any ${req.wild.replace(/s$/, '')}s — PawPal only rehomes companion animals from Australian shelters, and wild animals aren't kept as pets. ${have} Would you like me to suggest one that suits your home?`, picks: [], actions: cta };
+    return { reply: `We don't have any ${req.wild.replace(/s$/, '')}s. PawPal only rehomes companion animals from Australian shelters, and wild animals aren't kept as pets. ${have} Would you like me to suggest one that suits your home?`, picks: [], actions: cta };
   }
   if (req.asked.length && !req.found.length) {
     const names = req.missing.map((a) => a.label);
-    return { reply: `We don't have any ${names.join(' or ')} available for adoption at the moment. ${have} New animals arrive every week, so it's worth checking back — or tell me about your home and I'll suggest who could suit you.`, picks: [], actions: cta };
+    return { reply: `We don't have any ${names.join(' or ')} available for adoption at the moment. ${have} New animals arrive every week, so it's worth checking back, or tell me about your home and I'll suggest who could suit you.`, picks: [], actions: cta };
   }
   return null;
 }
@@ -376,17 +376,17 @@ function rulesChat({ message, profile, pets, applications, user, lastPetIds = []
 
   // 0. Greetings and small talk never trigger pet suggestions
   if (GREETING.test(plain)) {
-    return { reply: `Hi${user ? ` ${user.name.split(' ')[0]}` : ''}! I'm PawPal's adoption assistant. We have ${speciesSummary(pets)} looking for homes right now. Tell me a little about your home and routine and I'll suggest who could suit you — or ask me about a pet, the adoption process, or your application.`, picks: [] };
+    return { reply: `Hi${user ? ` ${user.name.split(' ')[0]}` : ''}! I'm PawPal's adoption assistant. We have ${speciesSummary(pets)} looking for homes right now. Tell me a little about your home and routine and I'll suggest who could suit you, or ask me about a pet, the adoption process, or your application.`, picks: [] };
   }
   if (THANKS.test(plain)) return { reply: 'You\'re welcome! Let me know if you\'d like more suggestions or help with an application.', picks: [] };
-  if (BYE.test(plain)) return { reply: 'Bye for now — good luck finding your new best friend!', picks: [] };
+  if (BYE.test(plain)) return { reply: 'Bye for now, good luck finding your new best friend!', picks: [] };
 
   // 1. Application status
   if (/\b(status|my application|my applications|applied|progress|where (is|are) my|update on)\b/.test(t) && !/what happens/.test(t)) {
-    if (!user) return { reply: 'I can check that for you once you log in — your applications are private to your account. Log in, then ask me again or open My Applications.', picks: [], actions: [{ label: 'Log in', href: 'login.html' }] };
+    if (!user) return { reply: 'I can check that for you once you log in, your applications are private to your account. Log in, then ask me again or open My Applications.', picks: [], actions: [{ label: 'Log in', href: 'login.html' }] };
     if (user.role !== 'user') return { reply: 'Staff accounts don\'t have adoption applications. Use the shelter dashboard to review applicants.', picks: [] };
     if (!applications.length) return { reply: 'You don\'t have any adoption applications yet. When you find a pet you love, press "Apply to adopt" on their profile and I can track it for you.', picks: [] };
-    const lines = applications.slice(0, 4).map((a) => `• ${a.petName}: ${a.status} — ${APP_STATUS_INFO[a.status] || ''}${a.appointmentAt ? ` (booked ${new Date(a.appointmentAt).toLocaleString('en-AU', { dateStyle: 'medium', timeStyle: 'short' })})` : ''}`);
+    const lines = applications.slice(0, 4).map((a) => `• ${a.petName}: ${a.status}, ${APP_STATUS_INFO[a.status] || ''}${a.appointmentAt ? ` (booked ${new Date(a.appointmentAt).toLocaleString('en-AU', { dateStyle: 'medium', timeStyle: 'short' })})` : ''}`);
     return { reply: `Here's where your applications are up to:\n${lines.join('\n')}`, picks: [], actions: [{ label: 'Open my timeline', href: 'my-applications.html' }] };
   }
 
@@ -397,7 +397,7 @@ function rulesChat({ message, profile, pets, applications, user, lastPetIds = []
       const m = evaluateMatch(pet, profile);
       const reasons = m.reasons.length ? m.reasons.map((r) => `• ${r}`).join('\n') : '• I don\'t know enough about your lifestyle yet to give specific reasons.';
       const cons = m.considerations.length ? `\nWorth considering:\n${m.considerations.map((r) => `• ${r}`).join('\n')}` : '';
-      return { reply: `${pet.name} scored ${m.score}% against what you've told me. Based on the shelter's information:\n${reasons}${cons}\n\nThis is guidance, not a guarantee — the shelter team can tell you much more.`, picks: [pick({ pet, ...m })] };
+      return { reply: `${pet.name} scored ${m.score}% against what you've told me. Based on the shelter's information:\n${reasons}${cons}\n\nThis is guidance, not a guarantee, the shelter team can tell you much more.`, picks: [pick({ pet, ...m })] };
     }
   }
 
@@ -418,7 +418,7 @@ function rulesChat({ message, profile, pets, applications, user, lastPetIds = []
 
   // 5. Location
   if (/\b(near me|nearby|close to me|in my area|near (to )?[a-z]+)\b/.test(t) && !profile.location) {
-    return { reply: 'Which suburb, city or state are you in? For example "Melbourne" or "NSW" — I\'ll show pets close by.', picks: [] };
+    return { reply: 'Which suburb, city or state are you in? For example "Melbourne" or "NSW", I\'ll show pets close by.', picks: [] };
   }
 
   // 6. Recommendations from lifestyle
@@ -437,7 +437,7 @@ function rulesChat({ message, profile, pets, applications, user, lastPetIds = []
     if (!top.length) return { reply: 'There aren\'t any pets that fit right now, but new animals arrive every week. Try widening what you\'re looking for.', picks: [] };
     const understood = describeProfile(profile);
     const intro = understood.length ? `Here's what I understood: ${understood.slice(0, 5).join(', ').toLowerCase()}.` : 'Here are some lovely pets available right now.';
-    const list = top.map((m) => `• ${m.pet.name} (${m.pet.breed}) — ${m.score}% match${m.reasons[0] ? `: ${m.reasons[0].charAt(0).toLowerCase()}${m.reasons[0].slice(1)}` : ''}`).join('\n');
+    const list = top.map((m) => `• ${m.pet.name} (${m.pet.breed}), ${m.score}% match${m.reasons[0] ? `: ${m.reasons[0].charAt(0).toLowerCase()}${m.reasons[0].slice(1)}` : ''}`).join('\n');
     const notHere = [...req.missing.map((a) => a.label), ...(req.wild ? [`${req.wild.replace(/s$/, '')}s`] : [])];
     const note = notHere.length ? `We don't have any ${notHere.join(' or ')} at the moment, but here's who is available.\n\n` : '';
     return { reply: `${note}${intro}\n\n${list}\n\n${nextQuestion(profile)}`, picks: top.map(pick) };
@@ -453,7 +453,7 @@ async function chat(ctx) {
   const profile = parseProfile(message, prevProfile, locations);
   const rules = rulesChat({ message, profile, pets, applications, user, lastPetIds, shelters });
   if (!llm.llmEnabled) return { ...rules, profile, source: 'rules' };
-  // Greetings, small talk and animals we don't have are answered straight from the catalogue — no pet list
+  // Greetings, small talk and animals we don't have are answered straight from the catalogue, no pet list
   const plain = message.toLowerCase().replace(/[’']/g, '').trim();
   const req = animalRequest(message, pets);
   if (GREETING.test(plain) || THANKS.test(plain) || BYE.test(plain) || unavailableReply(req, pets)) return { ...rules, profile, source: 'rules' };
@@ -467,7 +467,7 @@ async function chat(ctx) {
       system: `You are PawPal's adoption assistant for Australian animal shelters. Help people find compatible pets, answer questions about specific pets and the adoption process, and explain application status. ${GUARDRAILS}
 Keep replies under 120 words; plain text with simple "•" bullets when listing. Recommend at most 3 pets and include their ids in petIds. When recommending, prefer the ranked candidates and quote their matchScore as the match percentage.
 Always answer the latest message. rankedCandidates already reflect the adopter's current wishes: if they change what they want (for example cats to dogs, or a different size or age), recommend pets that fit the new request and do not repeat earlier suggestions unless they ask about them. Only recommend pets whose type matches the kind of animal they asked for. If the user asks about their application and "myApplications" is empty or the user is not logged in, say so.
-"availableNow" lists every kind of animal currently in the catalogue. If they ask for a kind of animal that isn't there, say plainly that PawPal doesn't have any right now and mention what is available; never suggest a different kind of animal as if it were what they asked for. Only suggest pets (petIds) when the message is about finding or learning about a pet — for greetings, thanks or general questions return an empty petIds list.
+"availableNow" lists every kind of animal currently in the catalogue. If they ask for a kind of animal that isn't there, say plainly that PawPal doesn't have any right now and mention what is available; never suggest a different kind of animal as if it were what they asked for. Only suggest pets (petIds) when the message is about finding or learning about a pet, for greetings, thanks or general questions return an empty petIds list.
 Return {"reply": string, "petIds": string[]}.
 Adoption FAQ: ${JSON.stringify(FAQ.map((f) => ({ q: f.q, a: f.a })))}`,
       messages: [
@@ -477,7 +477,7 @@ Adoption FAQ: ${JSON.stringify(FAQ.map((f) => ({ q: f.q, a: f.a })))}`,
           // request small (it was ~8k tokens per message) so the model answers quickly
           petsBeingDiscussed: discussed.length ? discussed.map(promptPet) : undefined,
           catalogue: pets.slice(0, 60).map(catalogueRow), myApplications: user ? myApps : undefined })}` },
-        { role: 'assistant', content: '{"reply":"Understood — I will only use this data.","petIds":[]}' },
+        { role: 'assistant', content: '{"reply":"Understood, I will only use this data.","petIds":[]}' },
         ...history.slice(-8).map((m) => ({ role: m.role === 'user' ? 'user' : 'assistant', content: String(m.content).slice(0, 800) })),
         { role: 'user', content: message },
       ] });
@@ -505,7 +505,7 @@ async function explainQuestion(key, userQuestion = '') {
   try {
     const text = await llm.complete({ maxTokens: 250,
       system: 'You help people understand questions on a pet adoption application. Explain what the question means and why the shelter asks it. ' +
-        'NEVER suggest, draft or fill in an answer for them — the adopter is responsible for their own answers. Max 80 words, friendly, Australian English.',
+        'NEVER suggest, draft or fill in an answer for them, the adopter is responsible for their own answers. Max 80 words, friendly, Australian English.',
       messages: [{ role: 'user', content: `Application question: "${q.label}"\nBackground: ${q.help}\nTheir question: ${userQuestion.slice(0, 400)}` }] });
     return { question: q.label, explanation: text || q.help, source: llm.provider };
   } catch {
@@ -566,7 +566,7 @@ async function shelterAssistant(question, snap) {
   }
 }
 
-// Summary of one application for staff (the applicant's own answers only — no staff notes sent)
+// Summary of one application for staff (the applicant's own answers only, no staff notes sent)
 async function summarizeApplication(app, pet) {
   const m = pet ? evaluateMatch(pet, {
     homeType: /apartment/i.test(app.livingType) ? 'apartment' : /farm/i.test(app.livingType) ? 'farm' : 'house',
@@ -583,7 +583,7 @@ async function summarizeApplication(app, pet) {
   if (!llm.llmEnabled) return { summary: rules, strengths: m.reasons, considerations: [...m.considerations, ...(app.notes || [])], source: 'rules' };
   try {
     const text = await llm.complete({ maxTokens: 350,
-      system: 'Summarise an adoption application for shelter staff in 4–6 short bullet points ("•"): household, routine, experience, fit with the pet, and anything to verify at interview. Use only the data. Do not decide the outcome.',
+      system: 'Summarise an adoption application for shelter staff in 4 to 6 short bullet points ("•"): household, routine, experience, fit with the pet, and anything to verify at interview. Use only the data. Do not decide the outcome.',
       messages: [{ role: 'user', content: JSON.stringify({ pet: pet ? promptPet(pet) : { name: app.petName },
         application: { livingType: app.livingType, ownership: app.ownership, landlordPermission: app.landlordPermission, activityLevel: app.activityLevel,
           hoursAlone: app.hoursAlone, hasChildren: app.hasChildren, hasOtherPets: app.hasOtherPets, experience: app.experience,
@@ -600,7 +600,7 @@ async function insights(facts, ruleSentences) {
   if (!llm.llmEnabled || !ruleSentences.length) return { insights: ruleSentences, source: 'rules' };
   try {
     const raw = await llm.complete({ json: true, maxTokens: 500,
-      system: 'You are an analyst for an animal shelter. Write 3–5 short, specific insights (max 30 words each) using ONLY the numbers given. No speculation beyond the data. Return {"insights": string[]}',
+      system: 'You are an analyst for an animal shelter. Write 3 to 5 short, specific insights (max 30 words each) using ONLY the numbers given. No speculation beyond the data. Return {"insights": string[]}',
       messages: [{ role: 'user', content: JSON.stringify(facts) }] });
     const list = (raw.insights || []).map((s) => String(s).slice(0, 240)).filter(Boolean).slice(0, 5);
     return { insights: list.length ? list : ruleSentences, source: list.length ? llm.provider : 'rules' };

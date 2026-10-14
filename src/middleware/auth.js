@@ -1,4 +1,4 @@
-// Authentication middleware — JWT stored in an httpOnly cookie (not readable by page scripts).
+// Authentication middleware, JWT stored in an httpOnly cookie (not readable by page scripts).
 // Roles: "user" (adopter), "staff" (shelter staff, scoped to one shelter), "admin" (everything).
 const jwt = require('jsonwebtoken');
 const config = require('../config');

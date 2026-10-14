@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Apply to adopt — PawPal</title>
+  <title>Apply to adopt | PawPal</title>
   <meta name="description" content="Apply to adopt a rescue pet through PawPal.">
   <meta name="theme-color" content="#FBF6EE">
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
@@ -19,7 +19,7 @@
 <section class="page-hero"><div class="container">
   <nav class="breadcrumbs" aria-label="Breadcrumb"><a href="adopt.html">Adopt</a><span aria-hidden="true">/</span><a id="petCrumb" href="adopt.html">Pet</a><span aria-hidden="true">/</span><span>Apply</span></nav>
   <h1 class="h1" id="applyTitle">Adoption application</h1>
-  <p class="lead">About 10 minutes. Your progress is saved on this device as you go. Stuck on a question? Tap “What does this mean?” — PawPal will explain it, but your answers are always your own.</p>
+  <p class="lead">About 10 minutes. Your progress is saved on this device as you go. Stuck on a question? Tap “What does this mean?” and PawPal will explain it, but your answers are always your own.</p>
 </div></section>
 <section class="section-sm"><div class="container" style="display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:32px;align-items:start" id="applyLayout">
   <form class="card" id="applyForm" novalidate>
@@ -46,12 +46,12 @@
       <fieldset class="step form-grid" data-step="3" hidden style="border:0;padding:0;margin:0"><legend class="sr-only">Lifestyle</legend>
         <div class="field full" data-q="activityLevel"><div class="row-between"><label for="activityLevel">How active is your household?</label><button type="button" class="link-btn small" data-help="activityLevel" aria-expanded="false">What does this mean?</button></div><div class="choice-grid" role="radiogroup" aria-label="activityLevel"><label class="choice"><input type="radio" name="activityLevel" value="1"><span>Relaxed</span></label><label class="choice"><input type="radio" name="activityLevel" value="2"><span>Moderately active</span></label><label class="choice"><input type="radio" name="activityLevel" value="3"><span>Very active</span></label></div><div class="help-slot" data-slot="activityLevel"></div></div>
         <div class="field" data-q="hoursAlone"><div class="row-between"><label for="hoursAlone">How many hours a day would the pet be alone?</label><button type="button" class="link-btn small" data-help="hoursAlone" aria-expanded="false">What does this mean?</button></div><select class="select" id="hoursAlone"><option value="">Choose…</option><option value="0">0 hours</option><option value="1">1 hours</option><option value="2">2 hours</option><option value="3">3 hours</option><option value="4">4 hours</option><option value="5">5 hours</option><option value="6">6 hours</option><option value="7">7 hours</option><option value="8">8 hours</option><option value="9">9 hours</option><option value="10">10 hours</option><option value="11">11 hours</option><option value="12">12 hours</option></select><div class="help-slot" data-slot="hoursAlone"></div></div>
-        <div class="field" data-q="workSchedule"><div class="row-between"><label for="workSchedule">What does a typical week look like?</label><button type="button" class="link-btn small" data-help="workSchedule" aria-expanded="false">What does this mean?</button></div><input class="input" id="workSchedule" maxlength="300" placeholder="e.g. office Mon–Wed, home Thu–Fri"><div class="help-slot" data-slot="workSchedule"></div></div>
+        <div class="field" data-q="workSchedule"><div class="row-between"><label for="workSchedule">What does a typical week look like?</label><button type="button" class="link-btn small" data-help="workSchedule" aria-expanded="false">What does this mean?</button></div><input class="input" id="workSchedule" maxlength="300" placeholder="e.g. office Mon to Wed, home Thu to Fri"><div class="help-slot" data-slot="workSchedule"></div></div>
         <div class="field full" data-q="experience"><div class="row-between"><label for="experience">What is your experience with pets?</label><button type="button" class="link-btn small" data-help="experience" aria-expanded="false">What does this mean?</button></div><div class="choice-grid" role="radiogroup" aria-label="experience"><label class="choice"><input type="radio" name="experience" value="First-time owner"><span>First-time owner</span></label><label class="choice"><input type="radio" name="experience" value="Some experience"><span>Some experience</span></label><label class="choice"><input type="radio" name="experience" value="Experienced"><span>Experienced</span></label></div><div class="help-slot" data-slot="experience"></div></div>
         <div class="field full" data-q="experienceDetails"><div class="row-between"><label for="experienceDetails">Tell us about your pet experience</label><button type="button" class="link-btn small" data-help="experienceDetails" aria-expanded="false">What does this mean?</button></div><textarea class="textarea" id="experienceDetails" maxlength="1500" style="min-height:100px"></textarea><div class="help-slot" data-slot="experienceDetails"></div></div>
       </fieldset>
       <fieldset class="step" data-step="4" hidden style="border:0;padding:0;margin:0"><legend class="sr-only">Why this pet</legend>
-        <div class="field full" data-q="motivation"><div class="row-between"><label for="motivation">Why would you like to adopt this pet?</label><button type="button" class="link-btn small" data-help="motivation" aria-expanded="false">What does this mean?</button></div><textarea class="textarea" id="motivation" maxlength="2000" style="min-height:180px"></textarea><span class="hint"><span id="motCount">0</span> characters — at least 20 please.</span><div class="help-slot" data-slot="motivation"></div></div>
+        <div class="field full" data-q="motivation"><div class="row-between"><label for="motivation">Why would you like to adopt this pet?</label><button type="button" class="link-btn small" data-help="motivation" aria-expanded="false">What does this mean?</button></div><textarea class="textarea" id="motivation" maxlength="2000" style="min-height:180px"></textarea><span class="hint"><span id="motCount">0</span> characters, at least 20 please.</span><div class="help-slot" data-slot="motivation"></div></div>
       </fieldset>
       <fieldset class="step" data-step="5" hidden style="border:0;padding:0;margin:0"><legend class="sr-only">Review</legend>
         <div id="review"></div>

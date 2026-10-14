@@ -16,7 +16,7 @@
   }
   const { pet, shelter } = data;
   const adopted = pet.status === 'Adopted';
-  document.title = `${pet.name} the ${pet.breed} — Adopt on PawPal`;
+  document.title = `${pet.name} the ${pet.breed}, Adopt on PawPal`;
   $('meta[name="description"]').setAttribute('content', `${pet.name} is a ${ageLong(pet.age).toLowerCase()} old ${pet.breed} looking for a home${pet.location ? ` in ${pet.location}` : ''}.`);
   $('#crumb').textContent = pet.name;
 
@@ -34,7 +34,7 @@
   const energy = Number(pet.energyLevel) || 2;
 
   const applyPath = `inquiry-form.html?petId=${encodeURIComponent(pet.id)}`;
-  const applyHref = u ? applyPath : `login.html?next=${encodeURIComponent(applyPath)}`;
+  const applyHref = u ? applyPath : `login.html?as=adopter&next=${encodeURIComponent(applyPath)}`;
   const applyBtn = adopted ? '' : staff
     ? `<a class="btn btn-dark btn-lg" href="add-pet.html?id=${encodeURIComponent(pet.id)}">${icons.edit}Edit in shelter portal</a>`
     : myApp ? `<a class="btn btn-sage btn-lg" href="my-applications.html?id=${encodeURIComponent(myApp.id)}">${icons.file}View my application · ${esc(myApp.status)}</a>`
@@ -62,7 +62,7 @@
         ${photos.length > 1 ? `<div class="gallery-thumbs" role="group" aria-label="More photos of ${esc(pet.name)}">${photos.map((p, i) => `<button type="button" data-thumb="${i}" aria-label="Photo ${i + 1}" aria-current="${i === 0}"><img src="${esc(sized(p, 240))}" alt="" loading="lazy" data-fallback="${PawPal.FALLBACK[pet.type]}"></button>`).join('')}</div>` : ''}
       </div>
       <div class="profile-side"><div class="profile-card" data-reveal>
-        <div class="row">${pet.status === 'On Hold' ? '<span class="badge badge-honey">On hold — meeting an adopter</span>' : adopted ? '<span class="badge badge-dark">Adopted</span>' : '<span class="badge badge-sage">Available for adoption</span>'}
+        <div class="row">${pet.status === 'On Hold' ? '<span class="badge badge-honey">On hold, meeting an adopter</span>' : adopted ? '<span class="badge badge-dark">Adopted</span>' : '<span class="badge badge-sage">Available for adoption</span>'}
           <span class="badge">${icons.pin}${esc(pet.location || 'Location on request')}</span>
           ${KIND[pet.category] ? `<a class="badge badge-brand category-badge" href="${pet.category === 'rescue' ? 'rescue.html' : `adopt.html?category=${pet.category}`}">${icons[KIND[pet.category][1]]}${esc(KIND[pet.category][0])}</a>` : ''}</div>
         <h1 class="profile-name" style="margin-top:18px">${esc(pet.name)}</h1>
@@ -72,7 +72,7 @@
           <div><dt>Size</dt><dd>${esc(pet.size)}</dd></div>
           <div><dt>Sex</dt><dd>${esc(pet.gender)}</dd></div>
           <div><dt>Energy</dt><dd><span class="energy-meter" aria-label="${esc(energyText(energy))}">${[1, 2, 3].map((n) => `<i class="${n <= energy ? 'on' : ''}"></i>`).join('')}</span></dd></div>
-          <div><dt>Colour</dt><dd>${esc(pet.colour || '—')}</dd></div>
+          <div><dt>Colour</dt><dd>${esc(pet.colour || 'N/A')}</dd></div>
           <div><dt>Adoption fee</dt><dd>${esc(money(pet.adoptionFee))}</dd></div>
         </dl>
         ${adopted ? '' : `<div class="profile-actions">${applyBtn}
@@ -109,7 +109,7 @@
             ${pet.healthChecks?.length
               // Species-appropriate checks (fish, reptiles, birds, farm animals…)
               ? pet.healthChecks.map((h) => `<li>${icons.checkCircle}<span>${esc(h)}</span></li>`).join('')
-              : [['vaccinated', 'Vaccinated'], ['desexed', 'Desexed'], ['microchipped', 'Microchipped']].map(([k, l]) => `<li>${pet[k] ? icons.checkCircle : icons.minus}<span>${pet[k] ? l : `Not yet ${l.toLowerCase()} — ask the shelter`}</span></li>`).join('')}
+              : [['vaccinated', 'Vaccinated'], ['desexed', 'Desexed'], ['microchipped', 'Microchipped']].map(([k, l]) => `<li>${pet[k] ? icons.checkCircle : icons.minus}<span>${pet[k] ? l : `Not yet ${l.toLowerCase()}, ask the shelter`}</span></li>`).join('')}
           </ul>
           <p class="small muted" style="margin-top:10px">Health information is provided by the shelter. Ask the team for full vet records before adopting.</p>
         </div>
@@ -135,10 +135,10 @@
         <div class="card card-pad" data-reveal>
           <h3 style="font-size:22px">Adopting ${esc(pet.name)}</h3>
           <ol class="plain reason-list pos" style="margin-top:14px">
-            <li>${icons.file}<span><b>Apply online</b> — takes about 10 minutes.</span></li>
-            <li>${icons.user}<span><b>Review &amp; chat</b> — the shelter reviews your application and may call you.</span></li>
-            <li>${icons.handshake}<span><b>Meet &amp; greet</b> — spend time with ${esc(pet.name)} at the shelter.</span></li>
-            <li>${icons.home}<span><b>Go home day</b> — ${pet.adoptionFee ? `adoption fee ${esc(money(pet.adoptionFee))}` : 'fee confirmed by the shelter'}.</span></li>
+            <li>${icons.file}<span><b>Apply online</b>: takes about 10 minutes.</span></li>
+            <li>${icons.user}<span><b>Review &amp; chat</b>: the shelter reviews your application and may call you.</span></li>
+            <li>${icons.handshake}<span><b>Meet &amp; greet</b>: spend time with ${esc(pet.name)} at the shelter.</span></li>
+            <li>${icons.home}<span><b>Go home day</b>: ${pet.adoptionFee ? `adoption fee ${esc(money(pet.adoptionFee))}` : 'fee confirmed by the shelter'}.</span></li>
           </ol>
           <a class="small" href="home.html#faq" style="display:inline-block;margin-top:12px">Adoption FAQ</a>
         </div>
@@ -150,7 +150,7 @@
     <div class="container carousel" id="similarCarousel">
       <div class="row-between section-head" style="max-width:none;align-items:flex-end"><div><span class="eyebrow">You might also like</span><h2 class="h2" style="margin-top:12px">Pets similar to <em>${esc(pet.name)}</em></h2></div>
         <div class="rail-nav"><button class="rail-btn" type="button" data-prev aria-label="Previous pets">${icons.arrowLeft}</button><button class="rail-btn" type="button" data-next aria-label="More pets">${icons.arrowRight}</button></div></div>
-      <div class="carousel-track" id="similar" tabindex="0" aria-label="Similar pets — drag or scroll sideways"></div>
+      <div class="carousel-track" id="similar" tabindex="0" aria-label="Similar pets, drag or scroll sideways"></div>
     </div>
   </section>`;
   PawPal.hydrateIcons(root);
@@ -186,7 +186,7 @@
           <div class="row-between"><span class="src-label src-ai">${icons.sparkle}PawPal's interpretation</span><div class="match-ring ${c.score < 75 ? 'mid' : ''}" style="--p:${c.score};width:56px;height:56px"><span style="width:44px;height:44px;font-size:14px">${c.score}%</span></div></div>
           ${c.reasons.length ? `<ul class="plain reason-list pos" style="margin-top:8px">${c.reasons.map((r) => `<li>${icons.check}<span>${esc(r)}</span></li>`).join('')}</ul>` : ''}
           ${c.considerations.length ? `<ul class="plain reason-list con" style="margin-top:8px">${c.considerations.map((r) => `<li>${icons.info}<span>${esc(r)}</span></li>`).join('')}</ul>` : ''}
-          <p class="tiny muted" style="margin-top:10px">Based on your saved lifestyle (<a href="profile.html#preferences">edit</a>). Guidance only — not a guarantee of behaviour.</p></div>`
+          <p class="tiny muted" style="margin-top:10px">Based on your saved lifestyle (<a href="profile.html#preferences">edit</a>). Guidance only, not a guarantee of behaviour.</p></div>`
           : `<div class="ai-panel small"><span class="src-label src-ai">${icons.sparkle}Is ${esc(pet.name)} right for you?</span><p style="margin-top:6px"><a href="ai-matching.html">Tell PawPal about your lifestyle</a> to see how well ${esc(pet.name)} fits.</p></div>`;
       } catch { compat.innerHTML = ''; }
     } else {
@@ -196,7 +196,7 @@
 
   // ---------- ask the shelter ----------
   $('#askShelter')?.addEventListener('click', () => {
-    if (!u) { location.href = `login.html?next=${encodeURIComponent(location.pathname.slice(1) + location.search)}`; return; }
+    if (!u) { location.href = `login.html?as=adopter&next=${encodeURIComponent(location.pathname.slice(1) + location.search)}`; return; }
     modal({ title: `Ask about ${pet.name}`, body: `<p class="muted small" style="margin-bottom:14px">Your question goes to ${esc(shelter?.name || 'the shelter team')}. You'll get an email and a notification when they reply.</p>
       <div class="field"><label for="enqMsg">Your question</label><textarea class="textarea" id="enqMsg" maxlength="1500" placeholder="e.g. How does ${esc(pet.name)} go with being left alone for a few hours?"></textarea></div><div id="enqErr"></div>`,
     actions: [{ label: 'Cancel', value: false }, { label: 'Send question', variant: 'btn-primary', onClick: async (m, btn) => {
@@ -228,7 +228,7 @@
       if (select.value !== code) return; // changed again while waiting
       if (r.translated) {
         showText(r.fields, code);
-        note.innerHTML = `${icons.sparkle}<span>${esc(r.label)} from English — some details may not be exact.</span> <button type="button" class="link-btn small" id="showOriginal">Show original</button>`;
+        note.innerHTML = `${icons.sparkle}<span>${esc(r.label)} from English, some details may not be exact.</span> <button type="button" class="link-btn small" id="showOriginal">Show original</button>`;
       } else {
         showText(original, 'en');
         note.className = 'mt-note mt-warn'; note.innerHTML = `${icons.info}<span>${esc(r.notice || 'Translation isn\'t available right now.')}</span>`;

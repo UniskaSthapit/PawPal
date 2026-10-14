@@ -40,7 +40,7 @@ function parseProfile(text, prev = {}, knownLocations = []) {
   if (has(/\b(experienced|years of experience|trained dogs|foster(ed|ing)?|vet nurse|dog trainer)\b/)) p.experience = 'experienced';
 
   // Schedule / time alone
-  if (has(/\b(9 ?(to|-|–) ?5|nine to five|full[- ]time|office job|long hours|work away|commute|out all day)\b/)) p.hoursAlone = 8;
+  if (has(/\b(9 ?(to|-|, ) ?5|nine to five|full[- ]time|office job|long hours|work away|commute|out all day)\b/)) p.hoursAlone = 8;
   if (has(/\b(part[- ]time)\b/)) p.hoursAlone = 5;
   if (has(/\b(work from home|wfh|home all day|remote(ly)?|retired|stay[- ]at[- ]home)\b/)) p.hoursAlone = 2;
   const hrs = t.match(/\b(\d{1,2}) ?(hours|hrs)\b.*\b(alone|away|by (itself|themselves))\b|\balone (for )?(\d{1,2}) ?(hours|hrs)\b/);
@@ -88,7 +88,7 @@ function parseProfile(text, prev = {}, knownLocations = []) {
   if (has(/\bdoesnt (require|need) (extremely |very |too )?(high|much) exercise\b|\blow energy\b/)) temp.add('calm');
   p.temperament = [...temp];
 
-  // Location — known pet locations first, then states/cities
+  // Location, known pet locations first, then states/cities
   const loc = knownLocations.find((l) => { const suburb = l.split(',')[0].trim().toLowerCase(); return suburb.length > 2 && t.includes(` ${suburb}`); });
   if (loc) p.location = loc.split(',')[0].trim();
   else {
@@ -172,7 +172,7 @@ function evaluateMatch(pet, p) {
     const diff = Math.abs(energy - p.activity);
     add(20, [1, 0.55, 0.1][diff]);
     if (diff === 0) reasons.push(`Their ${energyWord} energy matches your lifestyle`);
-    else if (energy > p.activity) considerations.push(`${pet.name} has ${energyWord} energy — more exercise than you described`);
+    else if (energy > p.activity) considerations.push(`${pet.name} has ${energyWord} energy, more exercise than you described`);
     else if (diff === 2) considerations.push(`${pet.name} is calmer than your active lifestyle`);
   } else add(20, 0.7);
 
@@ -200,7 +200,7 @@ function evaluateMatch(pet, p) {
   // Time alone
   if (known(p.hoursAlone)) {
     if (p.hoursAlone >= 8) {
-      if (energy === 3 && isDog) { add(8, 0.15); considerations.push('A high-energy dog alone for a full workday may struggle — a dog walker or daycare would help'); }
+      if (energy === 3 && isDog) { add(8, 0.15); considerations.push('A high-energy dog alone for a full workday may struggle, a dog walker or daycare would help'); }
       else if (isDog) { add(8, 0.6); considerations.push('Dogs usually need a midday break on long workdays'); }
       else { add(8, 1); reasons.push('Independent enough for your work schedule'); }
     } else { add(8, 1); if (p.hoursAlone <= 3) reasons.push('You are home often, which helps them settle'); }
@@ -221,11 +221,11 @@ function evaluateMatch(pet, p) {
     add(4, inArea ? 1 : 0.5);
     if (inArea) reasons.push(`Located in ${pet.location}`);
   }
-  if (pet.status === 'On Hold') considerations.push('Another adopter is already meeting this pet — they are on hold');
+  if (pet.status === 'On Hold') considerations.push('Another adopter is already meeting this pet, they are on hold');
 
   const total = parts.reduce((s, [w]) => s + w, 0);
   const score = Math.round((parts.reduce((s, [w, f]) => s + w * f, 0) / total) * 100);
-  // Never show 100% — a match score is guidance, not a guarantee of behaviour
+  // Never show 100%, a match score is guidance, not a guarantee of behaviour
   return { score: Math.max(5, Math.min(97, score)), reasons: [...new Set(reasons)].slice(0, 4), considerations: [...new Set(considerations)].slice(0, 3) };
 }
 
