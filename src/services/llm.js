@@ -52,15 +52,24 @@ async function callOpenAI(system, messages, maxTokens, json) {
 // (Google renames models over time), ask Google which models exist and switch to a Flash model.
 const GEMINI = 'https://generativelanguage.googleapis.com/v1beta';
 let geminiModel = config.geminiModel;
+// Gemini 3.x Flash models "think" before answering by default on the OpenAI-compatible endpoint, which made replies
+// slower than our timeout. Ask for little reasoning (GEMINI_REASONING: low | medium | high, or "off" to not send the
+// field at all) and allow a longer wait (GEMINI_TIMEOUT_MS) so slow-but-valid answers aren't thrown away.
+let geminiReasoning = String(process.env.GEMINI_REASONING || 'low').trim().toLowerCase();
+const geminiTimeoutMs = Number(process.env.GEMINI_TIMEOUT_MS) || 45000;
 async function pickGeminiModel() {
   const res = await fetch(`${GEMINI}/models?pageSize=200`, { headers: { 'x-goog-api-key': config.geminiKey }, signal: AbortSignal.timeout(15000) });
   if (!res.ok) throw new Error(`Gemini models ${res.status}`);
   const names = ((await res.json()).models || [])
     .filter((m) => (m.supportedGenerationMethods || []).includes('generateContent'))
     .map((m) => m.name.replace(/^models\//, ''))
-    .filter((n) => /^gemini-.*flash/.test(n) && !/lite|tts|image|audio|live|embed|thinking|exp/.test(n));
+    // Leave out paid-only models (e.g. "gemini-omni-…", "…-pro") and ones that aren't text chat models: picking a paid-only
+    // model gave the free key an instant 429 and paused AI for an hour
+    .filter((n) => /^gemini-.*flash/.test(n) && !/omni|pro|tts|image|audio|live|embed|thinking|exp|transcribe/.test(n));
   const stable = names.filter((n) => !/preview/.test(n));
-  const pick = (stable.length ? stable : names).sort((a, b) => b.localeCompare(a, undefined, { numeric: true }))[0];
+  const sorted = (stable.length ? stable : names).sort((a, b) => b.localeCompare(a, undefined, { numeric: true }));
+  // Newest first, but prefer a Flash-Lite model: fastest, with the most generous free-tier limits
+  const pick = sorted.find((n) => /lite/.test(n)) || sorted[0];
   if (!pick) throw new Error('No Gemini Flash model available for this key');
   console.log(`🤖 Gemini model "${geminiModel}" unavailable — using "${pick}" instead.`);
   return pick;
@@ -71,11 +80,19 @@ async function callGemini(system, messages, maxTokens, retried = false) {
     headers: { Authorization: `Bearer ${config.geminiKey}`, 'Content-Type': 'application/json' },
     // Flash models may "think" before answering, which uses output tokens — leave generous headroom
     body: JSON.stringify({ model: geminiModel, max_tokens: maxTokens + 2048, temperature: 0.5,
-      messages: [{ role: 'system', content: system }, ...normaliseTurns(messages)] }),
-    signal: AbortSignal.timeout(30000),
+      messages: [{ role: 'system', content: system }, ...normaliseTurns(messages)],
+      // Low reasoning keeps replies fast (see geminiReasoning above)
+      ...(geminiReasoning !== 'off' ? { reasoning_effort: geminiReasoning } : {}) }),
+    signal: AbortSignal.timeout(geminiTimeoutMs),
   });
   if (!res.ok) {
     const body = await res.text();
+    // Some models reject reasoning_effort: stop sending it for the rest of this process and retry once without it
+    if (res.status === 400 && geminiReasoning !== 'off' && /reasoning|thinking/i.test(body)) {
+      console.warn(`🤖 ${geminiModel} does not accept reasoning_effort — sending requests without it`);
+      geminiReasoning = 'off';
+      return callGemini(system, messages, maxTokens, retried);
+    }
     const retryInfo = (/"retryDelay":\s*"[^"]+"/.exec(body) || [''])[0];
     const detail = `${body.slice(0, 300)}${/PerDay/.test(body) ? ' PerDay' : ''} ${retryInfo}`.trim();
     if (!retried && (res.status === 404 || /model/i.test(detail) && res.status === 400)) {
