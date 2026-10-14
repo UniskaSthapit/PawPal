@@ -6,7 +6,7 @@ Team: Uniska Sthapit, Pratikshya Bhujel, Pemba Sange Sherpa, Sushrit Phuyal
 PawPal connects rescue pets with the right homes. Adopters describe their lifestyle in plain English and get
 explained, compatibility-ranked matches from real shelter data, then apply online and follow every step on a
 timeline. Shelter staff manage listings, a full adoption pipeline, enquiries and analytics — with AI helpers
-that only ever work from data they're allowed to see.
+that only ever work from data they're allowed to see
 ## Run it locally (5 minutes)
 
 Requires **Node.js 20.19+**.
