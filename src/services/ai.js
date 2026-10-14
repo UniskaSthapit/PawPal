@@ -17,6 +17,10 @@ const promptPet = (p) => ({ id: p.id, name: p.name, type: p.type, breed: p.breed
   goodWithOtherPets: p.goodWithOtherPets, needsYard: p.requiresYard, status: p.status, fee: p.adoptionFee,
   about: String(p.description || '').slice(0, 220) });
 
+// One short line per pet for the chat catalogue (public fields only)
+const catalogueRow = (p) => ({ id: p.id, name: p.name, type: p.type, breed: p.breed, age: p.age, size: p.size, location: p.location,
+  energy: energyWord(p.energyLevel), kids: p.goodWithChildren, otherPets: p.goodWithOtherPets, yard: p.requiresYard, status: p.status });
+
 const GUARDRAILS = 'Only mention pets that appear in the provided data, using their exact names. Never invent pets, facts, prices, medical details or ' +
   'behaviour. Never promise how an animal will behave — compatibility is guidance only and the shelter makes the final decision. ' +
   'Distinguish shelter-provided facts from your own interpretation. Australian English, warm and concise.';
@@ -457,6 +461,8 @@ async function chat(ctx) {
   try {
     const candidates = rankPets(req.found.length ? [...new Set(req.found.flatMap((a) => a.pets))] : pets, req.found.length ? { ...profile, preferredType: null } : profile, 8).map((m) => ({ ...promptPet(m.pet), matchScore: m.score, reasons: m.reasons, considerations: m.considerations }));
     const myApps = applications.map((a) => ({ pet: a.petName, status: a.status, meaning: APP_STATUS_INFO[a.status], appointment: a.appointmentAt, updated: a.updatedAt }));
+    const namedPet = nameMention(message, pets);
+    const discussed = [...new Set([namedPet, ...lastPetIds.map((id) => pets.find((p) => p.id === id))].filter(Boolean))].slice(0, 4);
     const raw = await llm.complete({ json: true, maxTokens: 700,
       system: `You are PawPal's adoption assistant for Australian animal shelters. Help people find compatible pets, answer questions about specific pets and the adoption process, and explain application status. ${GUARDRAILS}
 Keep replies under 120 words; plain text with simple "•" bullets when listing. Recommend at most 3 pets and include their ids in petIds. When recommending, prefer the ranked candidates and quote their matchScore as the match percentage.
@@ -466,7 +472,11 @@ Return {"reply": string, "petIds": string[]}.
 Adoption FAQ: ${JSON.stringify(FAQ.map((f) => ({ q: f.q, a: f.a })))}`,
       messages: [
         { role: 'user', content: `DATA (from the PawPal database):\n${JSON.stringify({ loggedIn: Boolean(user), firstName: user?.name?.split(' ')[0],
-          understoodLifestyle: describeProfile(profile), availableNow: speciesSummary(pets), rankedCandidates: candidates, catalogue: pets.slice(0, 60).map(promptPet), myApplications: user ? myApps : undefined })}` },
+          understoodLifestyle: describeProfile(profile), availableNow: speciesSummary(pets), rankedCandidates: candidates,
+          // Full details only for the pets being discussed; the rest of the catalogue is a compact list, which keeps the
+          // request small (it was ~8k tokens per message) so the model answers quickly
+          petsBeingDiscussed: discussed.length ? discussed.map(promptPet) : undefined,
+          catalogue: pets.slice(0, 60).map(catalogueRow), myApplications: user ? myApps : undefined })}` },
         { role: 'assistant', content: '{"reply":"Understood — I will only use this data.","petIds":[]}' },
         ...history.slice(-8).map((m) => ({ role: m.role === 'user' ? 'user' : 'assistant', content: String(m.content).slice(0, 800) })),
         { role: 'user', content: message },

@@ -75,16 +75,29 @@ async function pickGeminiModel() {
   return pick;
 }
 async function callGemini(system, messages, maxTokens, retried = false) {
-  const res = await fetch(`${GEMINI}/openai/chat/completions`, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${config.geminiKey}`, 'Content-Type': 'application/json' },
-    // Flash models may "think" before answering, which uses output tokens — leave generous headroom
-    body: JSON.stringify({ model: geminiModel, max_tokens: maxTokens + 2048, temperature: 0.5,
-      messages: [{ role: 'system', content: system }, ...normaliseTurns(messages)],
-      // Low reasoning keeps replies fast (see geminiReasoning above)
-      ...(geminiReasoning !== 'off' ? { reasoning_effort: geminiReasoning } : {}) }),
-    signal: AbortSignal.timeout(geminiTimeoutMs),
-  });
+  const started = Date.now();
+  const size = system.length + messages.reduce((t, m) => t + String(m.content || '').length, 0);
+  let res;
+  try {
+    res = await fetch(`${GEMINI}/openai/chat/completions`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${config.geminiKey}`, 'Content-Type': 'application/json' },
+      // Flash models may "think" before answering, which uses output tokens — leave generous headroom
+      body: JSON.stringify({ model: geminiModel, max_tokens: maxTokens + 2048, temperature: 0.5,
+        messages: [{ role: 'system', content: system }, ...normaliseTurns(messages)],
+        // Low reasoning keeps replies fast (see geminiReasoning above)
+        ...(geminiReasoning !== 'off' ? { reasoning_effort: geminiReasoning } : {}) }),
+      signal: AbortSignal.timeout(geminiTimeoutMs),
+    });
+  } catch (err) {
+    // Say which model timed out, after how long and how big the request was, so slow replies can be diagnosed from the logs
+    if (err.name === 'TimeoutError' || err.name === 'AbortError') {
+      throw new Error(`Gemini ${geminiModel} gave no reply within ${geminiTimeoutMs / 1000}s (request ~${size} characters, reasoning ${geminiReasoning})`);
+    }
+    throw err;
+  }
+  const seconds = ((Date.now() - started) / 1000).toFixed(1);
+  if (Date.now() - started > 15000) console.warn(`🤖 Slow Gemini reply: ${seconds}s from ${geminiModel} (request ~${size} characters, reasoning ${geminiReasoning})`);
   if (!res.ok) {
     const body = await res.text();
     // Some models reject reasoning_effort: stop sending it for the rest of this process and retry once without it
