@@ -53,7 +53,7 @@ function emailNote(r) {
   return parts.length ? ` ${parts.join(' ')}` : '';
 }
 
-// Optional sections the shelter likes to have — used for "incomplete application" reporting
+// Optional sections the shelter likes to have, used for "incomplete application" reporting
 const missingSections = (a) => [!a.phone && 'phone', !a.address && 'address', !a.experienceDetails && 'experience details',
   a.ownership === 'Rent' && !a.landlordPermission && 'landlord permission', !a.workSchedule && 'work schedule'].filter(Boolean);
 
@@ -156,7 +156,7 @@ router.post('/:id/messages', requireAuth, asyncHandler(async (req, res) => {
     await notifyStaff(app.shelterId, { title: `Reply from ${app.name}`, message: `${app.petName}: ${text.slice(0, 120)}`, link: `applications.html?id=${app.id}` });
   }
   res.json({ application: staff ? updated : forApplicant(updated), ...(mail ? { email: mail, emailSent: mail.sent.length > 0, emailStatus: mail.status } : {}),
-    message: patch.status ? 'Thanks — your reply was sent and your application is back under review.' : `Message sent.${mail ? emailNote(mail) : ''}` });
+    message: patch.status ? 'Thanks, your reply was sent and your application is back under review.' : `Message sent.${mail ? emailNote(mail) : ''}` });
 }));
 
 // ---- Meet & greet booking (staff invite → adopter picks a slot) ----
@@ -184,7 +184,7 @@ router.post('/:id/invite-booking', requireStaff, asyncHandler(async (req, res) =
     link: `my-applications.html?id=${app.id}#booking` }, { email: false });
   const mail = await emailApplicant('bookingInvite', updated, message);
   res.json({ application: updated, freeSlots, email: mail, emailSent: mail.sent.length > 0, emailStatus: mail.status,
-    message: `${app.name.split(' ')[0]} was invited to book a meet & greet.${freeSlots ? '' : ' There are no free times yet — add some on the Availability page.'}${emailNote(mail)}` });
+    message: `${app.name.split(' ')[0]} was invited to book a meet & greet.${freeSlots ? '' : ' There are no free times yet, add some on the Availability page.'}${emailNote(mail)}` });
 }));
 
 // Free times the invited adopter can choose from (their application's shelter, next 60 days)
@@ -217,11 +217,11 @@ router.post('/:id/book', requireAdopter, asyncHandler(async (req, res) => {
   const slotId = clean(req.body.slotId, 40);
   const slot = slotId && await db.findOne('slots', { id: slotId });
   if (!slot || slot.shelterId !== app.shelterId) throw new HttpError(404, 'That time is not available.');
-  if (new Date(slot.start).getTime() <= Date.now() + 60 * 60 * 1000) throw new HttpError(400, 'That time is too soon — please choose a later one.');
+  if (new Date(slot.start).getTime() <= Date.now() + 60 * 60 * 1000) throw new HttpError(400, 'That time is too soon, please choose a later one.');
   if (slot.id === app.slotId) throw new HttpError(400, 'You are already booked at that time.');
-  // Claim the slot only if it is still free at this exact moment (atomic in MongoDB) — prevents double booking
+  // Claim the slot only if it is still free at this exact moment (atomic in MongoDB), prevents double booking
   const claimed = await db.updateWhere('slots', { id: slot.id, bookedBy: null }, { bookedBy: app.id, bookedAt: now() });
-  if (!claimed) throw new HttpError(409, 'Sorry — someone has just booked that time. Please choose another.');
+  if (!claimed) throw new HttpError(409, 'Sorry, someone has just booked that time. Please choose another.');
   const previousStart = app.appointmentAt;
   if (rescheduling) await freeSlot(app);
   const at = now();
@@ -325,7 +325,7 @@ router.patch('/:id/status', requireStaff, asyncHandler(async (req, res) => {
   const at = now();
   const patch = { status, appointmentAt, updatedAt: at, history: [...app.history, { status, at, by: req.user.name, ...(note ? { note } : {}), ...(appointmentAt && APP_NEEDS_DATE.includes(status) ? { appointmentAt } : {}) }] };
   // A booked meet & greet slot no longer applies when the application closes, staff set a time manually, or it
-  // moves back before the meeting took place — free it so other adopters can book it
+  // moves back before the meeting took place, free it so other adopters can book it
   if (app.slotId && (APP_CLOSED.includes(status) || status === 'Meet & Greet'
     || (new Date(app.appointmentAt) > new Date() && !['Approved', 'Adoption Scheduled'].includes(status)))) {
     await freeSlot(app);
@@ -346,7 +346,7 @@ router.patch('/:id/status', requireStaff, asyncHandler(async (req, res) => {
   const mail = await emailApplicant(status === 'Adopted' ? 'adoptionComplete' : 'statusChanged', updated, ...(status === 'Adopted' ? [] : [note]));
   const when = appointmentAt ? new Date(appointmentAt).toLocaleString('en-AU', { dateStyle: 'medium', timeStyle: 'short' }) : '';
   await notify(app.userId, { type: STATUS_NOTE_TYPE[status] || 'status', title: `${app.petName}: ${status}`,
-    message: APP_NEEDS_DATE.includes(status) ? `${status} booked for ${when}.` : status === 'Info Requested' ? 'The shelter needs more information — tap to reply.' : APP_STATUS_INFO[status],
+    message: APP_NEEDS_DATE.includes(status) ? `${status} booked for ${when}.` : status === 'Info Requested' ? 'The shelter needs more information, tap to reply.' : APP_STATUS_INFO[status],
     link: `my-applications.html?id=${app.id}` }, { email: false });
 
   // Keep the pet's availability in sync with the pipeline
@@ -391,14 +391,14 @@ async function createCarePlan(app, { regenerated = false } = {}) {
   return updated;
 }
 const carePlanLimiter = rateLimit({ windowMs: 10 * 60 * 1000, limit: 10, standardHeaders: true, legacyHeaders: false,
-  keyGenerator: (req) => `user:${req.user?.id}`, message: { error: 'The care plan was regenerated several times — please wait a few minutes.' } });
+  keyGenerator: (req) => `user:${req.user?.id}`, message: { error: 'The care plan was regenerated several times, please wait a few minutes.' } });
 
 router.get('/:id/care-plan', requireAuth, asyncHandler(async (req, res) => {
   const app = await db.findOne('applications', { id: req.params.id });
   const staff = isStaff(req);
   if (!app || (staff ? !inScope(req, app) : app.userId !== req.user.id)) throw new HttpError(404, 'Application not found.');
   if (!app.carePlan) {
-    throw new HttpError(404, CARE_PLAN_STATUSES.includes(app.status) ? 'The care plan is still being prepared — please check back in a minute.'
+    throw new HttpError(404, CARE_PLAN_STATUSES.includes(app.status) ? 'The care plan is still being prepared, please check back in a minute.'
       : 'A care plan is created once the application is approved.');
   }
   const pet = await db.findOne('pets', { id: app.petId });

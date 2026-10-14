@@ -1,14 +1,16 @@
 // Log in, sign up, forgot password, resend verification.
 (async () => {
   const { $, $$, params, setBusy, errorHTML, esc, icons } = PawPal;
-  let role = params.get('role') === 'staff' ? 'staff' : 'user';
+  // Coming from "Apply to adopt" (or another adopter action): adopter log in only, no switch to shelter staff
+  const adopterOnly = params.get('as') === 'adopter' || /^inquiry-form\.html/.test(params.get('next') || '');
+  let role = !adopterOnly && params.get('role') === 'staff' ? 'staff' : 'user';
   let pendingEmail = '';
   const panels = { login: '#loginForm', signup: '#signupForm', forgot: '#forgotForm', sent: '#sentPanel', code: '#codeForm' };
   const okHTML = (msg) => `<div class="alert alert-success" role="status">${icons.checkCircle}<div>${esc(msg)}</div></div>`;
 
   function show(name) {
     Object.entries(panels).forEach(([k, sel]) => { $(sel).hidden = k !== name; });
-    $('#roleSeg').hidden = name !== 'login';
+    $('#roleSeg').hidden = adopterOnly || name !== 'login';
     const first = $(`${panels[name]} input`);
     if (first) first.focus();
   }
@@ -28,10 +30,16 @@
   if (u) { location.replace(safeNext || (PawPal.isStaffUser(u) ? 'index.html' : 'dashboard.html')); return; }
 
   setRole(role);
+  if (adopterOnly) {
+    $('#roleSeg').hidden = true;
+    $$('#demoBox [data-demo$="|staff"]').forEach((b) => b.remove());
+    $('#loginTitle').textContent = 'Log in to apply';
+    $('#loginSub').textContent = 'Log in or create a free account to apply to adopt and follow every step of your application.';
+  }
   if (params.get('mode') === 'signup') show('signup');
   if (params.get('mode') === 'forgot') show('forgot');
-  if (params.get('verified') === '1') $('#loginMsg').innerHTML = okHTML('Email verified — you can log in now.');
-  if (params.get('reset') === '1') $('#loginMsg').innerHTML = okHTML('Password updated — log in with your new password.');
+  if (params.get('verified') === '1') $('#loginMsg').innerHTML = okHTML('Email verified. You can log in now.');
+  if (params.get('reset') === '1') $('#loginMsg').innerHTML = okHTML('Password updated. Log in with your new password.');
   try {
     const cfg = await PawPalAPI.get('/config');
     const local = /^(localhost|127\.)/.test(location.hostname);
@@ -106,7 +114,7 @@
     try {
       await PawPalAPI.post('/auth/register', { name, email, password });
       pendingEmail = email;
-      $('#sentText').textContent = `We've sent a verification link to ${email}. Click it to activate your account — it expires in 24 hours.`;
+      $('#sentText').textContent = `We've sent a verification link to ${email}. Click it to activate your account, it expires in 24 hours.`;
       show('sent');
     } catch (err) { $('#signupMsg').innerHTML = errorHTML(err.message); }
     finally { setBusy(btn, false); }

@@ -1,5 +1,5 @@
 // Simulated adoption-fee payments. NO real payments: only the published test card numbers are accepted and
-// nothing is sent to a payment provider. The full card number and CVC are never stored or logged — only the
+// nothing is sent to a payment provider. The full card number and CVC are never stored or logged, only the
 // brand and last 4 digits are kept with the payment record.
 const crypto = require('crypto');
 const { HttpError } = require('../utils');
@@ -33,7 +33,7 @@ function checkCard(card = {}, nowDate = new Date()) {
   const expiry = String(card.expiry || '').replace(/\s/g, '');
   if (name.length < 2 || name.length > 80 || !/^[\p{L}][\p{L}' .-]*$/u.test(name)) fail('name', 'Enter the name on the card.');
   if (!/^\d{12,19}$/.test(digits)) fail('number', 'Enter the card number (digits only).');
-  if (!luhn(digits)) fail('number', 'That card number isn\'t valid — check the digits.');
+  if (!luhn(digits)) fail('number', 'That card number isn\'t valid, check the digits.');
   const outcome = TEST_CARDS[digits];
   if (!outcome) fail('number', 'Use a test card for this simulation (for example 4242 4242 4242 4242).');
   const m = /^(\d{2})\/(\d{2}|\d{4})$/.exec(expiry);

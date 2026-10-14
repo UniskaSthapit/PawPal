@@ -1,4 +1,4 @@
-// npm run test:ui — real-browser journeys through the UI (Playwright + Chromium).
+// npm run test:ui, real-browser journeys through the UI (Playwright + Chromium).
 // Starts PawPal on a spare port with a throwaway database, then clicks through the visitor, adopter,
 // shelter-staff and admin journeys. Needs Playwright: `npm i -D playwright && npx playwright install chromium`.
 const path = require('path');
@@ -261,7 +261,7 @@ const ok = (name, cond) => { if (cond) { pass++; console.log('  ✅ ' + name); }
   await p.goto(BASE + `my-applications.html?id=${demoAdopted.id}`); await p.waitForSelector('#payFeeBtn');
   ok('My Applications shows "Adoption fee due"', /Adoption fee due: \$\d+/.test(await p.textContent('#feeCard')));
   await p.click('#payFeeBtn'); await p.waitForSelector('#payForm');
-  ok('Checkout clearly says it is a simulation', /PAYMENT SIMULATION — no real money is taken\./.test(await p.textContent('#simBanner')) && /Use a test card/.test(await p.textContent('#simBanner')));
+  ok('Checkout clearly says it is a simulation', /PAYMENT SIMULATION: no real money is taken\./.test(await p.textContent('#simBanner')) && /Use a test card/.test(await p.textContent('#simBanner')));
   await p.fill('#c_name', 'Jordan Taylor'); await p.fill('#c_number', '4242424242424241'); await p.fill('#c_expiry', '1230'); await p.fill('#c_cvc', '123');
   await p.click('#payBtn');
   ok('Invalid numbers are caught in the browser (Luhn)', /isn't valid/.test(await p.textContent('#e_number')) && await p.getAttribute('#c_number', 'aria-invalid') === 'true');

@@ -1,11 +1,11 @@
 // Adoption application: 5 steps, validation per step, draft autosave, and an AI question helper
-// that explains what a question means — it never suggests or fills in answers.
+// that explains what a question means, it never suggests or fills in answers.
 (async () => {
   const { $, $$, esc, icons, params, setBusy, errorHTML, toast, photo, sized } = PawPal;
   const u = await PawPal.booted;
   const petId = params.get('petId');
   if (!petId) { location.href = 'adopt.html'; return; }
-  if (!u) { location.href = `login.html?next=${encodeURIComponent(`inquiry-form.html?petId=${petId}`)}`; return; }
+  if (!u) { location.href = `login.html?as=adopter&next=${encodeURIComponent(`inquiry-form.html?petId=${petId}`)}`; return; }
   const DRAFT = `pp_apply_${petId}`;
   const TITLES = ['About you', 'Your home', 'Your lifestyle', 'Why this pet', 'Review & submit'];
   let step = 1;
@@ -15,14 +15,14 @@
   try { pet = (await PawPalAPI.get(`/pets/${encodeURIComponent(petId)}`)).pet; }
   catch (err) { $('#applyLayout').innerHTML = PawPal.emptyHTML({ title: 'This pet is not available', text: err.message, action: '<a class="btn btn-primary" href="adopt.html">Browse pets</a>' }); return; }
   if (!['Available', 'On Hold'].includes(pet.status)) { $('#applyLayout').innerHTML = PawPal.emptyHTML({ title: `${pet.name} is no longer available`, text: 'They have found a home. PawPal can suggest similar pets.', action: '<a class="btn btn-primary" href="ai-matching.html">Find my PawPal</a>' }); return; }
-  document.title = `Apply to adopt ${pet.name} — PawPal`;
+  document.title = `Apply to adopt ${pet.name} | PawPal`;
   $('#applyTitle').textContent = `Apply to adopt ${pet.name}`;
   $('#petCrumb').textContent = pet.name; $('#petCrumb').href = `pet-profile.html?id=${encodeURIComponent(pet.id)}`;
   $('#petAside').innerHTML = `<div class="pet-card" style="pointer-events:none"><div class="pet-card-media"><img src="${esc(sized(photo(pet), 600))}" alt="${esc(pet.name)}" data-fallback="${PawPal.FALLBACK[pet.type]}"></div>
     <div class="pet-card-body"><div class="pet-card-title"><h3>${esc(pet.name)}</h3></div><div class="pet-card-meta"><b>${esc(pet.breed)}</b> · ${esc(PawPal.ageText(pet.age))}</div>
     <div class="pet-card-loc">${icons.pin}${esc(pet.location || '')}</div></div></div>
-    ${pet.status === 'On Hold' ? `<div class="alert alert-warn">${icons.info}<div>${esc(pet.name)} is on hold while another adopter meets them. You can still apply — you'll be considered if it doesn't go ahead.</div></div>` : ''}
-    <div class="fact-panel small"><span class="src-label src-shelter">${icons.shield}Your privacy</span><p style="margin-top:6px">Your application is only shared with the shelter caring for ${esc(pet.name)}. The shelter team makes every decision — not an algorithm.</p></div>`;
+    ${pet.status === 'On Hold' ? `<div class="alert alert-warn">${icons.info}<div>${esc(pet.name)} is on hold while another adopter meets them. You can still apply, you'll be considered if it doesn't go ahead.</div></div>` : ''}
+    <div class="fact-panel small"><span class="src-label src-shelter">${icons.shield}Your privacy</span><p style="margin-top:6px">Your application is only shared with the shelter caring for ${esc(pet.name)}. The shelter team makes every decision, not an algorithm.</p></div>`;
 
   // Existing open application?
   try {
@@ -64,7 +64,7 @@
   syncConditional();
 
   // ---------- steps ----------
-  // Same rule as phoneProblem() on the server: optional; digits, spaces, brackets, dashes and a leading +; 8–15 digits
+  // Same rule as phoneProblem() on the server: optional; digits, spaces, brackets, dashes and a leading +; 8 to 15 digits
   const phoneIssue = (p) => {
     const s = String(p ?? '').trim();
     if (!s) return null;
@@ -79,15 +79,15 @@
     3: (v) => (!v.activityLevel ? 'Choose how active your household is.' : v.hoursAlone === '' ? 'Tell us how long the pet would be alone each day.' : !v.experience ? 'Tell us about your experience with pets.' : null),
     4: (v) => (v.motivation.length < 20 ? 'Please write at least 20 characters about why you\'d like to adopt.' : null),
   };
-  const yesNo = (v) => (v === 'true' ? 'Yes' : v === 'false' ? 'No' : '—');
+  const yesNo = (v) => (v === 'true' ? 'Yes' : v === 'false' ? 'No' : 'N/A');
   function review() {
     const v = values();
-    const row = (l, x) => `<dt>${esc(l)}</dt><dd>${esc(x || '—')}</dd>`;
+    const row = (l, x) => `<dt>${esc(l)}</dt><dd>${esc(x || 'N/A')}</dd>`;
     $('#review').innerHTML = `<p class="muted small" style="margin-bottom:14px">Check everything is right. You can go back to change any answer.</p><dl class="kv">
       ${row('Name', v.name)}${row('Email', v.email)}${row('Mobile', v.phone)}${row('Address', v.address)}
       ${row('Home', `${v.livingType} · ${v.ownership}${v.ownership === 'Rent' ? ` (landlord permission: ${yesNo(v.landlordPermission)})` : ''}`)}
       ${row('Adults', v.householdAdults)}${row('Children', v.hasChildren === 'true' ? `Yes${v.childrenAges ? ` (${v.childrenAges})` : ''}` : 'No')}
-      ${row('Other pets', v.hasOtherPets === 'true' ? `Yes${v.otherPetsDetails ? ` — ${v.otherPetsDetails}` : ''}` : 'No')}
+      ${row('Other pets', v.hasOtherPets === 'true' ? `Yes${v.otherPetsDetails ? `, ${v.otherPetsDetails}` : ''}` : 'No')}
       ${row('Activity', ['', 'Relaxed', 'Moderately active', 'Very active'][v.activityLevel])}${row('Pet alone', `${v.hoursAlone} hours a day`)}
       ${row('Typical week', v.workSchedule)}${row('Experience', v.experience)}${row('Experience details', v.experienceDetails)}${row('Why', v.motivation)}</dl>`;
   }
@@ -159,7 +159,7 @@
       try { localStorage.removeItem(DRAFT); } catch { /* ignore */ }
       $('#applyForm').innerHTML = `<div class="card-body center" style="padding:48px 24px">
         <div class="e-icon" style="width:72px;height:72px;margin:0 auto 18px;border-radius:20px;background:var(--sage-soft);color:var(--sage);display:grid;place-items:center">${icons.checkCircle}</div>
-        <h2 class="h2">Application sent!</h2><p class="lead" style="margin:12px auto 24px">The team caring for ${esc(pet.name)} will review it — usually within 2–3 business days. ${res.email?.sent?.length ? `We've emailed a copy to <b>${esc(res.email.sent.join(' and '))}</b> (check your spam folder if you can't see it), and you` : 'You'} can follow every step on your timeline.</p>
+        <h2 class="h2">Application sent!</h2><p class="lead" style="margin:12px auto 24px">The team caring for ${esc(pet.name)} will review it, usually within 2 to 3 business days. ${res.email?.sent?.length ? `We've emailed a copy to <b>${esc(res.email.sent.join(' and '))}</b> (check your spam folder if you can't see it), and you` : 'You'} can follow every step on your timeline.</p>
         <div class="row" style="justify-content:center"><a class="btn btn-primary btn-lg" href="my-applications.html?id=${encodeURIComponent(res.application.id)}">View my timeline</a><a class="btn btn-lg" href="adopt.html">Keep browsing</a></div></div>`;
       $('#applyForm svg').style.cssText = 'width:34px;height:34px';
     } catch (err) {

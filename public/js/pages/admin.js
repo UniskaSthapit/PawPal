@@ -3,7 +3,7 @@
   const { $, $$, esc, icons, toast, modal, setBusy, errorHTML, fmtDate, timeAgo } = PawPal;
   const me = await PawPal.booted;
   let users = []; let shelters = []; let roles = []; let roleTab = '';
-  const shelterOptions = (sel) => `<option value="">— None —</option>${shelters.map((s) => `<option value="${esc(s.id)}" ${s.id === sel ? 'selected' : ''}>${esc(s.name)}</option>`).join('')}`;
+  const shelterOptions = (sel) => `<option value="">None</option>${shelters.map((s) => `<option value="${esc(s.id)}" ${s.id === sel ? 'selected' : ''}>${esc(s.name)}</option>`).join('')}`;
 
   async function loadShelters() {
     shelters = (await PawPalAPI.get('/admin/shelters')).shelters;
@@ -17,7 +17,7 @@
     $('#users').innerHTML = users.map((x) => `<tr data-user="${esc(x.id)}">
       <td class="cell-first"><div class="cell-pet"><span class="avatar">${esc(PawPal.initials(x.name))}</span><div><b>${esc(x.name)}</b><span>${esc(x.email)}${x.role === 'user' ? ` · ${x.applications} applications` : ''}</span>${x.role !== 'user' ? (x.twoFactorEnabled ? '<span class="badge badge-sage" style="margin-top:4px">2FA on</span>' : '<span class="badge" style="margin-top:4px">2FA off</span>') : ''}${x.emailVerified ? '' : '<span class="badge badge-honey" style="margin-top:4px">Email not verified</span>'}</div></div></td>
       <td data-label="Role"><label class="sr-only" for="role-${esc(x.id)}">Role</label><select class="select" id="role-${esc(x.id)}" data-field="role" style="min-height:38px;width:auto" ${x.id === me.id ? 'disabled' : ''}>${roles.map((r2) => `<option value="${r2.id}" ${r2.id === x.role ? 'selected' : ''}>${esc(r2.label)}</option>`).join('')}</select></td>
-      <td data-label="Shelter">${x.role === 'user' ? '<span class="muted small">—</span>' : `<label class="sr-only" for="sh-${esc(x.id)}">Shelter</label><select class="select" id="sh-${esc(x.id)}" data-field="shelterId" style="min-height:38px;width:auto;max-width:220px">${shelterOptions(x.shelterId)}</select>`}</td>
+      <td data-label="Shelter">${x.role === 'user' ? '<span class="muted small">N/A</span>' : `<label class="sr-only" for="sh-${esc(x.id)}">Shelter</label><select class="select" id="sh-${esc(x.id)}" data-field="shelterId" style="min-height:38px;width:auto;max-width:220px">${shelterOptions(x.shelterId)}</select>`}</td>
       <td data-label="Status">${x.id === me.id ? '<span class="badge badge-sage">You</span>' : `<div class="row" style="gap:6px"><button class="btn btn-sm ${x.active ? '' : 'btn-sage'}" data-toggle="${x.active ? 'off' : 'on'}">${x.active ? 'Deactivate' : 'Reactivate'}</button>
         ${x.role !== 'user' && x.active && !x.lastLoginAt ? `<button class="btn btn-sm" data-reinvite>${icons.mail || ''}Resend invite</button>` : ''}
         ${x.role !== 'user' && x.twoFactorEnabled ? `<button class="btn btn-sm" data-reset2fa>${icons.shield}Reset 2FA</button>` : ''}

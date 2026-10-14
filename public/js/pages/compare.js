@@ -40,8 +40,8 @@
     ['Other pets', (p) => yes(p.goodWithOtherPets, 'Gets along with pets', 'Prefers to be the only pet')],
     ['Home', (p) => (p.requiresYard ? '<span class="cmp-no">Needs a secure yard</span>' : `<span class="cmp-yes">${icons.check}No yard needed</span>`)],
     ['First-time owners', (p) => yes(p.firstTimeFriendly, 'Suits first-timers', 'Some experience helps')],
-    ['Personality', (p) => ((p.traits || []).length ? (p.traits || []).slice(0, 5).map((t) => `<span class="tag">${esc(t)}</span>`).join(' ') : '<span class="muted">—</span>')],
-    ['Location', (p) => esc([p.location, p.shelterName].filter(Boolean).join(' · ') || '—')],
+    ['Personality', (p) => ((p.traits || []).length ? (p.traits || []).slice(0, 5).map((t) => `<span class="tag">${esc(t)}</span>`).join(' ') : '<span class="muted">N/A</span>')],
+    ['Location', (p) => esc([p.location, p.shelterName].filter(Boolean).join(' · ') || 'N/A')],
     ['Adoption fee', (p) => esc(money(p.adoptionFee))],
     ['Status', (p) => (p.status === 'On Hold' ? '<span class="badge badge-honey">On hold</span>' : '<span class="badge badge-sage">Available</span>')],
   ];
@@ -64,12 +64,12 @@
         <thead><tr><td></td>${head}</tr></thead>
         <tbody>
           ${rows.map(([label, fn]) => `<tr><th scope="row">${esc(label)}</th>${pets.map((p) => `<td>${fn(p)}</td>`).join('')}</tr>`).join('')}
-          <tr><th scope="row">Good to know</th>${pets.map((p) => `<td>${(highlights[p.id] || []).length ? `<ul class="plain cmp-points">${highlights[p.id].map((x) => `<li>${esc(x)}</li>`).join('')}</ul>` : '<span class="muted">—</span>'}</td>`).join('')}</tr>
+          <tr><th scope="row">Good to know</th>${pets.map((p) => `<td>${(highlights[p.id] || []).length ? `<ul class="plain cmp-points">${highlights[p.id].map((x) => `<li>${esc(x)}</li>`).join('')}</ul>` : '<span class="muted">N/A</span>'}</td>`).join('')}</tr>
           <tr><th scope="row"><span class="sr-only">Actions</span></th>${pets.map((p) => `<td><a class="btn btn-primary btn-sm" href="pet-profile.html?id=${encodeURIComponent(p.id)}">Meet ${esc(p.name)}</a></td>`).join('')}</tr>
         </tbody>
       </table>
     </div>
-    <p class="tiny muted" style="margin-top:12px">Facts come from the shelter. Compatibility is guidance only — the shelter team makes the final decision.</p>`;
+    <p class="tiny muted" style="margin-top:12px">Facts come from the shelter. Compatibility is guidance only, the shelter team makes the final decision.</p>`;
 
   root.addEventListener('click', (e) => {
     const rm = e.target.closest('[data-remove]');

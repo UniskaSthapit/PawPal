@@ -30,7 +30,7 @@ function createJsonStore() {
     async init() {
       if (fs.existsSync(FILE)) {
         try { data = JSON.parse(fs.readFileSync(FILE, 'utf8')); }
-        catch { console.warn('⚠️  Could not read data file — starting fresh.'); data = {}; }
+        catch { console.warn('⚠️  Could not read data file, starting fresh.'); data = {}; }
       }
     },
     async find(name, filter = {}) { return coll(name).filter((d) => matches(d, filter)).map(copy); },
@@ -44,7 +44,7 @@ function createJsonStore() {
       persist();
       return copy(d);
     },
-    // Updates the first document matching the whole filter, or returns null — used for "only if still free" checks
+    // Updates the first document matching the whole filter, or returns null, used for "only if still free" checks
     async updateWhere(name, filter, patch) {
       const d = coll(name).find((x) => matches(x, filter));
       if (!d) return null;

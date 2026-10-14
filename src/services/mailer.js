@@ -2,9 +2,9 @@
 // - GMAIL_CLIENT_ID + GMAIL_CLIENT_SECRET + GMAIL_REFRESH_TOKEN: the Gmail API over HTTPS, sending as your own
 //                   Gmail address (best inbox placement for a Gmail sender; about 500 emails a day).
 // - RESEND_API_KEY: Resend over HTTPS (needs a domain you own for the sender).
-// - BREVO_API_KEY:  Brevo over HTTPS — can send from a single verified address such as a Gmail account.
+// - BREVO_API_KEY:  Brevo over HTTPS, can send from a single verified address such as a Gmail account.
 // - SMTP_HOST:      any SMTP server (note: Render's free plan blocks SMTP ports).
-// - none:           "dev mailbox" mode — emails are saved to the database and shown at /dev-mailbox.html
+// - none:           "dev mailbox" mode, emails are saved to the database and shown at /dev-mailbox.html
 //                   (local development only; disabled in production).
 const nodemailer = require('nodemailer');
 const config = require('../config');
@@ -53,14 +53,14 @@ async function gmailAccessToken() {
   });
   const data = await r.json().catch(() => ({}));
   if (!r.ok || !data.access_token) {
-    const hint = data.error === 'invalid_grant' ? ' (the refresh token was revoked or has expired — create a new one, see DEPLOY.md)' : '';
+    const hint = data.error === 'invalid_grant' ? ' (the refresh token was revoked or has expired, create a new one, see DEPLOY.md)' : '';
     throw Object.assign(new Error(`Gmail sign-in ${r.status}: ${data.error_description || data.error || 'no access token'}${hint}`),
       { status: r.status, code: data.error || null });
   }
   gmailToken = { value: data.access_token, expires: Date.now() + (Number(data.expires_in) || 3600) * 1000 - 60000 };
   return gmailToken.value;
 }
-// Header values with non-ASCII characters (names, "—", emoji) use RFC 2047 encoded words
+// Header values with non-ASCII characters (names, ", ", emoji) use RFC 2047 encoded words
 const mimeHeader = (v) => (/^[\x20-\x7E]*$/.test(v) ? v : `=?UTF-8?B?${Buffer.from(v, 'utf8').toString('base64')}?=`);
 const b64lines = (text) => Buffer.from(text, 'utf8').toString('base64').replace(/.{76}/g, '$&\r\n');
 // multipart/alternative: a plain-text part first, then the branded HTML part (no attachments, ever)
@@ -124,7 +124,7 @@ const HTTP_PROVIDERS = {
   },
   async smtp({ to, subject, html, text }) {
     try { await transporter.sendMail({ from: config.mailFrom, replyTo: replyTo().email, to, subject, html, text }); }
-    // SMTP 4xx replies are temporary, 5xx permanent — map them onto the HTTP convention used above
+    // SMTP 4xx replies are temporary, 5xx permanent, map them onto the HTTP convention used above
     catch (err) { throw Object.assign(err, { status: err.responseCode ? (err.responseCode < 500 ? 503 : 400) : undefined }); }
   },
 };
@@ -162,8 +162,8 @@ function plainText({ heading, body, buttonText, buttonUrl }) {
     .replace(/<br\s*\/?>/gi, '\n').replace(/<\/(p|div|li|h\d)>/gi, '\n\n').replace(/<li[^>]*>/gi, '• ')
     .replace(/<[^>]+>/g, '').replace(/&(#?\w+);/g, (m, e) => ENTITIES[e] ?? m)
     .replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
-  return [`PawPal — ${heading}`, '', text, ...(buttonUrl ? ['', `${buttonText}: ${buttonUrl}`] : []), '',
-    '—', 'PawPal · pet adoption', 'You are receiving this email because of activity on your PawPal account.'].join('\n');
+  return [`PawPal, ${heading}`, '', text, ...(buttonUrl ? ['', `${buttonText}: ${buttonUrl}`] : []), '',
+    'N/A', 'PawPal · pet adoption', 'You are receiving this email because of activity on your PawPal account.'].join('\n');
 }
 
 // Addresses that can never receive mail: reserved test domains (example.com, .test, .invalid…) and the made-up
@@ -181,7 +181,7 @@ async function deliver(message) {
     return { retried: false };
   } catch (err) {
     if (!isTransient(err)) throw err;
-    console.warn(`✉️  Email to ${message.to} failed (${err.message.split('\n')[0]}) — retrying once.`);
+    console.warn(`✉️  Email to ${message.to} failed (${err.message.split('\n')[0]}), retrying once.`);
     await sleep(config.mailRetryDelayMs);
     await HTTP_PROVIDERS[emailMode](message);
     return { retried: true };
@@ -189,7 +189,7 @@ async function deliver(message) {
 }
 
 // ---- Sending safety (protects the sending account from being rate-limited or blocked) ----
-// Today's date in Melbourne — the daily counter resets at local midnight
+// Today's date in Melbourne, the daily counter resets at local midnight
 const melbourneDate = (d = new Date()) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Australia/Melbourne', year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
 async function todayStats() {
   const id = melbourneDate();
@@ -207,7 +207,7 @@ async function setAuthProblem(problem) {
   else await db.insert('meta', doc);
 }
 
-// Common misspellings of big providers, and syntax no real domain has — never worth sending to
+// Common misspellings of big providers, and syntax no real domain has, never worth sending to
 const DOMAIN_TYPOS = { 'gmial.com': 'gmail.com', 'gmal.com': 'gmail.com', 'gmai.com': 'gmail.com', 'gamil.com': 'gmail.com', 'gnail.com': 'gmail.com',
   'gmail.con': 'gmail.com', 'gmail.cm': 'gmail.com', 'gmail.co': 'gmail.com', 'gmail.om': 'gmail.com', 'hotmial.com': 'hotmail.com',
   'hotmail.con': 'hotmail.com', 'outlok.com': 'outlook.com', 'outlook.con': 'outlook.com', 'yaho.com': 'yahoo.com', 'yahoo.con': 'yahoo.com', 'iclod.com': 'icloud.com' };
@@ -247,7 +247,7 @@ async function sendMail({ to, subject, heading, body, buttonText, buttonUrl, typ
     record.error = `Not sent: today's email limit (${config.mailDailyLimit}) was reached. The in-app notification was still delivered.`;
     const stats = await todayStats();
     await bumpStats('deferred', stats.limitReachedAt ? {} : { limitReachedAt: now() });
-    if (!stats.limitReachedAt) console.warn(`✉️  Daily email limit (${config.mailDailyLimit}) reached — further emails today are deferred.`);
+    if (!stats.limitReachedAt) console.warn(`✉️  Daily email limit (${config.mailDailyLimit}) reached, further emails today are deferred.`);
   } else {
     try {
       const { retried } = await deliver({ to, subject, html, text });
@@ -258,7 +258,7 @@ async function sendMail({ to, subject, heading, body, buttonText, buttonUrl, typ
       record.status = 'failed';
       record.error = err.message;
       await bumpStats('failed');
-      if (err.code === 'invalid_grant') await setAuthProblem({ message: 'Gmail sign-in expired — create a new refresh token (see DEPLOY.md).', code: err.code });
+      if (err.code === 'invalid_grant') await setAuthProblem({ message: 'Gmail sign-in expired, create a new refresh token (see DEPLOY.md).', code: err.code });
       console.error(`✉️  Email failed (${emailMode}):`, err.message);
     }
   }
@@ -292,14 +292,14 @@ const appMeta = (app) => ({ userId: app.userId || null, appId: app.id || null, s
 
 // What the adopter is told for each workflow status
 const STATUS_COPY = {
-  'Under Review': (a) => p(`Good news — a member of our team has started reviewing your application for <b>${escapeHtml(a.petName)}</b>.`),
+  'Under Review': (a) => p(`Good news, a member of our team has started reviewing your application for <b>${escapeHtml(a.petName)}</b>.`),
   'Info Requested': (a) => p(`We need a little more information before we can continue with your application for <b>${escapeHtml(a.petName)}</b>. Please reply from your dashboard.`),
   Interview: (a) => p(`We'd love to have a quick chat with you about <b>${escapeHtml(a.petName)}</b>.`) + (a.appointmentAt ? p(`<b>When:</b> ${when(a.appointmentAt)}`) : ''),
   'Meet & Greet': (a) => p(`It's time to meet <b>${escapeHtml(a.petName)}</b> in person!`) + (a.appointmentAt ? p(`<b>When:</b> ${when(a.appointmentAt)}<br>Please bring photo ID and, if you rent, your landlord's pet approval.`) : ''),
   Approved: (a) => p(`Your application for <b>${escapeHtml(a.petName)}</b> has been <b>approved</b>! We'll be in touch to book your go-home day.`),
   'Adoption Scheduled': (a) => p(`Your go-home day with <b>${escapeHtml(a.petName)}</b> is booked.`) + (a.appointmentAt ? p(`<b>When:</b> ${when(a.appointmentAt)}`) : ''),
   Declined: (a) => p(`Thank you for applying to adopt <b>${escapeHtml(a.petName)}</b>. After careful consideration we are unable to proceed with this application.`)
-    + p('Please don\'t be discouraged — every pet has different needs, and PawPal\'s matching can suggest companions that may suit your home better.'),
+    + p('Please don\'t be discouraged, every pet has different needs, and PawPal\'s matching can suggest companions that may suit your home better.'),
   Submitted: (a) => p(`Your application for <b>${escapeHtml(a.petName)}</b> is back in the review queue.`),
 };
 
@@ -320,7 +320,7 @@ const emails = {
     to: user.email, type: 'password-reset', subject: 'Reset your PawPal password',
     heading: 'Reset your password',
     body: p('We received a request to reset your password. This link expires in 1 hour and can only be used once.') +
-      p('If you did not ask for this, you can ignore this email — your password will not change.'),
+      p('If you did not ask for this, you can ignore this email, your password will not change.'),
     buttonText: 'Choose a new password', buttonUrl: link,
   }),
   staffInvite: (user, link, roleLabel = 'staff') => sendMail({
@@ -342,7 +342,7 @@ const emails = {
     ...appMeta(app), to: app.email, type: 'application', subject: `We received your application for ${app.petName}`,
     heading: 'Application received',
     body: p(`Thank you, ${first(app.name)}! Your adoption application for <b>${escapeHtml(app.petName)}</b> has been submitted.`) +
-      p('Our shelter team usually starts reviewing applications within 2–3 business days. You can follow every step on your adoption timeline.'),
+      p('Our shelter team usually starts reviewing applications within 2 to 3 business days. You can follow every step on your adoption timeline.'),
     buttonText: 'Track my application', buttonUrl: `${config.appUrl}/my-applications.html?id=${app.id}`,
   }),
   statusChanged: (app, note = '') => sendMail({
@@ -371,11 +371,11 @@ const emails = {
   // Receipt for the simulated adoption-fee payment (only brand + last 4 digits are ever known)
   paymentReceipt: (user, payment, app) => sendMail({
     to: user.email, type: 'receipt', userId: user.id, appId: app.id, subject: `Receipt ${payment.receiptNo}: adoption fee for ${app.petName}`,
-    heading: 'Thank you — adoption fee received',
+    heading: 'Thank you, adoption fee received',
     body: p(`Hi ${first(user.name)}, thank you for paying the adoption fee for <b>${escapeHtml(app.petName)}</b>.`)
       + p(`<b>Amount:</b> $${Number(payment.amount).toFixed(2)} AUD<br><b>Paid with:</b> ${escapeHtml(payment.last4 ? `${payment.brand} ending ${payment.last4}` : payment.brand)}<br>`
         + `<b>Receipt number:</b> ${escapeHtml(payment.receiptNo)}<br><b>Date:</b> ${escapeHtml(new Date(payment.paidAt).toLocaleString('en-AU', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Australia/Melbourne' }))}`)
-      + p('<i>PawPal payment simulation — no real money was taken.</i>'),
+      + p('<i>PawPal payment simulation, no real money was taken.</i>'),
     buttonText: 'View receipt', buttonUrl: `${config.appUrl}/receipt.html?id=${payment.id}`,
   }),
   shelterMessage: (app, text) => sendMail({
@@ -403,13 +403,13 @@ const emails = {
     ...appMeta(app), to: app.email, type: 'booking', subject: `Cancelled: meet & greet with ${app.petName}`,
     heading: 'Your meet & greet was cancelled',
     body: p(`Hi ${first(app.name)}, your meet &amp; greet with <b>${escapeHtml(app.petName)}</b>${startedAt ? ` on ${when(startedAt)}` : ''} has been cancelled.`) +
-      p('Your application is still open — choose another time whenever you\'re ready.'),
+      p('Your application is still open, choose another time whenever you\'re ready.'),
     buttonText: 'Choose another time', buttonUrl: `${config.appUrl}/my-applications.html?id=${app.id}#booking`,
   }),
   enquiryReceived: (enq) => sendMail({
     to: enq.email, type: 'enquiry', subject: `Your question about ${enq.petName}`,
     heading: 'We got your question',
-    body: p(`Thanks ${first(enq.name)} — your question about <b>${escapeHtml(enq.petName)}</b> has been sent to the shelter team.`) + quote(enq.message),
+    body: p(`Thanks ${first(enq.name)}, your question about <b>${escapeHtml(enq.petName)}</b> has been sent to the shelter team.`) + quote(enq.message),
     buttonText: 'View my enquiries', buttonUrl: `${config.appUrl}/dashboard.html#enquiries`,
   }),
   enquiryReply: (enq) => sendMail({

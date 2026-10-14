@@ -39,7 +39,7 @@ const PETS = [
     photos: [img('photo-1503256207526-0d5d80fa2f47')] },
   { name: 'Max', type: 'Dog', breed: 'French Bulldog', age: 1, gender: 'Male', size: 'Small', colour: 'Fawn', location: 'Osborne Park, WA', adoptionFee: 550,
     traits: ['Apartment Friendly', 'Playful', 'Cuddly'], energyLevel: 2, requiresYard: false, goodWithChildren: true, goodWithOtherPets: true, firstTimeFriendly: true,
-    vaccinated: true, desexed: false, microchipped: true, idealHome: 'Apartment or house — as long as there is a lap to sit on.',
+    vaccinated: true, desexed: false, microchipped: true, idealHome: 'Apartment or house, as long as there is a lap to sit on.',
     photos: [img('photo-1561754050-9a1ee0470c73')] },
   { name: 'Rosie', type: 'Dog', breed: 'Beagle', age: 4, gender: 'Female', size: 'Medium', colour: 'Tricolour', location: 'Woolloongabba, QLD', adoptionFee: 380,
     traits: ['Good with Kids', 'Gentle', 'Curious'], energyLevel: 2, requiresYard: true, goodWithChildren: true, goodWithOtherPets: true, firstTimeFriendly: true,
@@ -71,7 +71,7 @@ const PETS = [
     photos: [img('photo-1602241628512-459cdd3234fe'), img('photo-1558788353-f76d92427f16')] },
   { name: 'Pepper', type: 'Dog', breed: 'Kelpie Cross', age: 3, gender: 'Female', size: 'Medium', colour: 'Red', location: 'Footscray, VIC', adoptionFee: 400,
     traits: ['Active', 'Smart', 'Outdoorsy'], energyLevel: 3, requiresYard: true, goodWithChildren: true, goodWithOtherPets: true,
-    vaccinated: true, desexed: true, microchipped: true, idealHome: 'A runner, hiker or rural property — Pepper needs a job to do.',
+    vaccinated: true, desexed: true, microchipped: true, idealHome: 'A runner, hiker or rural property, Pepper needs a job to do.',
     photos: [img('photo-1561037404-61cd46aa615b'), img('photo-1552053831-71594a27632d')] },
   { name: 'Oliver', type: 'Cat', breed: 'Domestic Shorthair', age: 9, gender: 'Male', size: 'Medium', colour: 'Orange', location: 'Footscray, VIC', adoptionFee: 50,
     traits: ['Calm', 'Cuddly', 'Senior'], energyLevel: 1, requiresYard: false, goodWithChildren: true, goodWithOtherPets: true, firstTimeFriendly: true,
@@ -87,7 +87,7 @@ const PETS = [
     photos: [img('photo-1587300003388-59208cc962cb')] },
   { name: 'Tilly', type: 'Cat', breed: 'Domestic Shorthair', age: 3, gender: 'Female', size: 'Small', colour: 'Tabby', location: 'Parramatta, NSW', adoptionFee: 150,
     traits: ['Affectionate', 'Independent', 'Apartment Friendly'], energyLevel: 2, requiresYard: false, goodWithChildren: true, goodWithOtherPets: true, firstTimeFriendly: true,
-    vaccinated: true, desexed: true, microchipped: true, idealHome: 'A working household — she is happy on her own during the day.',
+    vaccinated: true, desexed: true, microchipped: true, idealHome: 'A working household, she is happy on her own during the day.',
     photos: [img('photo-1514888286974-6c03e2ca1dba')] },
   { name: 'Ruby', type: 'Dog', breed: 'Mixed Breed', age: 6, gender: 'Female', size: 'Medium', colour: 'Brown & white', location: 'Woolloongabba, QLD', adoptionFee: 250,
     traits: ['Calm', 'Gentle', 'Friendly'], energyLevel: 1, requiresYard: false, goodWithChildren: true, goodWithOtherPets: true, firstTimeFriendly: true,
@@ -104,7 +104,7 @@ const PETS = [
 ];
 
 const MEDICAL = ['Up to date on vaccinations. Healthy weight. No known conditions.', 'Recovered from a minor skin infection in March. Monitor coat condition.',
-  'Mild seasonal allergies — responds well to diet change.', 'Dental clean completed. No ongoing medication.'];
+  'Mild seasonal allergies, responds well to diet change.', 'Dental clean completed. No ongoing medication.'];
 const RESCUE = ['Surrendered by previous owner due to relocation.', 'Found as a stray and brought in by council rangers.',
   'Transferred from a partner rural shelter.', 'Rehomed after owner moved into aged care.'];
 
@@ -154,7 +154,7 @@ async function seedIfEmpty({ force = false } = {}) {
 
   const pets = PETS.map((p, i) => ({ id: newId('pet'), ...p, category: demoCategory(p) || defaultCategory(p.type), status: 'Available', description: templateDescription(p),
     shelterId: shelterFor(p.location, shelters).id, medicalHistory: MEDICAL[i % MEDICAL.length], rescueBackground: RESCUE[i % RESCUE.length],
-    internalNotes: i % 3 === 0 ? 'Reactive to loud trucks on walks — mention at meet & greet.' : '',
+    internalNotes: i % 3 === 0 ? 'Reactive to loud trucks on walks, mention at meet & greet.' : '',
     createdBy: admin.id, createdAt: daysAgo(70 - i * 3), updatedAt: daysAgo(70 - i * 3) }));
   pets[6].status = 'Draft';
 
@@ -206,7 +206,7 @@ async function seedIfEmpty({ force = false } = {}) {
   // Reptiles, birds, fish, hamsters, goats and cows (see extra-pets.js)
   await addExtraPets(shelters, { createdBy: admin.id });
 
-  // Meet & greet times: the next three Saturdays, 10:00–13:00 Melbourne time, every 30 minutes, at every shelter.
+  // Meet & greet times: the next three Saturdays, 10:00 to 13:00 Melbourne time, every 30 minutes, at every shelter.
   // One of the demo adopter's open applications is invited to book one (My applications → "Choose a time").
   for (const shelter of shelters) {
     for (let week = 0; week < 3; week++) {
@@ -218,11 +218,11 @@ async function seedIfEmpty({ force = false } = {}) {
   }
   const invitable = (await db.find('applications', { userId: demo.id })).find((a) => ['Submitted', 'Under Review', 'Interview'].includes(a.status));
   if (invitable) {
-    await db.update('applications', invitable.id, { bookingInvite: { at: daysAgo(1, 10), by: staff.name, message: 'We\'d love you to meet them — pick any time that suits.', statusBefore: invitable.status } });
+    await db.update('applications', invitable.id, { bookingInvite: { at: daysAgo(1, 10), by: staff.name, message: 'We\'d love you to meet them, pick any time that suits.', statusBefore: invitable.status } });
   }
 
   // Enquiries and favourites
-  const enquiries = [[2, 'Is Max okay being left alone for a few hours while I\'m at work?', 'Answered', 'He copes well with 4–5 hours once settled. We recommend a slow start with short absences.'],
+  const enquiries = [[2, 'Is Max okay being left alone for a few hours while I\'m at work?', 'Answered', 'He copes well with 4 to 5 hours once settled. We recommend a slow start with short absences.'],
     [9, 'Does Bella travel well in the car? We visit family most weekends.', 'Open', ''], [13, 'How much training has Archie had so far?', 'Open', ''],
     [15, 'Would Ruby be okay with a quiet older cat?', 'Answered', 'Ruby lived with a cat in her previous foster home and ignored him completely.'], [10, 'Can Pepper come on long hikes?', 'Open', '']];
   for (const [k, [petIndex, message, status, reply]] of enquiries.entries()) {

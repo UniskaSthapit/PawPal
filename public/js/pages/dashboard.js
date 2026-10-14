@@ -1,5 +1,5 @@
 // Adopter dashboard: nudges, key numbers, active applications with progress, recommendations,
-// favourites, enquiries, notifications and saved assistant conversations — all from the API.
+// favourites, enquiries, notifications and saved assistant conversations, all from the API.
 (async () => {
   const { $, esc, icons, petCardHTML, emptyHTML, errorHTML, timeAgo, statusBadge, fmtDateTime, noteHTML } = PawPal;
   const u = await PawPal.booted;
@@ -49,7 +49,7 @@
   // Recommendations
   const reco = val(recoR, { hasProfile: false, matches: [] });
   if (!reco.hasProfile) {
-    $('#reco').innerHTML = `<div style="grid-column:1/-1">${emptyHTML({ icon: 'sparkle', title: 'Tell PawPal about your lifestyle', text: 'Describe your home and routine and we\'ll recommend pets here — and notify you when a new strong match arrives.', action: '<a class="btn btn-primary" href="ai-matching.html">Find my PawPal</a>' })}</div>`;
+    $('#reco').innerHTML = `<div style="grid-column:1/-1">${emptyHTML({ icon: 'sparkle', title: 'Tell PawPal about your lifestyle', text: 'Describe your home and routine and we\'ll recommend pets here, and notify you when a new strong match arrives.', action: '<a class="btn btn-primary" href="ai-matching.html">Find my PawPal</a>' })}</div>`;
   } else {
     $('#recoUnderstood').innerHTML = reco.understood.map((x) => `<span class="badge badge-honey">${esc(x)}</span>`).join('');
     $('#reco').innerHTML = reco.matches.length ? reco.matches.map((m) => petCardHTML(m.pet, { match: m.score, reason: m.reasons[0] })).join('')

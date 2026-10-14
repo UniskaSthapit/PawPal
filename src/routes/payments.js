@@ -1,4 +1,4 @@
-// Simulated adoption-fee payments (NO real payments — test cards only, see services/payments.js).
+// Simulated adoption-fee payments (NO real payments, test cards only, see services/payments.js).
 // Card details are validated and then discarded: only { id, applicationId, userId, amount, brand, last4, status,
 // receiptNo, paidAt } is stored. Payments are idempotent: a paid application can never be charged again.
 const express = require('express');
@@ -12,9 +12,9 @@ const { newId, now, asyncHandler, clean, HttpError } = require('../utils');
 
 const router = express.Router();
 const payLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 20, standardHeaders: true, legacyHeaders: false,
-  keyGenerator: (req) => `user:${req.user?.id}`, message: { error: 'Too many payment attempts — please wait 15 minutes and try again.' } });
+  keyGenerator: (req) => `user:${req.user?.id}`, message: { error: 'Too many payment attempts, please wait 15 minutes and try again.' } });
 
-// Fields that may be stored or returned — never the card number or CVC
+// Fields that may be stored or returned, never the card number or CVC
 const record = (p) => p && ({ id: p.id, applicationId: p.applicationId, userId: p.userId, amount: p.amount, brand: p.brand, last4: p.last4,
   status: p.status, receiptNo: p.receiptNo, paidAt: p.paidAt });
 
@@ -47,7 +47,7 @@ async function paid(app, payment, user) {
   await db.insert('payments', payment);
   const updated = await db.update('applications', app.id, { paymentStatus: 'paid', paymentId: payment.id, updatedAt: now() });
   const account = user || await db.findOne('users', { id: app.userId });
-  await notify(app.userId, { type: 'payment', title: `Adoption fee paid: ${app.petName}`, message: `Receipt ${payment.receiptNo} — $${payment.amount}. Thank you!`,
+  await notify(app.userId, { type: 'payment', title: `Adoption fee paid: ${app.petName}`, message: `Receipt ${payment.receiptNo}, $${payment.amount}. Thank you!`,
     link: `receipt.html?id=${payment.id}` }, { email: false }); // the receipt email below is this notification's email
   if (account) emails.paymentReceipt(account, payment, app).catch((err) => console.warn('Receipt email failed:', err.message));
   return updated;
@@ -107,13 +107,13 @@ router.post('/pay-in-person', requireAdopter, payLimiter, asyncHandler(async (re
   if (state === 'pay_in_person') return res.json({ paymentStatus: state, message: 'You\'ve already chosen to pay at the shelter.' });
   if (state === 'paid') throw new HttpError(409, 'This adoption fee has already been paid.');
   if (state !== 'due') throw new HttpError(400, state === 'no_fee' ? 'There is no adoption fee to pay.' : 'The adoption fee is due once the adoption is complete.');
-  if (!(await claim(app, ['due'], 'pay_in_person'))) throw new HttpError(409, 'The payment status just changed — please refresh the page.');
+  if (!(await claim(app, ['due'], 'pay_in_person'))) throw new HttpError(409, 'The payment status just changed, please refresh the page.');
   await db.insert('payments', { id: newId('pay'), applicationId: app.id, userId: req.user.id, amount: amountOf(app), brand: null, last4: null,
     status: 'pay_in_person', receiptNo: null, paidAt: null });
   const shelter = await db.findOne('shelters', { id: app.shelterId });
   await notify(app.userId, { type: 'payment', title: `Pay at the shelter: ${app.petName}`,
     message: `Please pay the $${amountOf(app)} adoption fee at ${shelter?.name || 'the shelter'}. You can still pay online any time.`, link: `checkout.html?app=${app.id}` });
-  res.json({ paymentStatus: 'pay_in_person', message: `No problem — you can pay the $${amountOf(app)} fee at ${shelter?.name || 'the shelter'}.` });
+  res.json({ paymentStatus: 'pay_in_person', message: `No problem, you can pay the $${amountOf(app)} fee at ${shelter?.name || 'the shelter'}.` });
 }));
 
 // ---- Staff: record a payment taken at the shelter ----
@@ -122,7 +122,7 @@ router.post('/application/:id/record', requireStaff, asyncHandler(async (req, re
   const state = stateOf(app);
   if (state === 'paid') throw new HttpError(409, 'This adoption fee has already been paid.');
   if (state !== 'due' && state !== 'pay_in_person') throw new HttpError(400, state === 'no_fee' ? 'There is no adoption fee for this adoption.' : 'The fee is due once the adoption is complete.');
-  if (!(await claim(app, ['due', 'pay_in_person'], 'processing'))) throw new HttpError(409, 'The payment status just changed — please refresh.');
+  if (!(await claim(app, ['due', 'pay_in_person'], 'processing'))) throw new HttpError(409, 'The payment status just changed, please refresh.');
   const payment = { id: newId('pay'), applicationId: app.id, userId: app.userId, amount: amountOf(app), brand: 'Paid at the shelter', last4: null,
     status: 'succeeded', receiptNo: receiptNumber(), paidAt: now() };
   await paid(app, payment);

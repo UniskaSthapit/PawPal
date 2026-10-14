@@ -118,7 +118,7 @@ function buildAnalytics(data, from, to) {
     pets.filter((p) => ['Available', 'On Hold'].includes(p.status)).forEach((p) => { const k = fn(p); m[k] ||= { key: k, enquiries: 0, applications: 0, favourites: 0, views: 0, pets: 0 }; m[k].pets++; });
     return Object.values(m).map((x) => ({ ...x, interest: x.enquiries + x.applications * 2 + x.favourites + Math.round(x.views / 5) })).sort((a, b) => b.interest - a.interest);
   };
-  const ageLabel = { baby: 'Under 1', young: '1–2 years', adult: '3–7 years', senior: '8+ years' };
+  const ageLabel = { baby: 'Under 1', young: '1 to 2 years', adult: '3 to 7 years', senior: '8+ years' };
   const byAge = interestBy((p) => ageLabel[AGE_BAND(p.age)]);
   const byType = interestBy((p) => p.type);
   const bySize = interestBy((p) => p.size);
@@ -173,13 +173,13 @@ function ruleInsights(a) {
     out.push(`Pets aged ${(best || topAge).key.toLowerCase()} drew the most interest per pet this period (${(best || topAge).enquiries} enquiries, ${(best || topAge).applications} applications).`);
   }
   const topType = a.byType.find((x) => x.interest > 0);
-  if (topType) out.push(`${topType.key}s received ${topType.applications} application${topType.applications === 1 ? '' : 's'} and ${topType.enquiries} enquir${topType.enquiries === 1 ? 'y' : 'ies'} — the most of any species.`);
+  if (topType) out.push(`${topType.key}s received ${topType.applications} application${topType.applications === 1 ? '' : 's'} and ${topType.enquiries} enquir${topType.enquiries === 1 ? 'y' : 'ies'}, the most of any species.`);
   const views = a.funnel[0].count; const apps = a.funnel[2].count;
   if (views && apps) out.push(`About ${Math.round((apps / views) * 1000) / 10}% of pet profile views turned into an application.`);
   if (s.applicationsChange && Math.abs(s.applicationsChange) >= 10) out.push(`Applications are ${s.applicationsChange > 0 ? 'up' : 'down'} ${Math.abs(s.applicationsChange)}% on the previous period.`);
   if (s.avgDaysToFirstAction !== null) out.push(`Applications waited an average of ${s.avgDaysToFirstAction} days for their first review step.`);
-  if (a.zeroResultKeywords.length) out.push(`Adopters searched for "${a.zeroResultKeywords[0].keyword}" ${a.zeroResultKeywords[0].count} time${a.zeroResultKeywords[0].count === 1 ? '' : 's'} with no results — a possible gap in listings.`);
-  if (s.completionRate !== null && s.completionRate < 70) out.push(`Only ${s.completionRate}% of applications were complete — consider asking for missing details early.`);
+  if (a.zeroResultKeywords.length) out.push(`Adopters searched for "${a.zeroResultKeywords[0].keyword}" ${a.zeroResultKeywords[0].count} time${a.zeroResultKeywords[0].count === 1 ? '' : 's'} with no results, a possible gap in listings.`);
+  if (s.completionRate !== null && s.completionRate < 70) out.push(`Only ${s.completionRate}% of applications were complete, consider asking for missing details early.`);
   return out.slice(0, 5);
 }
 
@@ -306,7 +306,7 @@ router.get('/vets', asyncHandler(async (req, res) => {
     res.json(await maps.findVets({ query: clean(req.query.q, 100), lat: req.query.lat, lng: req.query.lng }));
   } catch (err) {
     console.warn('Vet search failed:', err.message);
-    res.json({ enabled: false, results: [], error: 'Live clinic search is unavailable right now — showing the map instead.' });
+    res.json({ enabled: false, results: [], error: 'Live clinic search is unavailable right now, showing the map instead.' });
   }
 }));
 
@@ -349,7 +349,7 @@ router.post('/system/reset', requireAdmin, asyncHandler(async (req, res) => {
   res.json({ message: 'All data was reset to the sample data. Please log in again.' });
 }));
 
-// Dev mailbox + SMS log — only when no real provider is configured and never in production
+// Dev mailbox + SMS log, only when no real provider is configured and never in production
 router.get('/dev/emails', asyncHandler(async (req, res) => {
   if (emailMode !== 'dev' || config.isProd) throw new HttpError(404, 'Not available.');
   let list = (await db.find('emails')).sort((a, b) => new Date(b.sentAt) - new Date(a.sentAt));

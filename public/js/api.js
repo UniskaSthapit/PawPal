@@ -1,5 +1,5 @@
 // ============================================================
-// api.js — the only place the website talks to the server.
+// api.js, the only place the website talks to the server.
 // Every page uses: PawPalAPI.get('/pets'), PawPalAPI.post('/auth/login', {...}), etc.
 // ============================================================
 const PawPalAPI = (() => {

@@ -80,22 +80,22 @@
           <button class="btn btn-primary" style="margin-top:10px" type="submit">${icons.send}Send reply</button></form></div>` : ''}
 
       ${a.payment ? (a.payment.status === 'paid' ? `<div class="card card-pad fee-card fee-paid" id="feeCard"><span class="src-label">${icons.checkCircle}Adoption fee paid</span>
-        <p class="small" style="margin-top:6px">Thank you — the $${esc(a.payment.amount)} adoption fee for ${esc(a.petName)} is paid.</p>
+        <p class="small" style="margin-top:6px">Thank you, the $${esc(a.payment.amount)} adoption fee for ${esc(a.petName)} is paid.</p>
         <a class="btn btn-sm" style="margin-top:10px" href="receipt.html?id=${encodeURIComponent(a.payment.paymentId || '')}">${icons.file}View receipt</a></div>`
         : `<div class="card card-pad fee-card" id="feeCard"><span class="src-label" style="color:var(--honey-ink)">${icons.alert}Adoption fee due: $${esc(a.payment.amount)}</span>
-        <p class="small muted" style="margin-top:6px">${a.payment.status === 'pay_in_person' ? 'You chose to pay at the shelter. You can also pay online now.' : 'Pay online (payment simulation — no real money is taken), or choose to pay at the shelter.'}</p>
+        <p class="small muted" style="margin-top:6px">${a.payment.status === 'pay_in_person' ? 'You chose to pay at the shelter. You can also pay online now.' : 'Pay online (payment simulation, no real money is taken), or choose to pay at the shelter.'}</p>
         <a class="btn btn-primary btn-sm" style="margin-top:10px" id="payFeeBtn" href="checkout.html?app=${encodeURIComponent(a.id)}">${icons.checkCircle}Pay adoption fee</a></div>`) : ''}
 
       ${a.carePlanReady ? `<div class="card card-pad care-cta" id="carePlanCard"><span class="src-label src-ai">${icons.clipboard}Your first 30 days</span>
         <h3 style="font-size:20px;margin-top:6px">A care plan to help ${esc(a.petName)} settle in</h3>
-        <p class="small muted" style="margin-top:4px">What to prepare, the first few days, feeding, exercise, the vet and warning signs — ready to print.</p>
+        <p class="small muted" style="margin-top:4px">What to prepare, the first few days, feeding, exercise, the vet and warning signs, ready to print.</p>
         <a class="btn btn-primary btn-sm" style="margin-top:12px" id="viewCarePlan" href="care-plan.html?id=${encodeURIComponent(a.id)}">${icons.file}View care plan</a></div>`
         : ['Approved', 'Adoption Scheduled', 'Adopted'].includes(a.status) ? `<div class="card card-pad"><span class="src-label src-ai">${icons.clipboard}Your first 30 days</span>
-        <p class="small muted" style="margin-top:6px">Your care plan for ${esc(a.petName)} is being prepared — we'll let you know when it's ready.</p></div>` : ''}
+        <p class="small muted" style="margin-top:6px">Your care plan for ${esc(a.petName)} is being prepared, we'll let you know when it's ready.</p></div>` : ''}
 
       ${a.booking ? `<div class="card card-pad" id="booking"><span class="src-label" style="color:var(--sky)">${icons.calendar}Meet &amp; greet</span>
         ${a.booking.slotId ? `<h3 style="font-size:20px;margin-top:6px">You're booked to meet ${esc(a.petName)}</h3>
-          <p class="small muted" style="margin-top:4px">${a.booking.canChange ? 'You can change or cancel this time until 24 hours before.' : 'It\'s less than 24 hours away — message the shelter if you can\'t make it.'}</p>
+          <p class="small muted" style="margin-top:4px">${a.booking.canChange ? 'You can change or cancel this time until 24 hours before.' : 'It\'s less than 24 hours away, message the shelter if you can\'t make it.'}</p>
           ${a.booking.canChange ? `<div class="row" style="margin-top:12px"><button class="btn btn-sm" type="button" data-booking="change">${icons.edit}Change time</button>
             <button class="btn btn-sm btn-ghost" type="button" data-booking="cancel" style="color:var(--danger)">${icons.x}Cancel</button></div>` : ''}`
           : `<h3 style="font-size:20px;margin-top:6px">Choose a time to meet ${esc(a.petName)}</h3>
@@ -119,11 +119,11 @@
 
       <details class="card"><summary class="card-head" style="cursor:pointer;border:0"><h3>Your answers</h3>${icons.chevron}</summary>
         <div class="card-body"><dl class="kv">
-          <dt>Home</dt><dd>${esc(ans.livingType || '—')}${ans.ownership ? ` · ${esc(ans.ownership)}` : ''}</dd>
-          <dt>Activity</dt><dd>${esc(['', 'Relaxed', 'Moderately active', 'Very active'][ans.activityLevel] || '—')}</dd>
-          <dt>Pet alone</dt><dd>${ans.hoursAlone === '' ? '—' : `${esc(ans.hoursAlone)} hours a day`}</dd>
+          <dt>Home</dt><dd>${esc(ans.livingType || 'N/A')}${ans.ownership ? ` · ${esc(ans.ownership)}` : ''}</dd>
+          <dt>Activity</dt><dd>${esc(['', 'Relaxed', 'Moderately active', 'Very active'][ans.activityLevel] || 'N/A')}</dd>
+          <dt>Pet alone</dt><dd>${ans.hoursAlone === '' ? 'N/A' : `${esc(ans.hoursAlone)} hours a day`}</dd>
           <dt>Children</dt><dd>${ans.hasChildren ? 'Yes' : 'No'}</dd><dt>Other pets</dt><dd>${ans.hasOtherPets ? 'Yes' : 'No'}</dd>
-          <dt>Experience</dt><dd>${esc(ans.experience || '—')}</dd><dt>Why</dt><dd style="font-weight:500">${esc(ans.motivation || '—')}</dd></dl></div></details>
+          <dt>Experience</dt><dd>${esc(ans.experience || 'N/A')}</dd><dt>Why</dt><dd style="font-weight:500">${esc(ans.motivation || 'N/A')}</dd></dl></div></details>
 
       ${closed ? '' : `<div><button class="btn btn-ghost" id="withdrawBtn" style="color:var(--danger)">${icons.x}Withdraw application</button></div>`}
     </div>`;
@@ -138,7 +138,7 @@
     box.innerHTML = '<div class="skeleton" style="height:90px"></div>';
     let slots;
     try { ({ slots } = await PawPalAPI.get(`/applications/${encodeURIComponent(a.id)}/slots`)); } catch (err) { box.innerHTML = errorHTML(err.message); return; }
-    if (!slots.length) { box.innerHTML = '<p class="small muted">There are no free times right now — the shelter will add more soon, or you can message them below.</p>'; return; }
+    if (!slots.length) { box.innerHTML = '<p class="small muted">There are no free times right now, the shelter will add more soon, or you can message them below.</p>'; return; }
     const days = new Map();
     slots.forEach((sl) => { const k = new Date(sl.start).toDateString(); if (!days.has(k)) days.set(k, []); days.get(k).push(sl); });
     box.innerHTML = `<div class="slot-picker" role="group" aria-label="Free meet and greet times">${[...days].map(([, list]) => `<div><h4>${esc(new Date(list[0].start).toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long' }))}</h4>

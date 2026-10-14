@@ -41,7 +41,7 @@
       $('#traits').value = (current.traits || []).join(', ');
       if (u.role === 'admin') $('#shelterId').value = current.shelterId || '';
       photos = [...(current.photos || [])];
-      document.title = `Edit ${current.name} — PawPal shelter portal`;
+      document.title = `Edit ${current.name} | PawPal shelter portal`;
       $('#pageTitle').textContent = `Edit ${current.name}`; $('#crumb').textContent = current.name;
       $('#statusPill').innerHTML = `${statusBadge(current.status)} <span class="small muted">${res.applicationCount} applications · ${res.enquiryCount} enquiries · ${res.favouriteCount} saves</span>
         <a class="btn btn-sm" href="flyer.html?id=${encodeURIComponent(current.id)}">${PawPal.icons.download}Print flyer</a>
@@ -113,7 +113,7 @@
     try {
       const r = await PawPalAPI.post('/ai/describe', body);
       $('#description').value = r.description; dirty = true;
-      $('#aiNote').innerHTML = `<p class="tiny muted" style="margin-top:6px">${icons.sparkle} Drafted by ${esc(PawPal.aiLabel(r.source, 'PawPal\'s template writer'))} — please review before publishing.</p>`;
+      $('#aiNote').innerHTML = `<p class="tiny muted" style="margin-top:6px">${icons.sparkle} Drafted by ${esc(PawPal.aiLabel(r.source, 'PawPal\'s template writer'))}, please review before publishing.</p>`;
     } catch (err) { toast(err.message, 'error'); }
     setBusy(btn, false);
   });

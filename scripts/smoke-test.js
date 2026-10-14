@@ -1,4 +1,4 @@
-// npm test — end-to-end check of the main PawPal journeys against a throwaway database.
+// npm test, end-to-end check of the main PawPal journeys against a throwaway database.
 // Runs the real server on a spare port. No email, SMS or AI provider is needed (dev modes + rules engine).
 const path = require('path');
 const os = require('os');
@@ -272,7 +272,7 @@ const mailFor = async (anon, email, type) => (await anon('GET', `/api/dev/emails
   check('Info request needs a message', r.status === 400);
   r = await admin('PATCH', `/api/applications/${appId}/status`, { status: 'Info Requested', message: 'Please send your landlord approval.' });
   check('Status → Info Requested', r.status === 200);
-  r = await adopter('POST', `/api/applications/${appId}/messages`, { text: 'Attached — my landlord is happy for a small dog.' });
+  r = await adopter('POST', `/api/applications/${appId}/messages`, { text: 'Attached, my landlord is happy for a small dog.' });
   check('Adopter reply sends it back to review', r.status === 200 && r.body.application.status === 'Under Review');
   r = await admin('PATCH', `/api/applications/${appId}/status`, { status: 'Meet & Greet' });
   check('Appointments need a date and time', r.status === 400);
@@ -443,7 +443,7 @@ const mailFor = async (anon, email, type) => (await anon('GET', `/api/dev/emails
   console.log('\nEnquiries, pet management, assistant, analytics');
   r = await staff('POST', `/api/enquiries/${enqId}/reply`, { reply: 'Yes, he copes well.' });
   check('Staff cannot answer another shelter\'s enquiry', r.status === 404);
-  r = await admin('POST', `/api/enquiries/${enqId}/reply`, { reply: 'Yes — Max copes well with a few hours alone once settled.' });
+  r = await admin('POST', `/api/enquiries/${enqId}/reply`, { reply: 'Yes, Max copes well with a few hours alone once settled.' });
   check('Shelter replies to an enquiry', r.status === 200 && r.body.enquiry.status === 'Answered');
   r = await adopter('GET', '/api/enquiries/mine');
   check('Adopter sees the reply', r.body.enquiries.find((e) => e.id === enqId)?.reply.includes('copes well'));
@@ -571,7 +571,7 @@ const mailFor = async (anon, email, type) => (await anon('GET', `/api/dev/emails
   r = await adopter('POST', '/api/applications', { ...form, petId: bPet2.id, declaration: true });
   const cApp = r.body.application.id;
   const at = (days, hours = 7, mins = 0) => { const d = new Date(Date.now() + days * 86400000); d.setHours(hours, mins, 0, 0); return d.toISOString(); };
-  // Test times are Tuesday mornings (07:00): the demo data's meet & greet times are Saturdays 10:00–13:00, so the
+  // Test times are Tuesday mornings (07:00): the demo data's meet & greet times are Saturdays 10:00 to 13:00, so the
   // two can never overlap, whatever day of the week or time zone the tests are run in
   const T = (() => { for (let d = 3; ; d++) if (new Date(Date.now() + d * 86400000).getDay() === 2) return d; })();
   r = await anon('POST', '/api/slots', { windows: [{ start: at(T), end: at(T, 9) }], durationMins: 30 });

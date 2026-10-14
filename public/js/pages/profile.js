@@ -37,7 +37,7 @@
     appEmails.disabled = true;
     try {
       await PawPalAPI.patch('/users/me', { emailPrefs: { applications: appEmails.checked } });
-      toast(appEmails.checked ? 'You\'ll get emails about your applications' : 'Application emails turned off — you\'ll still see updates in PawPal', appEmails.checked ? 'success' : 'info');
+      toast(appEmails.checked ? 'You\'ll get emails about your applications' : 'Application emails turned off, you\'ll still see updates in PawPal', appEmails.checked ? 'success' : 'info');
     } catch (err) { appEmails.checked = !appEmails.checked; toast(err.message, 'error'); }
     appEmails.disabled = false;
   });

@@ -1,5 +1,5 @@
 // "First 30 days" care plan for an approved adoption. Adopters see their own; staff can view and regenerate.
-// "Download PDF" uses the browser's print dialog (Save as PDF) with a print stylesheet — no server PDF library.
+// "Download PDF" uses the browser's print dialog (Save as PDF) with a print stylesheet, no server PDF library.
 (async () => {
   const { $, esc, icons, params, photo, sized, fmtDate, toast, setBusy, errorHTML, aiLabel, confirm } = PawPal;
   const u = await PawPal.booted;

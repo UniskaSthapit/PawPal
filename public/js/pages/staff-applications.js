@@ -44,7 +44,7 @@
     const a = res.application;
     const closed = ['Adopted', 'Declined', 'Withdrawn'].includes(a.status);
     const next = FLOW_NEXT[a.status] || [];
-    const yn = (v) => (v === true ? 'Yes' : v === false ? 'No' : '—');
+    const yn = (v) => (v === true ? 'Yes' : v === false ? 'No' : 'N/A');
     $('#appDetail').innerHTML = `<div class="stack page-fade" style="--stack:16px">
       <div class="card card-pad"><div class="row-between" style="align-items:flex-start;flex-wrap:nowrap;gap:16px">
         <div style="min-width:0"><div class="row">${statusBadge(a.status)}<span class="small muted">#${res.rank} of ${res.totalForPet} for ${esc(a.petName)}</span></div>
@@ -56,11 +56,11 @@
         ${a.missing?.length ? `<div class="alert alert-warn" style="margin-top:10px">${icons.info}<div>Missing: ${esc(a.missing.join(', '))}</div></div>` : ''}</div>
 
       <div class="card"><div class="card-head"><div><span class="src-label src-ai">${icons.sparkle}AI summary</span><h3>Summary for review</h3></div><button class="btn btn-sm" id="sumBtn">${icons.sparkle}Summarise</button></div>
-        <div class="card-body" id="sumBody"><p class="small muted">Get a concise summary of this application and what to check at interview. The applicant's own answers are used — never your private notes.</p></div></div>
+        <div class="card-body" id="sumBody"><p class="small muted">Get a concise summary of this application and what to check at interview. The applicant's own answers are used, never your private notes.</p></div></div>
 
       ${['Submitted', 'Under Review', 'Info Requested', 'Interview', 'Meet & Greet'].includes(a.status) ? `<div class="card" id="bookingCard"><div class="card-head"><h3>Meet &amp; greet booking</h3><a class="small" href="availability.html">Availability</a></div><div class="card-body stack" style="--stack:10px">
         ${a.slotId ? `<p>${icons.calendar} <b>Booked by ${esc(a.name.split(' ')[0])}</b> for ${esc(fmtDateTime(a.appointmentAt))}. They can change it until 24 hours before.</p>`
-          : a.bookingInvite ? `<p class="small">Invited ${esc(timeAgo(a.bookingInvite.at))} by ${esc(a.bookingInvite.by)} — waiting for ${esc(a.name.split(' ')[0])} to choose a time.</p>`
+          : a.bookingInvite ? `<p class="small">Invited ${esc(timeAgo(a.bookingInvite.at))} by ${esc(a.bookingInvite.by)}, waiting for ${esc(a.name.split(' ')[0])} to choose a time.</p>`
           : `<p class="small muted">Let ${esc(a.name.split(' ')[0])} pick from your free times instead of arranging a time by message.</p>`}
         ${a.slotId ? '' : `<div><button class="btn ${a.bookingInvite ? '' : 'btn-primary'}" type="button" id="inviteBtn">${icons.calendar}${a.bookingInvite ? 'Send the invite again' : 'Invite to book a meet & greet'}</button></div>`}
       </div></div>` : ''}
@@ -83,14 +83,14 @@
       ${closed ? '' : `<form class="card" id="statusForm"><div class="card-head"><h3>Update status</h3></div><div class="card-body stack" style="--stack:12px">
         <div class="field"><label for="newStatus">Move to</label><select class="select" id="newStatus">${next.map((s) => `<option>${esc(s)}</option>`).join('')}<option disabled>──────────</option>${statuses.filter((s) => !next.includes(s) && s !== a.status && s !== 'Withdrawn').map((s) => `<option>${esc(s)}</option>`).join('')}</select></div>
         <div class="field" id="dateField" hidden><label for="apptAt">Appointment date &amp; time</label><input class="input" type="datetime-local" id="apptAt"></div>
-        <div class="field"><label for="statusMsg">Message to ${esc(a.name.split(' ')[0])} <span class="muted small" id="msgHint">(optional — included in their email)</span></label><textarea class="textarea" id="statusMsg" maxlength="1000" style="min-height:90px"></textarea></div>
+        <div class="field"><label for="statusMsg">Message to ${esc(a.name.split(' ')[0])} <span class="muted small" id="msgHint">(optional, included in their email)</span></label><textarea class="textarea" id="statusMsg" maxlength="1000" style="min-height:90px"></textarea></div>
         <button class="btn btn-primary" type="submit" id="statusBtn">Update &amp; notify applicant</button></div></form>`}
 
       <div class="card"><div class="card-head"><h3>Answers</h3><span class="small muted">Score breakdown on the right</span></div><div class="card-body grid" style="grid-template-columns:minmax(0,1.2fr) minmax(0,1fr)">
         <dl class="kv"><dt>Home</dt><dd>${esc(a.livingType)}${a.ownership ? ` · ${esc(a.ownership)}` : ''}</dd>${a.ownership === 'Rent' ? `<dt>Landlord OK</dt><dd>${yn(a.landlordPermission)}</dd>` : ''}
-          <dt>Adults</dt><dd>${esc(a.householdAdults || '—')}</dd><dt>Children</dt><dd>${yn(a.hasChildren)}${a.childrenAges ? ` (${esc(a.childrenAges)})` : ''}</dd>
-          <dt>Other pets</dt><dd>${yn(a.hasOtherPets)}${a.otherPetsDetails ? ` — ${esc(a.otherPetsDetails)}` : ''}</dd><dt>Activity</dt><dd>${esc(['', 'Relaxed', 'Moderate', 'Very active'][a.activityLevel] || '—')}</dd>
-          <dt>Alone</dt><dd>${esc(a.hoursAlone)} hrs/day</dd><dt>Week</dt><dd>${esc(a.workSchedule || '—')}</dd><dt>Experience</dt><dd>${esc(a.experience)}</dd></dl>
+          <dt>Adults</dt><dd>${esc(a.householdAdults || 'N/A')}</dd><dt>Children</dt><dd>${yn(a.hasChildren)}${a.childrenAges ? ` (${esc(a.childrenAges)})` : ''}</dd>
+          <dt>Other pets</dt><dd>${yn(a.hasOtherPets)}${a.otherPetsDetails ? `, ${esc(a.otherPetsDetails)}` : ''}</dd><dt>Activity</dt><dd>${esc(['', 'Relaxed', 'Moderate', 'Very active'][a.activityLevel] || 'N/A')}</dd>
+          <dt>Alone</dt><dd>${esc(a.hoursAlone)} hrs/day</dd><dt>Week</dt><dd>${esc(a.workSchedule || 'N/A')}</dd><dt>Experience</dt><dd>${esc(a.experience)}</dd></dl>
         <ul class="plain breakdown">${(a.breakdown || []).map((b) => `<li><span>${esc(b.text)}</span><b>+${b.points}</b></li>`).join('')}${(a.notes || []).map((n) => `<li style="color:var(--honey-ink)"><span>${icons.alert} ${esc(n)}</span></li>`).join('')}</ul>
         <div style="grid-column:1/-1">${a.experienceDetails ? `<p class="label">Experience</p><p class="small">${esc(a.experienceDetails)}</p>` : ''}<p class="label" style="margin-top:10px">Why they want to adopt</p><p class="small">${esc(a.motivation)}</p></div></div></div>
 
@@ -110,7 +110,7 @@
       const s = $('#newStatus')?.value;
       if (!s) return;
       $('#dateField').hidden = !NEEDS_DATE.includes(s);
-      $('#msgHint').textContent = s === 'Info Requested' ? '(required — tell them what you need)' : '(optional — included in their email)';
+      $('#msgHint').textContent = s === 'Info Requested' ? '(required, tell them what you need)' : '(optional, included in their email)';
       if (!$('#statusMsg').value && TEMPLATES[s]) $('#statusMsg').placeholder = `${TEMPLATES[s]}…`;
     };
     $('#newStatus')?.addEventListener('change', syncStatus); syncStatus();
@@ -131,7 +131,7 @@
         $('#sumBody').innerHTML = `<div class="ai-panel"><p style="white-space:pre-wrap">${esc(s.summary)}</p>
           ${s.strengths.length ? `<ul class="plain reason-list pos" style="margin-top:10px">${s.strengths.map((x) => `<li>${icons.check}<span>${esc(x)}</span></li>`).join('')}</ul>` : ''}
           ${s.considerations.length ? `<ul class="plain reason-list con" style="margin-top:6px">${s.considerations.map((x) => `<li>${icons.info}<span>${esc(x)}</span></li>`).join('')}</ul>` : ''}
-          <p class="tiny muted" style="margin-top:10px">${esc(`Generated by ${PawPal.aiLabel(s.source, 'PawPal\'s rules engine')}`)} — a starting point, not a decision.</p></div>`;
+          <p class="tiny muted" style="margin-top:10px">${esc(`Generated by ${PawPal.aiLabel(s.source, 'PawPal\'s rules engine')}`)}, a starting point, not a decision.</p></div>`;
       } catch (err) { toast(err.message, 'error'); }
       setBusy(btn, false);
     });

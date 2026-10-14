@@ -10,7 +10,7 @@ const DIGITS = 6;
 const WINDOW = 1;
 const ISSUER = 'PawPal';
 
-// ---- Base32 (RFC 4648, no padding) — the format authenticator apps expect ----
+// ---- Base32 (RFC 4648, no padding), the format authenticator apps expect ----
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
 function base32Encode(buf) {
   let bits = 0; let value = 0; let out = '';
@@ -54,7 +54,7 @@ function verifyTotp(secret, code, { ms = Date.now(), lastStep = -1 } = {}) {
   if (!/^\d{6}$/.test(digits)) return null;
   const now = timeStep(ms);
   for (let step = now - WINDOW; step <= now + WINDOW; step++) {
-    if (step <= lastStep) continue; // already used — replay protection
+    if (step <= lastStep) continue; // already used, replay protection
     const expected = hotp(secret, step);
     if (crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(digits))) return step;
   }

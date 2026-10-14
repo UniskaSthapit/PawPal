@@ -5,7 +5,7 @@
   const PAGE = 12;
   const MULTI = ['age', 'size', 'energy'];
   const KINDS = { rescue: 'Rescue & Rehabilitation', domestic: 'Domestic Pets', exotic: 'Exotic Pets', rare: 'Rare & Special Breeds' };
-  const LABELS = { category: KINDS, type: { dog: 'Dogs', cat: 'Cats', small: 'Small pets', bird: 'Birds', reptile: 'Reptiles', fish: 'Fish', farm: 'Goats & cows', other: 'Other pets' }, age: { baby: 'Under 1', young: '1–2 yrs', adult: '3–7 yrs', senior: '8+ yrs' },
+  const LABELS = { category: KINDS, type: { dog: 'Dogs', cat: 'Cats', small: 'Small pets', bird: 'Birds', reptile: 'Reptiles', fish: 'Fish', farm: 'Goats & cows', other: 'Other pets' }, age: { baby: 'Under 1', young: '1 to 2 yrs', adult: '3 to 7 yrs', senior: '8+ yrs' },
     size: { small: 'Small', medium: 'Medium', large: 'Large' }, gender: { female: 'Female', male: 'Male' }, energy: { 1: 'Calm', 2: 'Moderate energy', 3: 'Very active' },
     apartment: 'Apartment OK', kids: 'Good with kids', otherPets: 'Good with pets', firstTime: 'First-time friendly', available: 'Hide on hold' };
   let state = readUrl();
@@ -58,7 +58,7 @@
   function render() {
     const grid = $('#grid');
     if (!pets.length) {
-      grid.innerHTML = emptyHTML({ icon: 'search', title: 'No pets match those filters', text: 'Try removing a filter or two — or tell PawPal about your lifestyle and we\'ll suggest pets that could still suit you.',
+      grid.innerHTML = emptyHTML({ icon: 'search', title: 'No pets match those filters', text: 'Try removing a filter or two, or tell PawPal about your lifestyle and we\'ll suggest pets that could still suit you.',
         action: `<div class="row" style="justify-content:center"><button class="btn" id="resetAll">Clear filters</button><a class="btn btn-primary" href="ai-matching.html">${icons.sparkle}Find my PawPal</a></div>` });
       $('#loadMore').hidden = true;
       return;

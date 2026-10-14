@@ -12,9 +12,9 @@
 
   const site = (cfg.siteUrl || location.origin).replace(/\/$/, '');
   const profileUrl = `${site}/pet-profile.html?id=${encodeURIComponent(pet.id)}`;
-  $('#crumb').textContent = `${pet.name} — flyer`;
+  $('#crumb').textContent = `${pet.name} flyer`;
   $('#editLink').href = `add-pet.html?id=${encodeURIComponent(pet.id)}`;
-  document.title = `${pet.name} adoption flyer — PawPal`;
+  document.title = `${pet.name} adoption flyer | PawPal`;
 
   // Public description, cut at a sentence so it fits the page
   const shortText = (text, max = 420) => {

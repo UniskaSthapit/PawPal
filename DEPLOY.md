@@ -69,7 +69,7 @@ Pick **one**:
 - **Free — Google Gemini:** https://aistudio.google.com/apikey → **Create API key** (no card) → `GEMINI_API_KEY`.
   Free-tier limits are modest, and Google may use free-tier prompts to improve its products (PawPal only sends public
   pet data and what people type into the assistant). If the free limit is hit, PawPal falls back to its rules engine.
-- **Paid — Anthropic:** https://console.anthropic.com → add credit (min US$5) → **API keys** → `ANTHROPIC_API_KEY`.
+- **Paid — Anthropic:** https://console.anthropic.com → add credit (min US$5) → **API keys** → `ANTHROPIC_API_KEY`, plus `ANTHROPIC_MODEL` (the model ID shown in the console).
 - **Paid — OpenAI:** `OPENAI_API_KEY`.
 
 If several keys are set, the order is Anthropic → OpenAI → Gemini. The startup log shows which one is active

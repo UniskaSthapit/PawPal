@@ -18,7 +18,7 @@ const router = express.Router();
 const aiLimiter = rateLimit({ windowMs: 60 * 1000, limit: 30, standardHeaders: true, legacyHeaders: false,
   keyGenerator: (req) => (req.user ? `user:${req.user.id}` : rateLimit.ipKeyGenerator(req.ip)),
   skip: (req) => req.path === '/translate', // has its own limit below, so translating chat replies doesn't use up the chat limit
-  message: { error: 'You\'re sending messages quickly — please wait a moment and try again.' } });
+  message: { error: 'You\'re sending messages quickly, please wait a moment and try again.' } });
 router.use(aiLimiter);
 
 const shapeMatch = (m) => ({ pet: toPublic(m.pet), match: m.score, score: m.score, reasons: m.reasons, considerations: m.considerations, summary: m.summary });
@@ -280,7 +280,7 @@ router.post('/compare', asyncHandler(async (req, res) => {
 // ---- Translate public pet text or chat replies (cached: each text is translated once per language) ----
 const translateLimiter = rateLimit({ windowMs: 10 * 60 * 1000, limit: 60, standardHeaders: true, legacyHeaders: false,
   keyGenerator: (req) => (req.user ? `user:${req.user.id}` : rateLimit.ipKeyGenerator(req.ip)),
-  message: { error: 'Too many translations at once — please wait a few minutes and try again.' } });
+  message: { error: 'Too many translations at once, please wait a few minutes and try again.' } });
 const sha = (s) => crypto.createHash('sha256').update(s).digest('hex');
 const UNAVAILABLE = 'Translation isn\'t available right now, so this is shown in English.';
 async function cached(key, petId, lang, hash, make) {
@@ -289,7 +289,7 @@ async function cached(key, petId, lang, hash, make) {
   if (hit) return { value: hit.value, cached: true };
   const value = await make();
   if (value === null) return null;
-  try { await db.insert('translations', { id, petId: petId || null, lang, hash, value, createdAt: now() }); } catch { /* translated twice at once — fine */ }
+  try { await db.insert('translations', { id, petId: petId || null, lang, hash, value, createdAt: now() }); } catch { /* translated twice at once, fine */ }
   return { value, cached: false };
 }
 router.post('/translate', translateLimiter, asyncHandler(async (req, res) => {

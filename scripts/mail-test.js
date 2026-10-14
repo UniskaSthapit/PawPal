@@ -1,4 +1,4 @@
-// npm test (part 2) — unit checks for the mailer with a simulated email provider (no real email is sent).
+// npm test (part 2), unit checks for the mailer with a simulated email provider (no real email is sent).
 // Covers: retry once on temporary failures (never on 4xx), skip reasons, plain-text part and Reply-To,
 // duplicate suppression, invalid domains, the daily limit and the expired-Gmail-sign-in banner.
 const os = require('os');
@@ -63,7 +63,7 @@ global.fetch = async (url, opts = {}) => {
 
   console.log('\nMessage format');
   sim.sends = [];
-  r = await mailer.sendMail({ to: 'format@gmail.com', subject: 'Café update — “Approved” 🎉', heading: 'Approved', body: '<p>Hi <b>Sam</b> &amp; family</p>',
+  r = await mailer.sendMail({ to: 'format@gmail.com', subject: 'Café update, “Approved” 🎉', heading: 'Approved', body: '<p>Hi <b>Sam</b> &amp; family</p>',
     buttonText: 'View', buttonUrl: 'https://example.org/x', type: 'test' });
   const raw = Buffer.from(sim.sends[0] || '', 'base64url').toString('utf8');
   const parts = raw.split(/--pawpal-[^\r\n-]+/);

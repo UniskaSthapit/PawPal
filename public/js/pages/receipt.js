@@ -20,7 +20,7 @@
     <dl>
       <dt>Receipt number</dt><dd id="receiptNo">${esc(p.receiptNo)}</dd>
       <dt>Date</dt><dd>${esc(when)}</dd>
-      <dt>For</dt><dd>Adoption fee — ${esc(r.application.petName)}${r.application.petBreed ? ` (${esc(r.application.petBreed)})` : ''}</dd>
+      <dt>For</dt><dd>Adoption fee, ${esc(r.application.petName)}${r.application.petBreed ? ` (${esc(r.application.petBreed)})` : ''}</dd>
       <dt>Adopter</dt><dd>${esc(r.application.adopter)}</dd>
       <dt>Paid with</dt><dd id="paidWith">${esc(p.last4 ? `${p.brand} ending ${p.last4}` : p.brand)}</dd>
     </dl>
