@@ -1,4 +1,4 @@
-# 🐾 PawPal — AI-assisted pet adoption
+# 🐾 PawPal- AI-assisted pet adoption
 
 NIT3003/NIT3004 IT Capstone · Victoria University
 Team: Uniska Sthapit, Pratikshya Bhujel, Pemba Sange Sherpa, Sushrit Phuyal
@@ -7,9 +7,6 @@ PawPal connects rescue pets with the right homes. Adopters describe their lifest
 explained, compatibility-ranked matches from real shelter data, then apply online and follow every step on a
 timeline. Shelter staff manage listings, a full adoption pipeline, enquiries and analytics — with AI helpers
 that only ever work from data they're allowed to see.
-
----
-
 ## Run it locally (5 minutes)
 
 Requires **Node.js 20.19+**.
