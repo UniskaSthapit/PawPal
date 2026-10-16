@@ -55,6 +55,8 @@ const needs2faSetup = (user) => settingsNow().requireStaff2fa && isStaffRole(use
 const setupRequired = (res) => res.status(403).json({ error: 'Your administrator requires two-factor authentication. Set it up in Settings to continue.',
   code: 'TWO_FACTOR_SETUP_REQUIRED' });
 
+// FR-03 Role-based access: runs before every staff route. 401 if not logged in, 403 if the user is not
+// shelter staff or an admin. Checked on the server, so hiding buttons in the browser is not our only protection.
 function requireStaff(req, res, next) {
   if (!req.user) return res.status(401).json({ error: 'Please log in to continue.' });
   if (!isStaffRole(req.user.role)) return res.status(403).json({ error: 'Staff access only.' });

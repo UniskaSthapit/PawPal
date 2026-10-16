@@ -43,6 +43,8 @@ function templateDescription(pet) {
 }
 
 async function describePet(pet) {
+// FR-02 AI pet descriptions: writes a friendly description from PUBLIC pet fields only (never medical
+// or internal notes). Falls back to a rules-based template if no AI provider is available.
   if (!llm.llmEnabled) return { text: templateDescription(pet), source: 'rules' };
   try {
     const text = await llm.complete({
