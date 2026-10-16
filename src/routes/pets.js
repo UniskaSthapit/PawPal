@@ -113,6 +113,8 @@ function keywordFilter(pets, q) {
     const hay = [p.name, p.type, p.breed, p.size, p.location, p.gender, p.colour, ...(p.traits || [])].join(' ').toLowerCase();
     return words.every((w) => hay.includes(w) || (w.endsWith('s') && hay.includes(w.slice(0, -1))));
   });
+  // FR-04 Pet search: a pet matches only if EVERY search word appears in its details (name, breed,
+  // traits). A simple plural rule lets "dogs" match "dog". Searches are logged for analytics.
 }
 
 const csv = (v) => clean(v, 200).toLowerCase().split(',').map((x) => x.trim()).filter(Boolean);
