@@ -7,6 +7,8 @@ const EXPERIENCE = ['First-time owner', 'Some experience', 'Experienced'];
 const REQUIRED = ['livingType', 'activityLevel', 'hasChildren', 'hasOtherPets', 'experience', 'hoursAlone'];
 
 function calculateSuitabilityScore(inquiry, pet) {
+// FR-08 Suitability score (Pseudocode 1): living 25 + activity 25 + children 20 + other pets 15 +
+// experience 15 = max 100. Incomplete applications return an error instead of a misleading score.
   const missing = REQUIRED.filter((f) => inquiry[f] === undefined || inquiry[f] === null || inquiry[f] === '');
   if (missing.length) return { error: 'Incomplete inquiry. Cannot calculate score.' };
 
