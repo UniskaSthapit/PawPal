@@ -5,6 +5,8 @@ const config = require('../config');
 
 const mapsEnabled = Boolean(config.mapsKey);
 
+// FR-11 Vet finder: searches Google Places (New) near the user's location or suburb. Without a
+// GOOGLE_MAPS_API_KEY the page falls back to the free Google Maps embed, so it never breaks.
 async function findVets({ query, lat, lng }) {
   if (!mapsEnabled) return { enabled: false, results: [], top: [] };
 
