@@ -141,8 +141,7 @@ function describeProfile(p) {
 const known = (v) => v !== null && v !== undefined;
 const AGE_BAND = (age) => (age < 1 ? 'baby' : age <= 2 ? 'young' : age <= 7 ? 'adult' : 'senior');
 
-// FR-05 AI pet matching: weighted, explainable score. Each factor (species, home, activity, children,
-// other pets, experience) adds weight × fit; the result is capped at 5–97% and returned with reasons.
+// FR-05 AI pet matching: weighted, explainable score. Each factor (species, home, activity, children, other pets, experience) adds weight × fit; the result is capped at 5–97% and returned with reasons.
 function evaluateMatch(pet, p) {
   const parts = [];
   const reasons = [];
