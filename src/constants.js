@@ -28,6 +28,8 @@ const PUBLIC_PET_STATUSES = ['Available', 'On Hold'];
 const APP_FLOW = ['Submitted', 'Under Review', 'Interview', 'Meet & Greet', 'Approved', 'Adoption Scheduled', 'Adopted'];
 const APP_STATUSES = ['Submitted', 'Under Review', 'Info Requested', 'Interview', 'Meet & Greet', 'Approved',
   'Adoption Scheduled', 'Adopted', 'Declined', 'Withdrawn'];
+// FR-09 Application workflow: the 10 stages every application moves through. Used by the server,
+// the staff portal and the adopter timeline. See docs/APPLICATION_WORKFLOW.md.
 const APP_CLOSED = ['Adopted', 'Declined', 'Withdrawn'];
 const APP_NEEDS_DATE = ['Interview', 'Meet & Greet', 'Adoption Scheduled'];
 // While an applicant is this far along, the pet is held for them

@@ -80,7 +80,8 @@ function readForm(b) {
   if (phoneIssue) throw new HttpError(400, phoneIssue);
   if (form.motivation.length < 20) throw new HttpError(400, 'Please tell the shelter a little more about why you want to adopt (at least 20 characters).');
   return form;
-}
+}// FR-07 Inquiry form: server-side validation of every answer (name, email, phone, home, lifestyle,
+// motivation). The browser checks too, but the server always re-checks because browser checks can be bypassed.
 
 // ---- Adopter: submit an application ----
 router.post('/', requireAdopter, asyncHandler(async (req, res) => {
