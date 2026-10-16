@@ -230,6 +230,8 @@ async function isDuplicate({ to, type, appId, subject }) {
 // userId / appId record who and what the email is about; skipReason records an email we chose not to send
 // (e.g. the recipient turned these emails off) so the admin email log explains it.
 async function sendMail({ to, subject, heading, body, buttonText, buttonUrl, type = 'general', userId = null, appId = null, skipReason = '' }) {
+// FR-12 Email notifications: sends every status/adoption email. Skips demo addresses, removes duplicates
+// within 2 minutes, respects the daily limit, retries once on failure and logs every attempt.
   const html = layout({ heading: heading || subject, body, buttonText, buttonUrl });
   const text = plainText({ heading: heading || subject, body, buttonText, buttonUrl });
   const record = { id: newId('mail'), to, subject, type, userId, appId, html, link: buttonUrl || null, mode: emailMode, status: 'sent', sentAt: now() };
